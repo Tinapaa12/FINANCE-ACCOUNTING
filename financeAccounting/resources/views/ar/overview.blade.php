@@ -1,77 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance and Accounting - A/R Overview</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        .content-scroll::-webkit-scrollbar-track { background: #f1f5f9; } .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
-        .bg-dot-grid { background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px); background-size: 22px 22px; }
-    </style>
-</head>
-<body class="bg-[#f3f4f6] h-screen flex overflow-hidden" x-data="overviewApp()" x-cloak>
+@extends('layouts.app')
 
-    <!-- SIDEBAR -->
-    <aside class="w-64 bg-gradient-to-b from-[#0f172a] via-[#0f172a] to-[#0b1120] text-gray-300 flex flex-col h-full shrink-0 overflow-y-auto font-sans relative">
-        <div class="absolute top-0 right-0 w-40 h-40 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="p-6 flex items-center space-x-3 border-b border-[#1e293b] relative">
-            <div class="bg-gradient-to-br from-[#3b82f6] to-[#4338ca] p-2.5 rounded-lg text-white shadow-lg shadow-indigo-900/40"><i class="fas fa-coins text-xl"></i></div>
-            <div><h1 class="text-white font-bold text-[15px] leading-tight">Finance and<br>Accounting</h1></div>
-        </div>
-        <nav class="flex-1 py-6 px-4 space-y-8 text-[13px] relative">
-            <div>
-                <div class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Main</div>
-                <a href="/ar-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-md bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white font-medium shadow-md shadow-indigo-950/50 border-l-2 border-[#a5b4fc] transition"><i class="fas fa-th-large w-5 text-center"></i><span>Dashboard</span></a>
-            </div>
-            <div>
-                <div class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">General Ledger</div>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-layer-group w-5 text-center"></i><span>Chart of Accounts</span></a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-book w-5 text-center"></i><span>Journal Entries</span></a>
-            </div>
-            <div>
-                <div class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Account Payables</div>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-file-invoice w-5 text-center"></i><span>Supplier Bills</span></a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-hand-holding-usd w-5 text-center"></i><span>Payments Made</span></a>
-            </div>
-            <div>
-                <div class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Account Receivables</div>
-                <a href="/ar-overview" class="flex items-center space-x-3 px-4 py-2.5 rounded-md bg-gradient-to-r from-[#4338ca] to-[#4f46e5] text-white font-medium shadow-md shadow-indigo-950/50 border-l-2 border-[#a5b4fc] transition"><i class="fas fa-file-invoice-dollar w-5 text-center"></i><span>A/R Overview</span></a>
-                <a href="/payments-received" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-hand-holding-heart w-5 text-center"></i><span>Payments Received</span></a>
-            </div>
-            <div>
-                <div class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Reports</div>
-                <a href="/aging-report" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-file-alt w-5 text-center"></i><span>Financial Reports</span></a>
-                <a href="#" class="flex items-center space-x-3 px-4 py-2.5 rounded-md hover:bg-[#1e293b] hover:text-white hover:pl-5 transition-all duration-200"><i class="fas fa-file-invoice w-5 text-center"></i><span>Tax and Compliance</span></a>
-            </div>
-        </nav>
-        <div class="p-4 mx-4 mb-4 rounded-lg bg-white/5 border border-white/10 relative">
-            <div class="flex items-center gap-2 text-[11px] text-slate-400"><span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_2px_rgba(52,211,153,0.5)]"></span> All systems operational</div>
-        </div>
-    </aside>
+@section('title', 'A/R Overview')
+@section('page-heading', 'Account Receivable Overview')
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 h-full flex flex-col overflow-hidden bg-[#f8fafc] relative">
-        <header class="bg-white/90 backdrop-blur px-10 py-5 border-b border-gray-200 flex justify-between items-center shrink-0 shadow-sm relative z-10">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 tracking-tight">Account Receivable Overview</h2>
-                <p class="text-[13px] text-gray-400 mt-0.5">Track invoices, collections, and customer balances</p>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="bg-gradient-to-br from-slate-800 to-black rounded-full w-10 h-10 flex items-center justify-center text-white shadow-md"><i class="fas fa-user text-xl"></i></div>
-                <div class="text-[14px]">
-                    <p class="font-bold text-gray-900">Admin User</p>
-                    <p class="text-[12px] text-gray-500 -mt-0.5">Administrator</p>
-                </div>
-            </div>
-            <div class="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500"></div>
-        </header>
+@section('content')
+<div x-data="overviewApp()" x-cloak>
 
-        <div class="flex-1 overflow-y-auto content-scroll p-10 space-y-8 relative bg-dot-grid">
+<div class="flex-1 overflow-y-auto content-scroll p-10 space-y-8 relative bg-dot-grid">
             <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-200/30 rounded-full blur-3xl pointer-events-none -z-0"></div>
             <div class="absolute top-96 left-0 w-72 h-72 bg-blue-200/20 rounded-full blur-3xl pointer-events-none -z-0"></div>
 
@@ -176,14 +111,13 @@
             <div class="bg-gradient-to-r from-white to-slate-50 p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex items-center justify-between">
                 <div class="flex space-x-4">
                     <button @click="showInvoiceModal = true" class="bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white text-[14px] py-2.5 px-5 rounded-md font-medium transition flex items-center justify-center gap-2 shadow-md shadow-indigo-200"><i class="fas fa-plus"></i> New Invoice</button>
-                    <a href="/aging-report" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[14px] py-2.5 px-5 rounded-md font-medium transition flex items-center justify-center gap-2"><i class="fas fa-chart-line text-indigo-500"></i> View Aging Report</a>
+                    <a href="{{ route('ar.aging') }}" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[14px] py-2.5 px-5 rounded-md font-medium transition flex items-center justify-center gap-2"><i class="fas fa-chart-line text-indigo-500"></i> View Aging Report</a>
                 </div>
                 <div class="hidden md:flex items-center gap-2 text-[12px] text-gray-400"><i class="fas fa-circle-info"></i> Data refreshed a few moments ago</div>
             </div>
         </div>
-    </main>
 
-    <!-- CREATE INVOICE MODAL -->
+<!-- CREATE INVOICE MODAL -->
     <div x-show="showInvoiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" x-cloak @click.away="showInvoiceModal = false">
         <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl p-6" @click.stop>
             <div class="flex justify-between items-center border-b pb-4 mb-4">
@@ -261,8 +195,12 @@
         </div>
     </div>
 
-    <script>
-        function overviewApp() {
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    function overviewApp() {
             return {
                 showInvoiceModal: false,
                 barsLoaded: false,
@@ -318,6 +256,5 @@
                 }
             }
         }
-    </script>
-</body>
-</html>
+</script>
+@endpush

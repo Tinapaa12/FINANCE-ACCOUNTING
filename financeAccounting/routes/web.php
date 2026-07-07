@@ -16,3 +16,9 @@ Route::get('/tax-compliance', [TaxComplianceController::class, 'index'])->name('
 Route::get('/dashboard', function () {
     return 'Dashboard placeholder';
 })->name('dashboard');
+
+use App\Http\Controllers\ARController;
+
+Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
+Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar.payments');
+Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');

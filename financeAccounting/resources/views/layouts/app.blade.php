@@ -11,7 +11,16 @@
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Financial Reports')</title>
-    @vite('resources/css/app.css')
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #0f172a; } ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .content-scroll::-webkit-scrollbar-track { background: #f1f5f9; } .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        .bg-dot-grid { background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px); background-size: 22px 22px; }
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
@@ -84,17 +93,29 @@
 
             <div>
                 <p class="uppercase text-xs font-medium tracking-wide text-slate-500 px-3 mb-2">Account Receivables</p>
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold text-white transition-colors hover:bg-slate-800">
+                <a href="{{ route('ar.overview') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-colors
+                          {{ request()->routeIs('ar.overview') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'text-white hover:bg-slate-800' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     A/R Overview
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold text-white transition-colors hover:bg-slate-800">
+                <a href="{{ route('ar.payments') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-colors
+                          {{ request()->routeIs('ar.payments') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'text-white hover:bg-slate-800' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Payments Received
+                </a>
+                <a href="{{ route('ar.aging') }}"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-semibold transition-colors
+                          {{ request()->routeIs('ar.aging') ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'text-white hover:bg-slate-800' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2a4 4 0 018 0v2M12 3v4m-6 4h12M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z" />
+                    </svg>
+                    Aging Report
                 </a>
             </div>
 
@@ -201,6 +222,7 @@
         });
     });
 </script>
+@stack('scripts')
 
 </body>
 </html>
