@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <title>@yield('title', 'Financial Reports')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite('resources/css/app.css')
 </head>
 <body class="bg-gray-100 text-gray-800">
 
