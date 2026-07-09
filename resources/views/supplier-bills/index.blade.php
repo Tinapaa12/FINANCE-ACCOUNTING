@@ -139,7 +139,7 @@
 
         <h2>Supplier Bills</h2>
 
-        <a href="#" class="add-btn">Add Bill</a>
+        <button class="add-btn" onclick="openModal()">Add Bill</button>
 
     </div>
 
@@ -285,5 +285,39 @@
     </div>
 
 </div>
+<!-- Modal -->
+<div id="billModal" class="modal">
 
+    <div class="modal-box">
+
+        <h2>Add Supplier Bill</h2>
+
+        <form>
+
+            <div class="modal-row">
+                <label>Supplier :</label>
+                <input type="text" placeholder="Supplier Name">
+            </div>
+
+            <div class="modal-row">
+                <label>Amount :</label>
+                <input type="number" placeholder="₱0.00">
+            </div>
+
+            <div class="modal-row">
+                <label>Due :</label>
+                <input type="date">
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="modal-btn">
+                    Add Bill
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
 @endsection

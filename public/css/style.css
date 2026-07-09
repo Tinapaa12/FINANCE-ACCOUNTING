@@ -607,3 +607,70 @@ tbody tr:hover{
     padding:6px 14px;
     border-radius:20px;
 }
+
+/* ================= MODAL ================= */
+
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    backdrop-filter:blur(8px);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-box{
+    width:420px;
+    background:#fff;
+    border:2px solid #333;
+    border-radius:15px;
+    padding:25px 28px;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+.modal-box h2{
+    margin-bottom:20px;
+    font-size:28px;
+}
+
+.modal-row{
+    display:flex;
+    align-items:center;
+    margin-bottom:18px;
+    border-bottom:1px solid #999;
+    padding-bottom:10px;
+}
+
+.modal-row label{
+    width:110px;
+    font-weight:bold;
+}
+
+.modal-row input{
+    flex:1;
+    border:none;
+    outline:none;
+    font-size:16px;
+    background:transparent;
+}
+
+.modal-footer{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:25px;
+}
+
+.modal-btn{
+    background:#4b5be7;
+    color:#fff;
+    border:none;
+    padding:10px 22px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.modal-btn:hover{
+    background:#3647d6;
+}
