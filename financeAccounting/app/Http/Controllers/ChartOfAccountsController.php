@@ -2,24 +2,49 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 
 class ChartOfAccountsController extends Controller
 {
     public function index()
     {
-        $accounts = [
-            ['code' => '1010', 'name' => 'Cash on Hand', 'type' => 'Asset', 'normal_balance' => 'Debit', 'current_balance' => 45200, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '1020', 'name' => 'Cash in Bank - BDO', 'type' => 'Asset', 'normal_balance' => 'Debit', 'current_balance' => 321400, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '1100', 'name' => 'Accounts Receivable', 'type' => 'Asset', 'normal_balance' => 'Debit', 'current_balance' => 248500, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '1200', 'name' => 'Merchandise Inventory', 'type' => 'Asset', 'normal_balance' => 'Debit', 'current_balance' => 98000, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '2100', 'name' => 'Accounts Payable', 'type' => 'Liabilities', 'normal_balance' => 'Credit', 'current_balance' => 91200, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '2300', 'name' => 'Output VAT Payable', 'type' => 'Liabilities', 'normal_balance' => 'Credit', 'current_balance' => 18600, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '4100', 'name' => 'Sales Revenue', 'type' => 'Revenue', 'normal_balance' => 'Credit', 'current_balance' => 520000, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '6100', 'name' => 'Salaries and Wages', 'type' => 'Expense', 'normal_balance' => 'Debit', 'current_balance' => 210000, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-            ['code' => '6200', 'name' => 'Rent Expenses', 'type' => 'Expense', 'normal_balance' => 'Debit', 'current_balance' => 45000, 'status' => 'Active', 'date_created' => 'June 15, 2025', 'last_updated' => 'June 22, 2025'],
-        ];
-
+        $accounts = ChartOfAccount::with('parent')->get();
         return view('chart-of-accounts.index', compact('accounts'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'account_code' => 'required|string|max:20|unique:chart_of_accounts',
+            'account_name' => 'required|string|max:255',
+            'type' => 'required|in:Asset,Liability,Equity,Revenue,Expense',
+            'normal_balance' => 'required|in:Debit,Credit',
+            'status' => 'required|in:Active,Inactive',
+            'parent_account_id' => 'nullable|exists:chart_of_accounts,account_id',
+        ]);
+
+        ChartOfAccount::create($validated);
+        return redirect()->route('chart-of-accounts.index')->with('success', 'Account created successfully.');
+    }
+
+    public function update(Request $request, ChartOfAccount $chartOfAccount)
+    {
+        $validated = $request->validate([
+            'account_name' => 'required|string|max:255',
+            'type' => 'required|in:Asset,Liability,Equity,Revenue,Expense',
+            'normal_balance' => 'required|in:Debit,Credit',
+            'status' => 'required|in:Active,Inactive',
+            'parent_account_id' => 'nullable|exists:chart_of_accounts,account_id',
+        ]);
+
+        $chartOfAccount->update($validated);
+        return redirect()->route('chart-of-accounts.index')->with('success', 'Account updated successfully.');
+    }
+
+    public function destroy(ChartOfAccount $chartOfAccount)
+    {
+        $chartOfAccount->delete();
+        return redirect()->route('chart-of-accounts.index')->with('success', 'Account deleted successfully.');
     }
 }

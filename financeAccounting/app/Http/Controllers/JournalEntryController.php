@@ -2,85 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JournalEntryController extends Controller
 {
     public function index()
     {
-        $entries = [
-            [
-                'id' => 1,
-                'date' => 'June 30, 2024',
-                'reference' => 'JE - 2024 - 00128',
-                'description' => 'Collection from Customer A',
-                'status' => 'Posted',
-                'debit' => 50000.00,
-                'credit' => 50000.00,
-                'created_at' => 'June 30, 2024',
-                'lines' => [
-                    ['account_code' => '1100 - 000', 'account_name' => 'Cash in Bank', 'description' => 'Collection from...', 'debit' => 50000.00, 'credit' => 0.00],
-                    ['account_code' => '1200 - 000', 'account_name' => 'Accounts Receivable', 'description' => 'Collection from...', 'debit' => 0.00, 'credit' => 50000.00],
-                ]
-            ],
-            [
-                'id' => 2,
-                'date' => 'June 29, 2024',
-                'reference' => 'JE - 2024 - 00127',
-                'description' => 'Payment to Supplier X',
-                'status' => 'Posted',
-                'debit' => 25000.00,
-                'credit' => 25000.00,
-                'created_at' => 'June 29, 2024',
-                'lines' => [
-                    ['account_code' => '2100 - 000', 'account_name' => 'Accounts Payable', 'description' => 'Payment to...', 'debit' => 25000.00, 'credit' => 0.00],
-                    ['account_code' => '1020 - 000', 'account_name' => 'Cash in Bank', 'description' => 'Payment to...', 'debit' => 0.00, 'credit' => 25000.00],
-                ]
-            ],
-            [
-                'id' => 3,
-                'date' => 'June 28, 2024',
-                'reference' => 'JE - 2024 - 00126',
-                'description' => 'Purchase of Office Supply',
-                'status' => 'Posted',
-                'debit' => 8500.00,
-                'credit' => 8500.00,
-                'created_at' => 'June 28, 2024',
-                'lines' => [
-                    ['account_code' => '6100 - 000', 'account_name' => 'Office Supplies', 'description' => 'Purchase of...', 'debit' => 8500.00, 'credit' => 0.00],
-                    ['account_code' => '1020 - 000', 'account_name' => 'Cash in Bank', 'description' => 'Purchase of...', 'debit' => 0.00, 'credit' => 8500.00],
-                ]
-            ],
-            [
-                'id' => 4,
-                'date' => 'June 27, 2024',
-                'reference' => 'JE - 2024 - 00125',
-                'description' => 'Monthly Salary Expense',
-                'status' => 'Posted',
-                'debit' => 15000.00,
-                'credit' => 15000.00,
-                'created_at' => 'June 27, 2024',
-                'lines' => [
-                    ['account_code' => '6100 - 000', 'account_name' => 'Salaries and Wages', 'description' => 'Monthly salary...', 'debit' => 15000.00, 'credit' => 0.00],
-                    ['account_code' => '1020 - 000', 'account_name' => 'Cash in Bank', 'description' => 'Monthly salary...', 'debit' => 0.00, 'credit' => 15000.00],
-                ]
-            ],
-            [
-                'id' => 5,
-                'date' => 'June 26, 2024',
-                'reference' => 'JE - 2024 - 00124',
-                'description' => 'Utility Bill Payment',
-                'status' => 'Posted',
-                'debit' => 1800.00,
-                'credit' => 1800.00,
-                'created_at' => 'June 26, 2024',
-                'lines' => [
-                    ['account_code' => '6200 - 000', 'account_name' => 'Utilities Expense', 'description' => 'Utility bill...', 'debit' => 1800.00, 'credit' => 0.00],
-                    ['account_code' => '1020 - 000', 'account_name' => 'Cash in Bank', 'description' => 'Utility bill...', 'debit' => 0.00, 'credit' => 1800.00],
-                ]
-            ],
-        ];
-
+        $entries = JournalEntry::with(['lines.account'])->latest()->get();
         return view('journal-entries.index', compact('entries'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'transaction_date' => 'required|date',
+            'reference_no' => 'required|string|max:50|unique:journal_entries',
+            'description' => 'required|string|max:500',
+            'status' => 'required|in:Draft,Posted',
+            'lines' => 'required|array|min:2',
+            'lines.*.account_id' => 'required|exists:chart_of_accounts,account_id',
+            'lines.*.description' => 'nullable|string|max:500',
+            'lines.*.debit' => 'nullable|numeric|min:0',
+            'lines.*.credit' => 'nullable|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            $entry = JournalEntry::create([
+                'transaction_date' => $validated['transaction_date'],
+                'reference_no' => $validated['reference_no'],
+                'description' => $validated['description'],
+                'status' => $validated['status'],
+            ]);
+
+            foreach ($validated['lines'] as $line) {
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->journal_entry_id,
+                    'account_id' => $line['account_id'],
+                    'description' => $line['description'] ?? $validated['description'],
+                    'debit' => $line['debit'] ?? 0,
+                    'credit' => $line['credit'] ?? 0,
+                ]);
+            }
+        });
+
+        return redirect()->route('journal-entries.index')->with('success', 'Journal entry created successfully.');
+    }
+
+    public function update(Request $request, JournalEntry $journalEntry)
+    {
+        $validated = $request->validate([
+            'transaction_date' => 'required|date',
+            'description' => 'required|string|max:500',
+            'status' => 'required|in:Draft,Posted',
+        ]);
+
+        $journalEntry->update($validated);
+        return redirect()->route('journal-entries.index')->with('success', 'Journal entry updated successfully.');
+    }
+
+    public function destroy(JournalEntry $journalEntry)
+    {
+        $journalEntry->delete();
+        return redirect()->route('journal-entries.index')->with('success', 'Journal entry deleted successfully.');
     }
 }
