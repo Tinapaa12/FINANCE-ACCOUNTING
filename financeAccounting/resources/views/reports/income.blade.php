@@ -1,12 +1,10 @@
-{{-- resources/views/reports/income.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Income Statements')
+@section('page-title', 'Income Statements')
 
 @section('content')
     <div class="flex flex-col lg:flex-row gap-6">
-
-        {{-- LEFT: Income Statement --}}
         <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <div class="flex items-center justify-between mb-4">
@@ -16,7 +14,6 @@
                     </select>
                 </div>
 
-                {{-- Revenue --}}
                 <div class="bg-green-50 rounded-lg p-4 mb-4">
                     <p class="font-semibold text-green-900 mb-2">Revenue Earned</p>
                     @php $totalRevenue = 0; @endphp
@@ -33,7 +30,6 @@
                     </div>
                 </div>
 
-                {{-- Expenses --}}
                 <div class="bg-red-50 rounded-lg p-4">
                     <p class="font-semibold text-red-900 mb-2">Expenses</p>
                     @php $totalExpenses = 0; @endphp
@@ -52,7 +48,6 @@
             </div>
         </div>
 
-        {{-- RIGHT: Trial Balance --}}
         <div class="w-full lg:w-96">
             <div class="bg-white rounded-lg border p-5">
                 <h2 class="font-semibold text-lg mb-4">Trial balance</h2>
@@ -86,6 +81,5 @@
                 </table>
             </div>
         </div>
-
     </div>
 @endsection

@@ -1,12 +1,9 @@
-{{-- resources/views/tax/compliance.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Tax and Compliance')
-@section('page-heading', 'Tax and Compliance')
+@section('page-title', 'Tax and Compliance')
 
 @section('content')
-
-    {{-- Summary cards --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-6">
         <div class="bg-white rounded-lg border p-6 text-center">
             <p class="text-gray-500 text-sm mb-1">Total Taxable Amount</p>
@@ -22,7 +19,6 @@
         </div>
     </div>
 
-    {{-- Tax records / calculation table --}}
     <div class="bg-white rounded-lg border p-5 max-w-6xl mx-auto">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-lg">Tax Calculations</h2>
@@ -73,5 +69,4 @@
             </tfoot>
         </table>
     </div>
-
 @endsection

@@ -1,7 +1,7 @@
-{{-- resources/views/reports/liabilities.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Budget vs Actual')
+@section('page-title', 'Budget vs Actual')
 
 @section('content')
     <div class="bg-white rounded-lg border p-5">
@@ -19,10 +19,7 @@
             </thead>
             <tbody>
                 @foreach($budgetVsActual as $row)
-                    @php
-                        $variance = $row['actual'] - $row['budget'];
-                        $isOver = $variance > 0;
-                    @endphp
+                    @php $variance = $row['actual'] - $row['budget']; @endphp
                     <tr class="border-b last:border-0">
                         <td class="py-2.5">{{ $row['account'] }}</td>
                         <td class="py-2.5">₱{{ number_format($row['budget']) }}</td>

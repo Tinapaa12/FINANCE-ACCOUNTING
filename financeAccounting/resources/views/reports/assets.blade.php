@@ -1,12 +1,10 @@
-{{-- resources/views/reports/assets.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Balance Sheet - Assets')
+@section('page-title', 'Balance Sheet - Assets')
 
 @section('content')
     <div class="flex flex-col lg:flex-row gap-6">
-
-        {{-- LEFT: Assets --}}
         <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <h2 class="font-semibold text-lg mb-4">Assets</h2>
@@ -27,7 +25,6 @@
             </div>
         </div>
 
-        {{-- RIGHT: Liabilities & Equity --}}
         <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <h2 class="font-semibold text-lg mb-4">Liabilities & Equity</h2>
@@ -68,6 +65,5 @@
                 <p class="text-center text-xs text-gray-400 mt-6">LIAB + EQUITY = ASSETS</p>
             </div>
         </div>
-
     </div>
 @endsection

@@ -65,4 +65,3 @@ class FinancialReportController extends Controller
         ]);
     }
 }
-
