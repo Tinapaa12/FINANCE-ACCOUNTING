@@ -148,6 +148,25 @@
         <header class="flex items-center justify-between bg-white px-6 py-4 border-b">
             <h1 class="text-xl font-semibold">@yield('page-heading', 'Financial Reports')</h1>
             <div class="flex items-center gap-4">
+                @php
+                    $pdfRoutes = [
+                        'reports.income'      => 'reports.income.pdf',
+                        'reports.assets'      => 'reports.assets.pdf',
+                        'reports.liabilities' => 'reports.liabilities.pdf',
+                        'reports.cashflow'    => 'reports.cashflow.pdf',
+                        'tax.compliance'      => 'tax.compliance.pdf',
+                    ];
+                    $currentPdfRoute = null;
+                    foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
+                        if (request()->routeIs($pageRoute)) {
+                            $currentPdfRoute = $pdfRoute;
+                        }
+                    }
+                @endphp
+                @if($currentPdfRoute)
+                    <a href="{{ route($currentPdfRoute) }}" target="_blank"
+                       class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
+                @endif
                 <button data-export-pdf class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">EXPORT PDF</button>
                 <div class="flex items-center gap-2">
                     <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white">👤</div>
@@ -178,6 +197,11 @@
                        class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
                               {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
                         Liabilities
+                    </a>
+                    <a href="{{ route('reports.cashflow') }}"
+                       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                              {{ request()->routeIs('reports.cashflow') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                        Cash Flow
                     </a>
                 </div>
             @endif
