@@ -72,7 +72,7 @@
 
                 <h3>Total Outstanding :</h3>
 
-                <h2>₱111,100</h2>
+                <h2 id="totalOutstanding">₱111,100</h2>
 
             </div>
 
@@ -90,9 +90,9 @@
 
                     <h4>Total Bills</h4>
 
-                    <h1>₱111,100</h1>
+                    <h1 id="totalBillsAmount">₱111,100</h1>
 
-                    <p>4 Bills</p>
+                    <p id="totalBillsCount">4 Bills</p>
 
                 </div>
 
@@ -120,9 +120,9 @@
 
                     <h4>Total Bill Pending</h4>
 
-                    <h1>₱58,700</h1>
+                    <h1 id="totalPendingAmount">₱58,700</h1>
 
-                    <p>3 Bills</p>
+                    <p id="totalPendingCount">3 Bills</p>
 
                 </div>
 
@@ -162,7 +162,7 @@
 
             </thead>
 
-            <tbody>
+            <tbody id="billsTableBody">
 
                 <tr>
                     <td>BILL-01</td>
@@ -177,9 +177,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -196,9 +196,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -215,9 +215,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -234,9 +234,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -253,9 +253,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -272,9 +272,9 @@
                     </td>
 
                     <td class="actions">
-                        <button class="btn-edit">✏</button>
-                        <button class="btn-delete">🗑</button>
-                        <button class="btn-view">View</button>
+                        <button class="btn-edit" onclick="editBill(this)">✏</button>
+                        <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                        <button class="btn-view" onclick="viewBill(this)">View</button>
                     </td>
                 </tr>
 
@@ -292,24 +292,25 @@
 
         <h2>Add Supplier Bill</h2>
 
-        <form>
+        <form id="addBillForm">
 
             <div class="modal-row">
                 <label>Supplier :</label>
-                <input type="text" placeholder="Supplier Name">
+                <input type="text" id="billSupplier" placeholder="Supplier Name" required>
             </div>
 
             <div class="modal-row">
                 <label>Amount :</label>
-                <input type="number" placeholder="₱0.00">
+                <input type="number" id="billAmount" placeholder="₱0.00" step="0.01" required>
             </div>
 
             <div class="modal-row">
                 <label>Due :</label>
-                <input type="date">
+                <input type="date" id="billDue" required>
             </div>
 
             <div class="modal-footer">
+                <button type="button" class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
                 <button type="submit" class="modal-btn">
                     Add Bill
                 </button>
@@ -320,4 +321,323 @@
     </div>
 
 </div>
+
+<!-- View Modal -->
+<div id="viewModal" class="modal">
+
+    <div class="modal-box">
+
+        <h2>Bill Details</h2>
+
+        <div class="modal-row"><label>Bill No. :</label> <span id="viewBillNo"></span></div>
+        <div class="modal-row"><label>PO No. :</label> <span id="viewPoNo"></span></div>
+        <div class="modal-row"><label>Receipt/GRN No. :</label> <span id="viewGrnNo"></span></div>
+        <div class="modal-row"><label>Supplier :</label> <span id="viewSupplier"></span></div>
+        <div class="modal-row"><label>Amount :</label> <span id="viewAmount"></span></div>
+        <div class="modal-row"><label>Due :</label> <span id="viewDue"></span></div>
+        <div class="modal-row"><label>Status :</label> <span id="viewStatus"></span></div>
+
+        <div class="modal-footer">
+            <button type="button" class="modal-btn-cancel" onclick="closeViewModal()">Close</button>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="modal">
+
+    <div class="modal-box">
+
+        <h2>Edit Supplier Bill</h2>
+
+        <form id="editBillForm">
+
+            <div class="modal-row">
+                <label>Supplier :</label>
+                <input type="text" id="editSupplier" placeholder="Supplier Name" required>
+            </div>
+
+            <div class="modal-row">
+                <label>Amount :</label>
+                <input type="number" id="editAmount" placeholder="₱0.00" step="0.01" required>
+            </div>
+
+            <div class="modal-row">
+                <label>Due :</label>
+                <input type="date" id="editDue" required>
+            </div>
+
+            <div class="modal-row">
+                <label>Status :</label>
+                <select id="editStatus">
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="modal-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="modal-btn">
+                    Save Changes
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<style>
+    /* Fallback modal show/hide styling in case it isn't already defined elsewhere */
+    #billModal.modal,
+    #viewModal.modal,
+    #editModal.modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    #billModal.modal.active,
+    #viewModal.modal.active,
+    #editModal.modal.active {
+        display: flex;
+    }
+    #viewModal .modal-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+    }
+    #viewModal .modal-row label {
+        font-weight: 600;
+    }
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+    }
+    .modal-btn-cancel {
+        background-color: #e9ecef;
+        color: #333;
+        border: 1px solid #ccc;
+        padding: 8px 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.15s ease;
+    }
+    .modal-btn-cancel:hover {
+        background-color: #dcdfe3;
+    }
+</style>
+
+<script>
+    let billCounter = document.querySelectorAll('#billsTableBody tr').length;
+
+    function openModal() {
+        document.getElementById('billModal').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('billModal').classList.remove('active');
+        document.getElementById('addBillForm').reset();
+    }
+
+    // Close modal when clicking outside the modal box
+    document.getElementById('billModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    function formatCurrency(num) {
+        return '₱' + num.toLocaleString('en-US', { minimumFractionDigits: 0 });
+    }
+
+    function formatDueDate(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    }
+
+    document.getElementById('addBillForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const supplier = document.getElementById('billSupplier').value.trim();
+        const amount = parseFloat(document.getElementById('billAmount').value);
+        const due = document.getElementById('billDue').value;
+
+        if (!supplier || isNaN(amount) || !due) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        billCounter++;
+        const billNo = 'BILL-' + String(billCounter).padStart(2, '0');
+
+        // PO No. and Receipt/GRN No. aren't collected in the form, so they're
+        // auto-generated to match the bill number. Update these manually via
+        // the edit button if needed, or add fields to the modal later.
+        const poNo = 'PO-2026-' + String(billCounter).padStart(3, '0');
+        const grnNo = 'GRN-2026-' + String(billCounter).padStart(3, '0');
+
+        // New bills default to "Pending" status until approved.
+        const status = 'pending';
+        const statusLabel = 'Pending';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${billNo}</td>
+            <td>${poNo}</td>
+            <td>${grnNo}</td>
+            <td>${supplier}</td>
+            <td>${formatCurrency(amount)}</td>
+            <td>${formatDueDate(due)}</td>
+            <td><span class="status ${status}">${statusLabel}</span></td>
+            <td class="actions">
+                <button class="btn-edit" onclick="editBill(this)">✏</button>
+                <button class="btn-delete" onclick="deleteRow(this)">🗑</button>
+                <button class="btn-view" onclick="viewBill(this)">View</button>
+            </td>
+        `;
+
+        document.getElementById('billsTableBody').appendChild(row);
+
+        updateTotals();
+        closeModal();
+    });
+
+    function deleteRow(btn) {
+        if (confirm('Remove this bill?')) {
+            btn.closest('tr').remove();
+            updateTotals();
+        }
+    }
+
+    // ---------- VIEW ----------
+
+    document.getElementById('viewModal').addEventListener('click', function (e) {
+        if (e.target === this) closeViewModal();
+    });
+
+    function closeViewModal() {
+        document.getElementById('viewModal').classList.remove('active');
+    }
+
+    function viewBill(btn) {
+        const row = btn.closest('tr');
+        const cells = row.children;
+
+        document.getElementById('viewBillNo').textContent = cells[0].textContent;
+        document.getElementById('viewPoNo').textContent = cells[1].textContent;
+        document.getElementById('viewGrnNo').textContent = cells[2].textContent;
+        document.getElementById('viewSupplier').textContent = cells[3].textContent;
+        document.getElementById('viewAmount').textContent = cells[4].textContent;
+        document.getElementById('viewDue').textContent = cells[5].textContent;
+        document.getElementById('viewStatus').textContent = cells[6].textContent.trim();
+
+        document.getElementById('viewModal').classList.add('active');
+    }
+
+    // ---------- EDIT ----------
+
+    let editingRow = null;
+
+    document.getElementById('editModal').addEventListener('click', function (e) {
+        if (e.target === this) closeEditModal();
+    });
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+        document.getElementById('editBillForm').reset();
+        editingRow = null;
+    }
+
+    function editBill(btn) {
+        const row = btn.closest('tr');
+        editingRow = row;
+        const cells = row.children;
+
+        document.getElementById('editSupplier').value = cells[3].textContent.trim();
+
+        const amountText = cells[4].textContent.replace(/[₱,]/g, '');
+        document.getElementById('editAmount').value = parseFloat(amountText);
+
+        // The table only stores a formatted due date (e.g. "June 30"), not a
+        // full ISO date, so the date input can't be pre-filled precisely.
+        // Leave it blank for the user to re-pick if they want to change it.
+        document.getElementById('editDue').value = '';
+
+        const statusSpan = cells[6].querySelector('.status');
+        const currentStatus = statusSpan.classList[1] || 'pending';
+        document.getElementById('editStatus').value = currentStatus;
+
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    document.getElementById('editBillForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        if (!editingRow) return;
+
+        const supplier = document.getElementById('editSupplier').value.trim();
+        const amount = parseFloat(document.getElementById('editAmount').value);
+        const due = document.getElementById('editDue').value;
+        const status = document.getElementById('editStatus').value;
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+
+        if (!supplier || isNaN(amount)) {
+            alert('Please fill in all fields.');
+            return;
+        }
+
+        const cells = editingRow.children;
+        cells[3].textContent = supplier;
+        cells[4].textContent = formatCurrency(amount);
+
+        // Only update the Due cell if a new date was actually picked.
+        if (due) {
+            cells[5].textContent = formatDueDate(due);
+        }
+
+        cells[6].innerHTML = `<span class="status ${status}">${statusLabel}</span>`;
+
+        updateTotals();
+        closeEditModal();
+    });
+
+    function updateTotals() {
+        const rows = document.querySelectorAll('#billsTableBody tr');
+        let total = 0;
+        let pendingTotal = 0;
+        let pendingCount = 0;
+
+        rows.forEach(row => {
+            const amountText = row.children[4].textContent.replace(/[₱,]/g, '');
+            const amount = parseFloat(amountText) || 0;
+            total += amount;
+
+            const status = row.children[6].textContent.trim().toLowerCase();
+            if (status === 'pending' || status === 'approved') {
+                pendingTotal += amount;
+                pendingCount++;
+            }
+        });
+
+        document.getElementById('totalOutstanding').textContent = formatCurrency(total);
+        document.getElementById('totalBillsAmount').textContent = formatCurrency(total);
+        document.getElementById('totalBillsCount').textContent = rows.length + ' Bills';
+        document.getElementById('totalPendingAmount').textContent = formatCurrency(pendingTotal);
+        document.getElementById('totalPendingCount').textContent = pendingCount + ' Bills';
+    }
+</script>
+
 @endsection

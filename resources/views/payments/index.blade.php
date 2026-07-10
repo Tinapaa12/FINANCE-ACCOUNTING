@@ -12,7 +12,6 @@
 
                 <div class="payment-actions">
                     <input type="text" placeholder="Search Payment">
-                    <button class="payment-btn">+ Add Payment</button>
                 </div>
 
             </div>

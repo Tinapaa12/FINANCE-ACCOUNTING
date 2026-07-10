@@ -185,24 +185,22 @@ body{
 }
 
 .dashboard{
-
-    padding:25px;
-
+    padding:30px;
+    max-width:1600px;
+    margin:0 auto;
 }
 
 .top-section{
-
     display:flex;
-
-    gap:20px;
-
+    gap:25px;
+    align-items:stretch;
 }
 
 /* UPCOMING */
 
 .upcoming-card{
 
-    flex:1;
+    flex:2;
 
     background:white;
 
@@ -316,7 +314,8 @@ body{
 
 .summary-card{
 
-    width:430px;
+    width:480px;
+    min-width:480px;
 
     background:white;
 
@@ -383,7 +382,9 @@ body{
 /* ================================= */
 
 .table-card{
-    margin-top:25px;
+    margin-top:30px;
+    width:100%;
+    min-height:420px;
     background:#fff;
     border-radius:15px;
     box-shadow:0 3px 8px rgba(0,0,0,.15);
@@ -439,7 +440,7 @@ th{
 }
 
 td{
-    padding:14px 15px;
+    padding:18px 15px;
     border-top:1px solid #ececec;
     font-size:14px;
 }
@@ -552,6 +553,8 @@ tbody tr:hover{
 }
 
 .payment-card{
+    width:100%;
+    min-height:650px;
     background:#fff;
     border:2px solid #444;
     border-radius:18px;
@@ -582,7 +585,8 @@ tbody tr:hover{
 
 .payment-table th,
 .payment-table td{
-    padding:16px;
+    padding:20px 18px;
+    font-size:15px;
     border-bottom:1px solid #ddd;
 }
 
@@ -595,7 +599,7 @@ tbody tr:hover{
 }
 
 .payment-actions input{
-    width:320px;
+    width:380px;
     padding:10px;
     border:1px solid #999;
     border-radius:20px;
@@ -673,4 +677,22 @@ tbody tr:hover{
 
 .modal-btn:hover{
     background:#3647d6;
+}
+
+@media (min-width:1920px){
+
+    .dashboard{
+        max-width:1700px;
+    }
+
+    .summary-card{
+        width:520px;
+        min-width:520px;
+    }
+
+    .table-card,
+    .payment-card{
+        min-height:500px;
+    }
+
 }
