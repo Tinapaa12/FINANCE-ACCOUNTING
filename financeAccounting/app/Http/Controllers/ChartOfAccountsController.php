@@ -4,12 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ChartOfAccountsController extends Controller
 {
     public function index()
     {
-        $accounts = ChartOfAccount::with('parent')->get();
+        $accounts = ChartOfAccount::with('parent')
+            ->select('chart_of_accounts.*')
+            ->addSelect(DB::raw('COALESCE((
+                SELECT CASE WHEN chart_of_accounts.normal_balance = "Debit"
+                    THEN SUM(jel.debit) - SUM(jel.credit)
+                    ELSE SUM(jel.credit) - SUM(jel.debit)
+                END
+                FROM journal_entry_lines jel
+                WHERE jel.account_id = chart_of_accounts.account_id
+            ), 0) as current_balance'))
+            ->get();
+
         return view('chart-of-accounts.index', compact('accounts'));
     }
 

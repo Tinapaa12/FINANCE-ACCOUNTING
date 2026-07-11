@@ -201,7 +201,7 @@
                     type: a.type,
                     normal_balance: a.normal_balance,
                     status: a.status,
-                    current_balance: 0,
+                    current_balance: parseFloat(a.current_balance) || 0,
                     date_created: a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
                     last_updated: a.updated_at ? new Date(a.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
                 }));
