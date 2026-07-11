@@ -61,7 +61,7 @@ class SupplierBillController extends Controller
             'status' => 'required',
         ]);
 
-        $nextId = (SupplierBill::max('id') ?? 0) + 1;
+        $nextId = SupplierBill::count() + 1;
 
         SupplierBill::create([
             'bill_no' => 'BILL-' . str_pad($nextId, 2, '0', STR_PAD_LEFT),
@@ -79,6 +79,16 @@ class SupplierBillController extends Controller
     public function destroy(SupplierBill $supplierBill)
     {
         $supplierBill->delete();
+
+        $remaining = SupplierBill::orderBy('id')->get();
+        foreach ($remaining as $i => $bill) {
+            $num = $i + 1;
+            $bill->update([
+                'bill_no' => 'BILL-' . str_pad($num, 2, '0', STR_PAD_LEFT),
+                'po_no'   => 'PO-2026-' . str_pad($num, 3, '0', STR_PAD_LEFT),
+                'grn_no'  => 'GRN-2026-' . str_pad($num, 3, '0', STR_PAD_LEFT),
+            ]);
+        }
 
         return redirect()->route('supplier-bills.index');
     }
