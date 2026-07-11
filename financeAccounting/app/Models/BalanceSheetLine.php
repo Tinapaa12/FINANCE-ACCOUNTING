@@ -1,5 +1,4 @@
-<?php
-
+<?php // BalanceSheetLine model — a single line entry within a BalanceSheet. Stores line name, amount, and category.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

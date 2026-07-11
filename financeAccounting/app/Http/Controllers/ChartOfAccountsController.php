@@ -1,5 +1,4 @@
-<?php
-
+<?php // ChartOfAccountsController — manages the Chart of Accounts CRUD. Lists accounts with computed balances from journal entry lines, and handles create/update/delete with JSON support for AJAX.
 namespace App\Http\Controllers;
 
 use App\Models\ChartOfAccount;

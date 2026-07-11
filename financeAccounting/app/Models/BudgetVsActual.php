@@ -1,5 +1,4 @@
-<?php
-
+<?php // BudgetVsActual model — stores budget vs actual comparison data. Tracks budget/actual amounts with variance status.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

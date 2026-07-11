@@ -1,5 +1,4 @@
-<?php
-
+<?php // CashFlowReportLine model — a single line entry within a CashFlowReport. Stores line name, amount, and activity type.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

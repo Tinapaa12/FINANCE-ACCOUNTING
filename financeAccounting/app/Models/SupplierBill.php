@@ -1,5 +1,4 @@
-<?php
-
+<?php // SupplierBill model — represents a bill from a supplier in Accounts Payable. Tracks bill number, PO/GRN, supplier, amount, due date, and status.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

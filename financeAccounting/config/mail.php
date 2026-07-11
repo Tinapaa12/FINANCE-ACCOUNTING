@@ -1,5 +1,4 @@
-<?php
-
+<?php // Mail configuration — mailer driver (smtp, log, etc.), addresses, and mail server settings.
 return [
 
     /*

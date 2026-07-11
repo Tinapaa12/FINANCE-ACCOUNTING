@@ -1,5 +1,4 @@
-<?php
-
+<?php // JournalEntrySeeder — creates sample journal entries with lines for testing. Includes example transactions.
 namespace Database\Seeders;
 
 use App\Models\ChartOfAccount;

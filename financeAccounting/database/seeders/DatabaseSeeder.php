@@ -1,5 +1,4 @@
-<?php
-
+<?php // DatabaseSeeder — runs ChartOfAccountsSeeder, JournalEntrySeeder, and FinancialReportSeeder in order.
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;

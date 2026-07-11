@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates journal_entries table. Stores transaction date, reference number, description, and status.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

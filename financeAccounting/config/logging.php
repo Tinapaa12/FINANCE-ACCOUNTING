@@ -1,5 +1,4 @@
-<?php
-
+<?php // Logging configuration — log channels, drivers (stack, single, daily), and levels.
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;

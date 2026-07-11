@@ -1,5 +1,4 @@
-<?php
-
+<?php // JournalEntryController — manages journal entries and their lines. Handles listing, creating, updating, and deleting journal entries within database transactions to ensure balanced entries.
 namespace App\Http\Controllers;
 
 use App\Models\ChartOfAccount;

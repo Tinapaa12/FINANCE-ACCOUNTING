@@ -1,5 +1,4 @@
-<?php
-
+<?php // web.php — defines all web routes for the application. Includes General Ledger, Reports, Tax Compliance, Accounts Receivable, and Dashboard.
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChartOfAccountsController;
 use App\Http\Controllers\JournalEntryController;

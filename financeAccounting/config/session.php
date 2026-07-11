@@ -1,5 +1,4 @@
-<?php
-
+<?php // Session configuration — driver, lifetime, encryption, cookie settings, and caching.
 use Illuminate\Support\Str;
 
 return [

@@ -1,5 +1,4 @@
-<?php
-
+<?php // Filesystem configuration — disk drivers (local, s3, public), and cloud settings.
 return [
 
     /*

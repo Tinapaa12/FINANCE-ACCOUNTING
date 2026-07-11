@@ -1,5 +1,4 @@
-<?php
-
+<?php // DashboardService — encapsulates business logic for the dashboard. Computes KPI data, recent journal entries, account summaries, chart data, and alerts.
 namespace App\Services;
 
 use App\Models\ChartOfAccount;

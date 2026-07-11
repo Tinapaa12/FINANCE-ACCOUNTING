@@ -1,5 +1,4 @@
-<?php
-
+<?php // BalanceSheet model — represents a balance sheet within a FinancialReport. Has many lines split into assets, liabilities, and equity.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

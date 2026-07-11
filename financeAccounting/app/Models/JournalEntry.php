@@ -1,5 +1,4 @@
-<?php
-
+<?php // JournalEntry model — represents a journal entry with transaction date, reference, description, and status. Has many lines and provides balance check helpers.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

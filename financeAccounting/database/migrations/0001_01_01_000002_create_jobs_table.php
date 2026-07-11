@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates jobs, job_batches, and failed_jobs tables for Laravel's queue system.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

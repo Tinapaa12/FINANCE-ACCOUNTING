@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates trial_balances table linked to a financial report. Stores account-level debit/credit balances.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

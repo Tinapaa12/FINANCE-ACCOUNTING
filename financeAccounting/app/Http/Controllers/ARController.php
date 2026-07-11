@@ -1,5 +1,4 @@
-<?php
-
+<?php // ARController — serves Accounts Receivable overview, payments received, and aging report views.
 namespace App\Http\Controllers;
 
 class ARController extends Controller

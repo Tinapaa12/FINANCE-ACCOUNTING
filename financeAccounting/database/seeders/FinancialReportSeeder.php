@@ -1,5 +1,4 @@
-<?php
-
+<?php // FinancialReportSeeder — generates sample financial reports including Income Statement, Balance Sheet, Cash Flow, and Budget vs Actual.
 namespace Database\Seeders;
 
 use App\Models\BalanceSheet;

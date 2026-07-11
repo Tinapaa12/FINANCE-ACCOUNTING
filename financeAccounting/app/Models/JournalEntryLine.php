@@ -1,5 +1,4 @@
-<?php
-
+<?php // JournalEntryLine model — a single line within a journal entry. Belongs to JournalEntry and ChartOfAccount, with debit/credit amounts.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates balance_sheet_lines table. Each line belongs to a balance sheet with name, amount, and category.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

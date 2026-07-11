@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates cash_flow_report_lines table. Each line belongs to a cash flow report with name, amount, and activity type.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

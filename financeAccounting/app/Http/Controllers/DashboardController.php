@@ -1,5 +1,4 @@
-<?php
-
+<?php // DashboardController — serves the main dashboard view. Aggregates KPI data, recent journal entries, account summaries, chart data, financial alerts, and account type counts via DashboardService.
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;

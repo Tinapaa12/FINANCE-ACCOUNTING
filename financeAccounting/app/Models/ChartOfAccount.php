@@ -1,5 +1,4 @@
-<?php
-
+<?php // ChartOfAccount model — represents a single account in the Chart of Accounts. Has code, name, type, normal balance, status, and optional parent.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;

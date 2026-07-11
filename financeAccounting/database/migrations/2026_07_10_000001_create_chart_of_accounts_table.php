@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates chart_of_accounts table with self-referencing parent hierarchy. Stores code, name, type, normal balance, and status.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

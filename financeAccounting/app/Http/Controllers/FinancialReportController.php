@@ -1,5 +1,4 @@
-<?php
-
+<?php // FinancialReportController — serves financial report pages and their PDF versions. Provides Income Statement, Balance Sheet, Cash Flow, and Budget vs Actual views with data from generated report models.
 namespace App\Http\Controllers;
 
 use App\Models\BalanceSheet;

@@ -1,5 +1,4 @@
-<?php
-
+<?php // TaxComplianceController — displays tax compliance records and a PDF export. Shows tax types, taxable amounts, rates, computed tax, and filing status.
 namespace App\Http\Controllers;
 
 use App\Models\TaxRecord;

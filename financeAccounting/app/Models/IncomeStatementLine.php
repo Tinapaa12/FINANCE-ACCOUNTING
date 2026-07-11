@@ -1,5 +1,4 @@
-<?php
-
+<?php // IncomeStatementLine model — a single line entry within an IncomeStatement. Stores line name, amount, and type.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates tax_records table. Stores tax type, taxable amount, rate, computed tax, period, and filing status.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

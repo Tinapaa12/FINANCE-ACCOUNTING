@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates journal_entry_lines table. Each line belongs to a journal entry and an account, with debit/credit amounts. Cascade deletes with parent.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
