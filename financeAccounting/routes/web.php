@@ -21,12 +21,9 @@ Route::get('/reports/cashflow/pdf', [FinancialReportController::class, 'cashflow
 Route::get('/tax-compliance', [TaxComplianceController::class, 'index'])->name('tax.compliance');
 Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name('tax.compliance.pdf');
 
-// The layout also references a 'dashboard' named route for the sidebar Dashboard link.
-// If you already have one (e.g. from Laravel Breeze/Jetstream), leave it as is.
-// Otherwise add a placeholder so the link doesn't error:
-Route::get('/dashboard', function () {
-    return 'Dashboard placeholder';
-})->name('dashboard');
+// NOTE: 'dashboard' route is already defined elsewhere in your web.php
+// via DashboardController — do NOT add a duplicate here, Laravel will
+// error on a repeated route name.
 
 // Accounts Receivable
 Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');

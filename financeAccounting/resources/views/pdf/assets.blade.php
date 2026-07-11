@@ -1,73 +1,62 @@
-{{-- resources/views/reports/assets.blade.php --}}
-@extends('layouts.app')
+{{-- resources/views/pdf/assets.blade.php --}}
+@extends('layouts.pdf')
 
-@section('title', 'Balance Sheet - Assets')
+@section('title', 'Balance Sheet PDF')
+@section('pdf-title', 'Balance Sheet')
 
-@section('content')
-    <div class="flex flex-col lg:flex-row gap-6">
+@section('pdf-content')
+    <p class="text-sm text-gray-500 mb-6">As of {{ now()->format('F j, Y') }}</p>
 
-        {{-- LEFT: Assets --}}
-        <div class="flex-1">
-            <div class="bg-white rounded-lg border p-5">
-                <h2 class="font-semibold text-lg mb-4">Assets</h2>
+    <p class="font-semibold mb-2">Assets</p>
+    <table class="w-full text-sm mb-6">
+        @php $totalAssets = 0; @endphp
+        @foreach($assets as $item)
+            @php $totalAssets += $item['amount']; @endphp
+            <tr>
+                <td class="py-1.5 px-3">{{ $item['label'] }}</td>
+                <td class="py-1.5 px-3 text-right">₱{{ number_format($item['amount']) }}</td>
+            </tr>
+        @endforeach
+        <tr class="font-semibold border-t">
+            <td class="py-2 px-3">Total Assets</td>
+            <td class="py-2 px-3 text-right">₱{{ number_format($totalAssets) }}</td>
+        </tr>
+    </table>
 
-                @php $totalAssets = 0; @endphp
-                @foreach($assets as $item)
-                    @php $totalAssets += $item['amount']; @endphp
-                    <div class="flex justify-between text-sm py-1.5">
-                        <span>{{ $item['label'] }}</span>
-                        <span>₱{{ number_format($item['amount']) }}</span>
-                    </div>
-                @endforeach
+    <p class="font-semibold mb-2">Liabilities</p>
+    <table class="w-full text-sm mb-6">
+        @php $totalLiabilities = 0; @endphp
+        @foreach($liabilities as $item)
+            @php $totalLiabilities += $item['amount']; @endphp
+            <tr>
+                <td class="py-1.5 px-3">{{ $item['label'] }}</td>
+                <td class="py-1.5 px-3 text-right">₱{{ number_format($item['amount']) }}</td>
+            </tr>
+        @endforeach
+        <tr class="font-semibold border-t">
+            <td class="py-2 px-3">Total Liabilities</td>
+            <td class="py-2 px-3 text-right">₱{{ number_format($totalLiabilities) }}</td>
+        </tr>
+    </table>
 
-                <div class="flex justify-between font-semibold mt-3 pt-3 border-t">
-                    <span>Total Asset</span>
-                    <span class="text-green-600">₱{{ number_format($totalAssets) }}</span>
-                </div>
-            </div>
-        </div>
+    <p class="font-semibold mb-2">Equity</p>
+    <table class="w-full text-sm mb-6">
+        @php $totalEquity = 0; @endphp
+        @foreach($equity as $item)
+            @php $totalEquity += $item['amount']; @endphp
+            <tr>
+                <td class="py-1.5 px-3">{{ $item['label'] }}</td>
+                <td class="py-1.5 px-3 text-right">₱{{ number_format($item['amount']) }}</td>
+            </tr>
+        @endforeach
+        <tr class="font-semibold border-t">
+            <td class="py-2 px-3">Total Equity</td>
+            <td class="py-2 px-3 text-right">₱{{ number_format($totalEquity) }}</td>
+        </tr>
+    </table>
 
-        {{-- RIGHT: Liabilities & Equity --}}
-        <div class="flex-1">
-            <div class="bg-white rounded-lg border p-5">
-                <h2 class="font-semibold text-lg mb-4">Liabilities & Equity</h2>
-
-                <p class="text-gray-500 text-sm mb-1">Liabilities</p>
-                @php $totalLiabilities = 0; @endphp
-                @foreach($liabilities as $item)
-                    @php $totalLiabilities += $item['amount']; @endphp
-                    <div class="flex justify-between text-sm py-1.5">
-                        <span>{{ $item['label'] }}</span>
-                        <span>₱{{ number_format($item['amount']) }}</span>
-                    </div>
-                @endforeach
-                <div class="flex justify-between font-semibold mt-2 pt-2 border-t">
-                    <span>Total liabilities</span>
-                    <span class="text-red-500">₱{{ number_format($totalLiabilities) }}</span>
-                </div>
-
-                <p class="text-gray-500 text-sm mt-5 mb-1">Equity</p>
-                @php $totalEquity = 0; @endphp
-                @foreach($equity as $item)
-                    @php $totalEquity += $item['amount']; @endphp
-                    <div class="flex justify-between text-sm py-1.5">
-                        <span>{{ $item['label'] }}</span>
-                        <span>₱{{ number_format($item['amount']) }}</span>
-                    </div>
-                @endforeach
-                <div class="flex justify-between font-semibold mt-2 pt-2 border-t">
-                    <span>Total equity</span>
-                    <span class="text-green-600">₱{{ number_format($totalEquity) }}</span>
-                </div>
-
-                <div class="flex justify-between font-semibold mt-5 pt-3 border-t">
-                    <span>LIAB + EQUITY</span>
-                    <span class="text-green-600">₱{{ number_format($totalLiabilities + $totalEquity) }}</span>
-                </div>
-
-                <p class="text-center text-xs text-gray-400 mt-6">LIAB + EQUITY = ASSETS</p>
-            </div>
-        </div>
-
+    <div class="mt-6 pt-4 border-t flex justify-between font-bold text-base">
+        <span>Liabilities + Equity</span>
+        <span>₱{{ number_format($totalLiabilities + $totalEquity) }}</span>
     </div>
 @endsection
