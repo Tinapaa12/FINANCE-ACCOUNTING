@@ -24,5 +24,8 @@ Route::delete('/supplier-bills/{supplierBill}', [SupplierBillController::class, 
 Route::put('/supplier-bills/{supplierBill}', [SupplierBillController::class, 'update'])
     ->name('supplier-bills.update');
 
+Route::patch('/supplier-bills/{supplierBill}/pay', [SupplierBillController::class, 'pay'])
+    ->name('supplier-bills.pay');
+
 Route::get('/payments', [PaymentController::class, 'index'])
     ->name('payments.index');

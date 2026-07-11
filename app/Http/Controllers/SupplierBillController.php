@@ -95,6 +95,13 @@ class SupplierBillController extends Controller
         return redirect()->route('supplier-bills.index');
     }
 
+    public function pay(SupplierBill $supplierBill)
+    {
+        $supplierBill->update(['status' => 'Paid']);
+
+        return redirect()->route('payments.index');
+    }
+
     public function destroy(SupplierBill $supplierBill)
     {
         $supplierBill->delete();

@@ -148,6 +148,13 @@
             </form>
 
             <button class="border-none cursor-pointer rounded-md bg-blue-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-blue-700 transition-colors" onclick="viewBill(this)">View</button>
+
+            @if(strtolower($bill->status) !== 'paid')
+            <form action="{{ route('supplier-bills.pay', $bill->id) }}" method="POST" class="inline">
+                @csrf @method('PATCH')
+                <button type="submit" class="border-none cursor-pointer rounded-md bg-green-600 text-white px-3 py-1.5 text-xs font-medium hover:bg-green-700 transition-colors">Paid</button>
+            </form>
+            @endif
         </div>
     </td>
 </tr>
