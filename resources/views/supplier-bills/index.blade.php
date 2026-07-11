@@ -105,7 +105,7 @@
         <div style="display:flex;gap:10px;align-items:center;">
             <form method="GET" action="{{ route('supplier-bills.index') }}" style="display:flex;gap:6px;">
                 <input type="text" name="search" placeholder="Search bills..." value="{{ $search ?? '' }}" style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;width:220px;">
-                <button type="submit" style="padding:8px 14px;background:#5865f2;color:#fff;border:none;border-radius:6px;cursor:pointer;">Search</button>
+                <button type="submit" class="add-btn">Search</button>
                 @if(request('search'))
                     <a href="{{ route('supplier-bills.index') }}" style="padding:8px 14px;background:#6b7280;color:#fff;border-radius:6px;text-decoration:none;font-size:14px;">Clear</a>
                 @endif
