@@ -100,9 +100,13 @@ class JournalEntryController extends Controller
         return redirect()->route('journal-entries.index')->with('success', 'Journal entry updated successfully.');
     }
 
-    public function destroy(JournalEntry $journalEntry)
+    public function destroy(Request $request, JournalEntry $journalEntry)
     {
         $journalEntry->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('journal-entries.index')->with('success', 'Journal entry deleted successfully.');
     }
 }
