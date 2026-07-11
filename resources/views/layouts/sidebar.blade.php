@@ -13,7 +13,7 @@
 
         <small>MAIN</small>
 
-        <a href="#">
+        <a href="{{ route('dashboard') }}">
             <span>📊</span>
             Dashboard
         </a>

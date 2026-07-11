@@ -20,5 +20,8 @@
 
     </div>
 
+    <script src="{{ asset('js/supplier-bills.js') }}"></script>
+
+
 </body>
 </html>

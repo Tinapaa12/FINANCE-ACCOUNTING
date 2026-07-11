@@ -1,60 +1,59 @@
-    @extends('layouts.app')
+@extends('layouts.app')
 
-    @section('content')
+@section('content')
 
-    <div class="dashboard">
+<div class="dashboard">
 
-        <div class="payment-card">
+    <div class="payment-card">
 
-            <div class="payment-header">
+        <div class="payment-header">
+            <h2>Payments Made to Suppliers</h2>
 
-                <h2>Payments Made to supplires</h2>
-
-                <div class="payment-actions">
-                    <input type="text" placeholder="Search Payment">
-                </div>
-
+            <div class="payment-actions">
+                <input type="text" placeholder="Search Payment">
             </div>
-
-            <table class="payment-table">
-
-                <thead>
-                    <tr>
-                        <th>Payment ID</th>
-                        <th>Supplier</th>
-                        <th>Amount</th>
-                        <th>Payment Date</th>
-                        <th>Method</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    <tr>
-                        <td>PAY-001</td>
-                        <td>PC Express</td>
-                        <td>₱52,400</td>
-                        <td>June 30, 2026</td>
-                        <td>Bank Transfer</td>
-                        <td><span class="payment-status">Paid</span></td>
-                    </tr>
-
-                    <tr>
-                        <td>PAY-002</td>
-                        <td>Complink</td>
-                        <td>₱900</td>
-                        <td>July 2, 2026</td>
-                        <td>Cash</td>
-                        <td><span class="payment-status">Paid</span></td>
-                    </tr>
-
-                </tbody>
-
-            </table>
-
         </div>
+
+        <table class="payment-table">
+
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Supplier</th>
+                    <th>Amount</th>
+                    <th>Payment Date</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @forelse($payments as $payment)
+                    <tr>
+                        <td>{{ $payment->bill_no }}</td>
+                        <td>{{ $payment->supplier }}</td>
+                        <td>₱{{ number_format($payment->amount, 2) }}</td>
+                        <td>{{ \Carbon\Carbon::parse($payment->due_date)->format('M d, Y') }}</td>
+                        <td>Cash</td>
+                        <td>
+                            <span class="status {{ strtolower($payment->status) }}">
+                                {{ $payment->status }}
+                            </span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="text-align:center;">
+                            No payments made yet.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+
+        </table>
 
     </div>
 
-    @endsection
+</div>
+
+@endsection
