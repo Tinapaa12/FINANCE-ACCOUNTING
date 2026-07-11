@@ -13,7 +13,8 @@ class JournalEntryController extends Controller
     public function index()
     {
         $entries = JournalEntry::with(['lines.account'])->latest()->get();
-        return view('journal-entries.index', compact('entries'));
+        $accounts = ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(['account_id', 'account_code', 'account_name']);
+        return view('journal-entries.index', compact('entries', 'accounts'));
     }
 
     public function store(Request $request)
@@ -23,8 +24,8 @@ class JournalEntryController extends Controller
             'reference_no' => 'required|string|max:50|unique:journal_entries',
             'description' => 'required|string|max:500',
             'status' => 'required|in:Draft,Posted',
-            'lines' => 'required|array|min:2',
-            'lines.*.account_id' => 'required|exists:chart_of_accounts,account_id',
+            'lines' => 'nullable|array|min:2',
+            'lines.*.account_id' => 'required_with:lines|exists:chart_of_accounts,account_id',
             'lines.*.description' => 'nullable|string|max:500',
             'lines.*.debit' => 'nullable|numeric|min:0',
             'lines.*.credit' => 'nullable|numeric|min:0',
@@ -38,17 +39,23 @@ class JournalEntryController extends Controller
                 'status' => $validated['status'],
             ]);
 
-            foreach ($validated['lines'] as $line) {
-                JournalEntryLine::create([
-                    'journal_entry_id' => $entry->journal_entry_id,
-                    'account_id' => $line['account_id'],
-                    'description' => $line['description'] ?? $validated['description'],
-                    'debit' => $line['debit'] ?? 0,
-                    'credit' => $line['credit'] ?? 0,
-                ]);
+            if (!empty($validated['lines'])) {
+                foreach ($validated['lines'] as $line) {
+                    if (empty($line['account_id'])) continue;
+                    JournalEntryLine::create([
+                        'journal_entry_id' => $entry->journal_entry_id,
+                        'account_id' => $line['account_id'],
+                        'description' => $line['description'] ?? $validated['description'],
+                        'debit' => $line['debit'] ?? 0,
+                        'credit' => $line['credit'] ?? 0,
+                    ]);
+                }
             }
         });
 
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('journal-entries.index')->with('success', 'Journal entry created successfully.');
     }
 
@@ -58,9 +65,38 @@ class JournalEntryController extends Controller
             'transaction_date' => 'required|date',
             'description' => 'required|string|max:500',
             'status' => 'required|in:Draft,Posted',
+            'lines' => 'nullable|array|min:2',
+            'lines.*.account_id' => 'required_with:lines|exists:chart_of_accounts,account_id',
+            'lines.*.description' => 'nullable|string|max:500',
+            'lines.*.debit' => 'nullable|numeric|min:0',
+            'lines.*.credit' => 'nullable|numeric|min:0',
         ]);
 
-        $journalEntry->update($validated);
+        DB::transaction(function () use ($validated, $journalEntry) {
+            $journalEntry->update([
+                'transaction_date' => $validated['transaction_date'],
+                'description' => $validated['description'],
+                'status' => $validated['status'],
+            ]);
+
+            if (!empty($validated['lines'])) {
+                $journalEntry->lines()->delete();
+                foreach ($validated['lines'] as $line) {
+                    if (empty($line['account_id'])) continue;
+                    JournalEntryLine::create([
+                        'journal_entry_id' => $journalEntry->journal_entry_id,
+                        'account_id' => $line['account_id'],
+                        'description' => $line['description'] ?? $validated['description'],
+                        'debit' => $line['debit'] ?? 0,
+                        'credit' => $line['credit'] ?? 0,
+                    ]);
+                }
+            }
+        });
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('journal-entries.index')->with('success', 'Journal entry updated successfully.');
     }
 

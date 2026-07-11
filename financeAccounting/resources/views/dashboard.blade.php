@@ -9,8 +9,8 @@
     <div class="grid grid-cols-4 gap-4">
         <x-kpi-card 
             label="Total Revenue" 
-            value="₱1,680,000" 
-            change="12.6%" 
+            value="₱{{ number_format($kpi['total_revenue'], 2) }}"
+            change="-" 
             changeType="positive"
             iconBg="bg-green-100"
             iconColor="text-green-600"
@@ -18,8 +18,8 @@
 
         <x-kpi-card 
             label="Total Expenses" 
-            value="₱1,015,000" 
-            change="6.3%" 
+            value="₱{{ number_format($kpi['total_expenses'], 2) }}"
+            change="-"
             changeType="negative"
             iconBg="bg-red-100"
             iconColor="text-red-500"
@@ -27,17 +27,17 @@
 
         <x-kpi-card 
             label="Net Profit" 
-            value="₱665,000" 
-            change="15.4%" 
-            changeType="positive"
+            value="₱{{ number_format($kpi['net_profit'], 2) }}"
+            change="-"
+            :changeType="$kpi['net_profit'] >= 0 ? 'positive' : 'negative'"
             iconBg="bg-blue-100"
             iconColor="text-blue-500"
             iconPath='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>' />
 
         <x-kpi-card 
             label="Cash Balance" 
-            value="₱120,000" 
-            change="-0.0%" 
+            value="₱{{ number_format($kpi['cash_balance'], 2) }}"
+            change="-"
             changeType="neutral"
             iconBg="bg-purple-100"
             iconColor="text-purple-500"
@@ -75,9 +75,12 @@
                 </div>
             </div>
 
-            <!-- Recent Journal Entry -->
+            <!-- Recent Journal Entries -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h3 class="text-sm font-bold text-gray-900 mb-4">Recent Journal Entry</h3>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-sm font-bold text-gray-900">Recent Journal Entries</h3>
+                    <span class="text-xs text-gray-500">{{ $recentEntries->count() }} entries</span>
+                </div>
                 <table class="w-full">
                     <thead>
                         <tr class="border-b border-gray-100">
@@ -88,20 +91,22 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
-                        @foreach([
-                            ['date' => 'June 30, 2024', 'ref' => 'JE - 2024 - 00128', 'desc' => 'Collection from Customer A'],
-                            ['date' => 'June 29, 2024', 'ref' => 'JE - 2024 - 00127', 'desc' => 'Payment to Supplier X'],
-                            ['date' => 'June 28, 2024', 'ref' => 'JE - 2024 - 00126', 'desc' => 'Purchase of Office Supply'],
-                            ['date' => 'June 27, 2024', 'ref' => 'JE - 2024 - 00125', 'desc' => 'Monthly Salary Expense'],
-                            ['date' => 'June 26, 2024', 'ref' => 'JE - 2024 - 00124', 'desc' => 'Utility Bill Payment'],
-                        ] as $entry)
+                        @forelse($recentEntries as $entry)
                         <tr class="hover:bg-gray-50">
                             <td class="py-3 text-sm text-gray-600">{{ $entry['date'] }}</td>
-                            <td class="py-3 text-sm text-gray-900 font-medium">{{ $entry['ref'] }}</td>
-                            <td class="py-3 text-sm text-gray-900">{{ $entry['desc'] }}</td>
-                            <td class="py-3"><span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">Posted</span></td>
+                            <td class="py-3 text-sm text-gray-900 font-medium">{{ $entry['reference'] }}</td>
+                            <td class="py-3 text-sm text-gray-900">{{ $entry['description'] }}</td>
+                            <td class="py-3">
+                                <span class="px-2 py-1 rounded text-xs font-medium {{ $entry['status'] === 'Posted' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                                    {{ $entry['status'] }}
+                                </span>
+                            </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        <tr>
+                            <td colspan="4" class="py-6 text-center text-sm text-gray-400">No journal entries yet.</td>
+                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
                 <div class="mt-4">
@@ -119,15 +124,27 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                 <h3 class="text-sm font-bold text-gray-900 mb-3">Accounts Summary</h3>
                 <div class="space-y-2 text-sm">
-                    @foreach([
-                        ['label' => 'Chart of Accounts', 'value' => '9'],
-                        ['label' => 'Journal Entries', 'value' => '5'],
-                        ['label' => 'Active Accounts', 'value' => '9'],
-                        ['label' => 'Inactive Accounts', 'value' => '0'],
-                    ] as $item)
                     <div class="flex justify-between items-center">
-                        <span class="text-gray-600">{{ $item['label'] }}</span>
-                        <span class="font-semibold text-gray-900">{{ $item['value'] }}</span>
+                        <span class="text-gray-600">Chart of Accounts</span>
+                        <span class="font-semibold text-gray-900">{{ $accountsSummary['total_accounts'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Journal Entries</span>
+                        <span class="font-semibold text-gray-900">{{ \App\Models\JournalEntry::count() }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Active Accounts</span>
+                        <span class="font-semibold text-gray-900">{{ $accountsSummary['active'] }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Inactive Accounts</span>
+                        <span class="font-semibold text-gray-900">{{ $accountsSummary['inactive'] }}</span>
+                    </div>
+                    <hr class="my-2">
+                    @foreach($accountTypeCounts as $type => $count)
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 capitalize">{{ $type }}s</span>
+                        <span class="font-semibold text-gray-900">{{ $count }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -137,63 +154,29 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                 <h3 class="text-sm font-bold text-gray-900 mb-3">Financial Alerts</h3>
                 <div class="space-y-2">
-                    @foreach([
-                        ['color' => 'red', 'text' => '3 Supplier Bills Due Today'],
-                        ['color' => 'green', 'text' => '1 Tax Filing Due in June 30'],
-                        ['color' => 'yellow', 'text' => '0 Draft Journal Entry'],
-                    ] as $alert)
+                    @forelse($alerts as $alert)
                     <div class="flex items-center gap-2 p-2 bg-{{ $alert['color'] }}-50 rounded-lg border border-{{ $alert['color'] }}-100">
                         <span class="w-2 h-2 rounded-full bg-{{ $alert['color'] }}-500 flex-shrink-0"></span>
                         <span class="text-xs text-{{ $alert['color'] }}-700 font-medium">{{ $alert['text'] }}</span>
                     </div>
-                    @endforeach
+                    @empty
+                    <p class="text-sm text-gray-400">No alerts.</p>
+                    @endforelse
                 </div>
             </div>
 
-            <!-- Account Payable Summary -->
+            <!-- Link to Chart of Accounts -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h3 class="text-sm font-bold text-gray-900 mb-3">Account Payable Summary</h3>
-                <div class="space-y-3">
-                    @foreach([
-                        ['bg' => 'yellow', 'label' => 'Paid This Month', 'sub' => '1 Payment', 'value' => '₱54,400'],
-                        ['bg' => 'green', 'label' => 'Payments Today', 'sub' => '1 Payments', 'value' => '₱54,400'],
-                        ['bg' => 'purple', 'label' => 'Total Bill Pending', 'sub' => '3 Bills', 'value' => '₱58,700'],
-                    ] as $card)
-                    <div class="p-3 bg-{{ $card['bg'] }}-50 rounded-lg border border-{{ $card['bg'] }}-100">
-                        <p class="text-xs text-gray-500 mb-1">{{ $card['label'] }}</p>
-                        <p class="text-xs text-gray-500">{{ $card['sub'] }}</p>
-                        <p class="text-lg font-bold text-gray-900">{{ $card['value'] }}</p>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Accounts Receivable Summary -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h3 class="text-sm font-bold text-gray-900 mb-3">Accounts Receivable Summary</h3>
-                <div class="space-y-3">
-                    <div class="p-3 bg-green-50 rounded-lg border border-green-100">
-                        <p class="text-xs text-green-700 font-medium">Total Collected (This Month)</p>
-                        <p class="text-xs text-gray-500">From 3 payments</p>
-                        <p class="text-lg font-bold text-gray-900">₱50,500</p>
-                    </div>
-                    @foreach([
-                        ['bg' => 'yellow', 'label' => 'Cleared Payments', 'sub' => 'Fully recorded', 'badge' => '2'],
-                        ['bg' => 'red', 'label' => 'Pending Clearance', 'sub' => '₱25,500 — Santos Ent.', 'badge' => '1'],
-                    ] as $item)
-                    <div class="flex items-center justify-between p-2 bg-{{ $item['bg'] }}-50 rounded-lg border border-{{ $item['bg'] }}-100">
-                        <div>
-                            <p class="text-xs text-{{ $item['bg'] }}-700 font-medium">{{ $item['label'] }}</p>
-                            <p class="text-xs text-gray-500">{{ $item['sub'] }}</p>
-                        </div>
-                        <span class="w-6 h-6 rounded-full bg-{{ $item['bg'] }}-400 text-white text-xs font-bold flex items-center justify-center">{{ $item['badge'] }}</span>
-                    </div>
-                    @endforeach
-                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <p class="text-xs text-blue-700 font-medium">Top Payment Method</p>
-                        <p class="text-xs text-gray-500">Used in 3 of 3 payments</p>
-                        <p class="text-sm font-bold text-blue-600">Gcash</p>
-                    </div>
+                <h3 class="text-sm font-bold text-gray-900 mb-3">Quick Links</h3>
+                <div class="space-y-2">
+                    <a href="{{ route('chart-of-accounts.index') }}" class="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span class="text-sm font-medium text-blue-700">Chart of Accounts</span>
+                    </a>
+                    <a href="{{ route('journal-entries.index') }}" class="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-100 hover:bg-purple-100 transition-colors">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span class="text-sm font-medium text-purple-700">Journal Entries</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -204,31 +187,35 @@
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
+    const chartData = @json($chartData);
+
     let cashFlowChartInstance = null;
     let revenueExpensesChartInstance = null;
 
     function dashboard() {
         return {
             chartsInitialized: false,
-            
+
             initCharts() {
                 if (this.chartsInitialized) return;
                 this.$nextTick(() => {
                     const cashCanvas = document.getElementById('cashFlowChart');
                     const revCanvas = document.getElementById('revenueExpensesChart');
                     if (!cashCanvas || !revCanvas) return;
-                    
+
                     if (cashFlowChartInstance) cashFlowChartInstance.destroy();
                     if (revenueExpensesChartInstance) revenueExpensesChartInstance.destroy();
-                    
+
+                    const labels = chartData.cash_flow.map(d => d.month);
+
                     cashFlowChartInstance = new Chart(cashCanvas.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                            labels: labels,
                             datasets: [
-                                { label: 'Cash In', data: [120,150,180,140,200,170,190], backgroundColor: '#22c55e', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
-                                { label: 'Cash Out', data: [80,90,110,100,130,120,140], backgroundColor: '#ef4444', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
-                                { type: 'line', label: 'Net Cash Flow', data: [40,60,70,40,70,50,50], borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.4, pointRadius: 3, pointBackgroundColor: '#3b82f6', borderWidth: 2, fill: true }
+                                { label: 'Cash In', data: chartData.cash_flow.map(d => d.cash_in), backgroundColor: '#22c55e', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
+                                { label: 'Cash Out', data: chartData.cash_flow.map(d => d.cash_out), backgroundColor: '#ef4444', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
+                                { type: 'line', label: 'Net Cash Flow', data: chartData.cash_flow.map(d => d.net), borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', tension: 0.4, pointRadius: 3, pointBackgroundColor: '#3b82f6', borderWidth: 2, fill: true }
                             ]
                         },
                         options: {
@@ -242,14 +229,14 @@
                             }
                         }
                     });
-                    
+
                     revenueExpensesChartInstance = new Chart(revCanvas.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                            labels: chartData.revenue_expenses.map(d => d.month),
                             datasets: [
-                                { label: 'Revenue', data: [180,220,280,250,300,270,290], backgroundColor: '#3b82f6', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
-                                { label: 'Expenses', data: [120,140,180,160,200,190,210], backgroundColor: '#ef4444', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 }
+                                { label: 'Revenue', data: chartData.revenue_expenses.map(d => d.revenue), backgroundColor: '#3b82f6', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 },
+                                { label: 'Expenses', data: chartData.revenue_expenses.map(d => d.expenses), backgroundColor: '#ef4444', borderRadius: 3, barPercentage: 0.6, categoryPercentage: 0.8 }
                             ]
                         },
                         options: {
@@ -263,7 +250,7 @@
                             }
                         }
                     });
-                    
+
                     this.chartsInitialized = true;
                 });
             }

@@ -27,7 +27,7 @@
     </div>
 
     <!-- Filter Tabs -->
-    <x-filter-tabs active="filter" :options="['All' => 'All Accounts', 'Asset' => 'Assets', 'Liabilities' => 'Liabilities', 'Revenue' => 'Revenue', 'Expense' => 'Expenses']" />
+    <x-filter-tabs active="filter" :options="['All' => 'All Accounts', 'Asset' => 'Assets', 'Liability' => 'Liabilities', 'Equity' => 'Equity', 'Revenue' => 'Revenue', 'Expense' => 'Expenses']" />
 
     <!-- Accounts Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
@@ -51,7 +51,7 @@
                         <td class="px-6 py-3">
                             <span :class="{
                                 'bg-blue-100 text-blue-700': account.type === 'Asset',
-                                'bg-orange-100 text-orange-700': account.type === 'Liabilities',
+                                'bg-orange-100 text-orange-700': account.type === 'Liability',
                                 'bg-green-100 text-green-700': account.type === 'Revenue',
                                 'bg-purple-100 text-purple-700': account.type === 'Expense'
                             }" class="px-3 py-1 rounded-full text-xs font-medium" x-text="account.type"></span>
@@ -109,7 +109,7 @@
     <!-- Add Account Modal -->
     <x-modal show="showAddModal">
         <div class="flex items-center justify-between mb-6">
-            <h3 class="text-lg font-bold text-gray-900">Add Account</h3>
+            <h3 class="text-lg font-bold text-gray-900" x-text="editingAccount ? 'Edit Account' : 'Add Account'"></h3>
             <button @click="showAddModal = false" class="text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -130,7 +130,8 @@
                         <select x-model="newAccount.type" @change="updateNormalBalance()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
                             <option value="">Choose type</option>
                             <option value="Asset">Asset</option>
-                            <option value="Liabilities">Liability</option>
+                            <option value="Liability">Liability</option>
+                            <option value="Equity">Equity</option>
                             <option value="Revenue">Revenue</option>
                             <option value="Expense">Expense</option>
                         </select>
@@ -148,13 +149,13 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                         <select x-model="newAccount.status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
                             <option value="Active">Active</option>
-                            <option value="Not Active">Not Active</option>
+                            <option value="Inactive">Inactive</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="mt-6">
-                <button type="submit" class="w-full px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium">Add Account</button>
+                <button type="submit" class="w-full px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium" x-text="editingAccount ? 'Update Account' : 'Add Account'"></button>
             </div>
         </form>
     </x-modal>
@@ -177,9 +178,10 @@
             showAddModal: false,
             showSuccessModal: false,
             showPDFModal: false,
-            accounts: @json($accounts),
+            accounts: [],
+            editingAccount: null,
             newAccount: { name: '', code: '', type: '', normal_balance: 'Debit', status: 'Active' },
-            
+
             get filteredAccounts() {
                 let result = this.accounts;
                 if (this.filter !== 'All') result = result.filter(a => a.type === this.filter);
@@ -189,34 +191,89 @@
                 }
                 return result;
             },
-            
-            init() { if (this.accounts.length > 0) this.selectedAccount = this.accounts[0]; },
+
+            init() {
+                const raw = @json($accounts);
+                this.accounts = (raw || []).map(a => ({
+                    account_id: a.account_id,
+                    code: a.account_code,
+                    name: a.account_name,
+                    type: a.type,
+                    normal_balance: a.normal_balance,
+                    status: a.status,
+                    current_balance: 0,
+                    date_created: a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+                    last_updated: a.updated_at ? new Date(a.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+                }));
+                if (this.accounts.length > 0) this.selectedAccount = this.accounts[0];
+            },
+
             selectAccount(account) { this.selectedAccount = account; },
-            openAddModal() { this.newAccount = { name: '', code: '', type: '', normal_balance: 'Debit', status: 'Active' }; this.showAddModal = true; },
-            
+
+            openAddModal() {
+                this.editingAccount = null;
+                this.newAccount = { name: '', code: '', type: '', normal_balance: 'Debit', status: 'Active' };
+                this.showAddModal = true;
+            },
+
             updateNormalBalance() {
                 const type = this.newAccount.type;
                 if (type === 'Asset' || type === 'Expense') this.newAccount.normal_balance = 'Debit';
-                else if (type === 'Liabilities' || type === 'Revenue') this.newAccount.normal_balance = 'Credit';
+                else if (type === 'Liability' || type === 'Equity' || type === 'Revenue') this.newAccount.normal_balance = 'Credit';
             },
-            
-            saveAccount() {
-                const account = { ...this.newAccount, current_balance: 0, date_created: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), last_updated: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) };
-                this.accounts.push(account);
-                this.showAddModal = false;
-                this.showSuccessModal = true;
-                this.selectedAccount = account;
-            },
-            
-            editAccount(account) { alert('Edit functionality - ' + account.name); },
-            
-            deleteAccount(account) {
-                if (confirm('Are you sure you want to delete ' + account.name + '?')) {
-                    this.accounts = this.accounts.filter(a => a.code !== account.code);
-                    if (this.selectedAccount && this.selectedAccount.code === account.code) this.selectedAccount = this.accounts.length > 0 ? this.accounts[0] : null;
+
+            async saveAccount() {
+                const isEdit = this.editingAccount;
+                const formData = new FormData();
+                formData.append('account_name', this.newAccount.name);
+                formData.append('type', this.newAccount.type);
+                formData.append('normal_balance', this.newAccount.normal_balance);
+                formData.append('status', this.newAccount.status);
+                if (!isEdit) {
+                    formData.append('account_code', this.newAccount.code);
+                }
+                try {
+                    const url = isEdit ? '/chart-of-accounts/' + this.editingAccount.account_id : '{{ route('chart-of-accounts.store') }}';
+                    const method = isEdit ? 'POST' : 'POST';
+                    if (isEdit) formData.append('_method', 'PUT');
+                    const res = await fetch(url, {
+                        method: method,
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: formData,
+                    });
+                    if (res.ok) {
+                        this.showAddModal = false;
+                        this.showSuccessModal = true;
+                        window.location.reload();
+                    } else {
+                        const data = await res.json();
+                        alert(data.message || Object.values(data.errors || {}).flat().join('\n') || 'Save failed');
+                    }
+                } catch (e) {
+                    alert('Network error');
                 }
             },
-            
+
+            editAccount(account) {
+                this.editingAccount = account;
+                this.newAccount = { name: account.name, code: account.code, type: account.type, normal_balance: account.normal_balance, status: account.status };
+                this.showAddModal = true;
+            },
+
+            async deleteAccount(account) {
+                if (!confirm('Delete ' + account.name + '?')) return;
+                try {
+                    const res = await fetch('/chart-of-accounts/' + account.account_id, {
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    });
+                    if (res.ok) window.location.reload();
+                    else alert('Delete failed');
+                } catch (e) {
+                    alert('Network error');
+                }
+            },
+
             exportPDF() { this.showPDFModal = true; }
         }
     }

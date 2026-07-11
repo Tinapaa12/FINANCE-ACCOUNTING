@@ -25,6 +25,10 @@ class ChartOfAccountsController extends Controller
         ]);
 
         ChartOfAccount::create($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('chart-of-accounts.index')->with('success', 'Account created successfully.');
     }
 
@@ -39,12 +43,20 @@ class ChartOfAccountsController extends Controller
         ]);
 
         $chartOfAccount->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('chart-of-accounts.index')->with('success', 'Account updated successfully.');
     }
 
     public function destroy(ChartOfAccount $chartOfAccount)
     {
         $chartOfAccount->delete();
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->route('chart-of-accounts.index')->with('success', 'Account deleted successfully.');
     }
 }
