@@ -7,11 +7,27 @@ use App\Models\SupplierBill;
 
 class SupplierBillController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $supplierBills = SupplierBill::orderBy('due_date')->get();
+        $search = $request->input('search');
+        $sort = $request->input('sort', 'due_date');
+        $direction = $request->input('direction', 'asc');
 
-        $upcomingBills = $supplierBills->take(4);
+        $query = SupplierBill::query();
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('supplier', 'like', "%{$search}%")
+                  ->orWhere('bill_no', 'like', "%{$search}%")
+                  ->orWhere('po_no', 'like', "%{$search}%")
+                  ->orWhere('grn_no', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        $supplierBills = $query->orderBy($sort, $direction)->paginate(10);
+
+        $upcomingBills = SupplierBill::orderBy('due_date')->take(4)->get();
 
         $totalBillsAmount = SupplierBill::sum('amount');
         $totalBillsCount = SupplierBill::count();
@@ -48,7 +64,10 @@ class SupplierBillController extends Controller
             'paymentsTodayAmount',
             'paymentsTodayCount',
             'pendingBillsAmount',
-            'pendingBillsCount'
+            'pendingBillsCount',
+            'search',
+            'sort',
+            'direction'
         ));
     }
 

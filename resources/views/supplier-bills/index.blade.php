@@ -102,7 +102,16 @@
 
         <h2>Supplier Bills</h2>
 
-        <button class="add-btn" onclick="openModal()">Add Bill</button>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <form method="GET" action="{{ route('supplier-bills.index') }}" style="display:flex;gap:6px;">
+                <input type="text" name="search" placeholder="Search bills..." value="{{ $search ?? '' }}" style="padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;width:220px;">
+                <button type="submit" style="padding:8px 14px;background:#5865f2;color:#fff;border:none;border-radius:6px;cursor:pointer;">Search</button>
+                @if(request('search'))
+                    <a href="{{ route('supplier-bills.index') }}" style="padding:8px 14px;background:#6b7280;color:#fff;border-radius:6px;text-decoration:none;font-size:14px;">Clear</a>
+                @endif
+            </form>
+            <button class="add-btn" onclick="openModal()">Add Bill</button>
+        </div>
 
     </div>
 
@@ -113,13 +122,13 @@
             <thead>
 
                 <tr>
-                    <th>Bill No.</th>
-                    <th>PO No.</th>
-                    <th>Receipt/GRN No.</th>
-                    <th>Supplier</th>
-                    <th>Amount</th>
-                    <th>Due</th>
-                    <th>Status</th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'bill_no', 'direction' => $sort === 'bill_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Bill No. @if($sort === 'bill_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'po_no', 'direction' => $sort === 'po_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">PO No. @if($sort === 'po_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'grn_no', 'direction' => $sort === 'grn_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Receipt/GRN No. @if($sort === 'grn_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'supplier', 'direction' => $sort === 'supplier' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Supplier @if($sort === 'supplier') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'amount', 'direction' => $sort === 'amount' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Amount @if($sort === 'amount') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'due_date', 'direction' => $sort === 'due_date' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Due @if($sort === 'due_date') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
+                    <th><a href="{{ route('supplier-bills.index', ['sort' => 'status', 'direction' => $sort === 'status' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" style="color:inherit;text-decoration:none;">Status @if($sort === 'status') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th>Actions</th>
                 </tr>
 
@@ -175,6 +184,10 @@
 </tbody>
 
         </table>
+
+        <div style="padding:15px 25px;border-top:1px solid #ddd;">
+            {{ $supplierBills->appends(request()->query())->links() }}
+        </div>
 
     </div>
 

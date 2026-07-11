@@ -558,6 +558,42 @@ tbody tr:hover{
 
 }
 
+.pagination {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pagination a, .pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    transition: .2s;
+}
+
+.pagination a:hover {
+    background: #f0f0f0;
+}
+
+.pagination .active span {
+    background: #5865f2;
+    color: #fff;
+    border-color: #5865f2;
+}
+
+.pagination .disabled span {
+    color: #ccc;
+    cursor: default;
+}
+
 .payment-card{
     width:100%;
     min-height:650px;
