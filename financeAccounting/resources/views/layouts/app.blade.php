@@ -197,6 +197,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
+            <p class="font-semibold text-xl mb-6">PDF EXPORTED!</p>
+            <button onclick="closeExportModal()" class="bg-slate-900 text-white text-sm font-medium px-8 py-2.5 rounded hover:bg-slate-800 transition-colors">
+                OKAY
+            </button>
         </div>
     </div>
 
