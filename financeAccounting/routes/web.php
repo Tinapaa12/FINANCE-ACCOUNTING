@@ -1,10 +1,10 @@
 <?php // web.php — defines all web routes for the application. Includes General Ledger, Reports, Tax Compliance, Accounts Receivable, and Dashboard.
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ChartOfAccountsController;
-use App\Http\Controllers\JournalEntryController;
+use App\Http\Controllers\GeneralLedger\ChartOfAccountsController;
+use App\Http\Controllers\GeneralLedger\JournalEntryController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\FinancialReportController;
-use App\Http\Controllers\TaxComplianceController;
+use App\Http\Controllers\FinancialReporting\FinancialReportController;
+use App\Http\Controllers\FinancialReporting\TaxComplianceController;
 use App\Http\Controllers\ARController;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -39,3 +39,9 @@ Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name
 Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
 Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar.payments');
 Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
+
+// Dummy Sales Transactions (simulates an external ERP Sales module)
+Route::get('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'index'])->name('sales-transactions.index');
+Route::post('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'store'])->name('sales-transactions.store');
+Route::post('/sales-transactions/{salesTransaction}/mark-as-paid', [\App\Http\Controllers\SalesTransactionController::class, 'markAsPaid'])->name('sales-transactions.mark-as-paid');
+

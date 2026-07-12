@@ -1,6 +1,7 @@
 <?php // ChartOfAccountsController — manages the Chart of Accounts CRUD. Lists accounts with computed balances from journal entry lines, and handles create/update/delete with JSON support for AJAX.
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\GeneralLedger;
 
+use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +20,9 @@ class ChartOfAccountsController extends Controller
                 FROM journal_entry_lines jel
                 WHERE jel.account_id = chart_of_accounts.account_id
             ), 0) as current_balance'))
-            ->get();
+            ->paginate(10);
 
-        return view('chart-of-accounts.index', compact('accounts'));
+        return view('general-ledger.chart-of-accounts.index', compact('accounts'));
     }
 
     public function store(Request $request)

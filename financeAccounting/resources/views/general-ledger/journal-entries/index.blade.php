@@ -30,9 +30,10 @@
     <x-filter-tabs active="filter" :options="['All' => 'All', 'Draft' => 'Drafts', 'Posted' => 'Posted']" />
 
     <!-- Entries Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-y-auto" style="max-height: 568px;">
         <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
+            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Reference</th>
@@ -71,6 +72,11 @@
                 </tr>
             </tbody>
         </table>
+        </div>
+    </div>
+
+    <div class="mt-4 mb-6">
+        {{ $entries->links('pagination::tailwind') }}
     </div>
 
     <!-- Entry Details -->
@@ -376,7 +382,7 @@
 
             init() {
                 this.accounts = @json($accounts);
-                const raw = @json($entries);
+                const raw = @json($entries->items());
                 this.entries = (raw || []).map(e => {
                     const totalDebit = (e.lines || []).reduce((s, l) => s + parseFloat(l.debit || 0), 0);
                     const totalCredit = (e.lines || []).reduce((s, l) => s + parseFloat(l.credit || 0), 0);

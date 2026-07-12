@@ -1,6 +1,7 @@
 <?php // JournalEntryController — manages journal entries and their lines. Handles listing, creating, updating, and deleting journal entries within database transactions to ensure balanced entries.
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\GeneralLedger;
 
+use App\Http\Controllers\Controller;
 use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
@@ -11,9 +12,9 @@ class JournalEntryController extends Controller
 {
     public function index()
     {
-        $entries = JournalEntry::with(['lines.account'])->latest()->get();
+        $entries = JournalEntry::with(['lines.account'])->latest()->paginate(10);
         $accounts = ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(['account_id', 'account_code', 'account_name']);
-        return view('journal-entries.index', compact('entries', 'accounts'));
+        return view('general-ledger.journal-entries.index', compact('entries', 'accounts'));
     }
 
     public function store(Request $request)

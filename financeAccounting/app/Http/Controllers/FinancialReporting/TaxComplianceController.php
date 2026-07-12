@@ -1,18 +1,19 @@
 <?php // TaxComplianceController — displays tax compliance records and a PDF export. Shows tax types, taxable amounts, rates, computed tax, and filing status.
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\FinancialReporting;
 
+use App\Http\Controllers\Controller;
 use App\Models\TaxRecord;
 
 class TaxComplianceController extends Controller
 {
     public function index()
     {
-        return view('tax.compliance', $this->taxData());
+        return view('financial-reporting.tax.compliance', $this->taxData());
     }
 
     public function pdf()
     {
-        return view('pdf.tax-compliance', $this->taxData());
+        return view('financial-reporting.pdf.tax-compliance', $this->taxData());
     }
 
     private function taxData(): array

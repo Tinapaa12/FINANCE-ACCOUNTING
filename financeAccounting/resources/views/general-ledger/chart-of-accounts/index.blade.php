@@ -30,9 +30,10 @@
     <x-filter-tabs active="filter" :options="['All' => 'All Accounts', 'Asset' => 'Assets', 'Liability' => 'Liabilities', 'Equity' => 'Equity', 'Revenue' => 'Revenue', 'Expense' => 'Expenses']" />
 
     <!-- Accounts Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-y-auto" style="max-height: 568px;">
         <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-200">
+            <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Name</th>
@@ -78,6 +79,11 @@
                 </tr>
             </tbody>
         </table>
+        </div>
+    </div>
+
+    <div class="mt-4 mb-6">
+        {{ $accounts->links('pagination::tailwind') }}
     </div>
 
     <!-- Account Details -->
@@ -193,7 +199,7 @@
             },
 
             init() {
-                const raw = @json($accounts);
+                const raw = @json($accounts->items());
                 this.accounts = (raw || []).map(a => ({
                     account_id: a.account_id,
                     code: a.account_code,

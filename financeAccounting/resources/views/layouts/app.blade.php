@@ -44,6 +44,16 @@
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
+                <!-- Sales — dummy module simulating an external ERP Sales system -->
+                <x-sidebar-section title="Sales">
+                    <x-sidebar-nav-item
+                        href="{{ route('sales-transactions.index') }}"
+                        :active="request()->routeIs('sales-transactions.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />'>
+                        Transactions
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
+
                 <x-sidebar-section title="General Ledger">
                     <x-sidebar-nav-item 
                         href="{{ route('chart-of-accounts.index') }}" 

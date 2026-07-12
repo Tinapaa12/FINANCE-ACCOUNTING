@@ -1,6 +1,7 @@
 <?php // FinancialReportController — serves financial report pages and their PDF versions. Provides Income Statement, Balance Sheet, Cash Flow, and Budget vs Actual views with data from generated report models.
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\FinancialReporting;
 
+use App\Http\Controllers\Controller;
 use App\Models\BalanceSheet;
 use App\Models\BudgetVsActual;
 use App\Models\CashFlowReport;
@@ -11,47 +12,46 @@ class FinancialReportController extends Controller
 {
     public function income()
     {
-        return view('reports.income', $this->incomeData());
+        return view('financial-reporting.reports.income', $this->incomeData());
     }
 
     public function incomePdf()
     {
-        return view('pdf.income', $this->incomeData());
+        return view('financial-reporting.pdf.income', $this->incomeData());
     }
 
     public function assets()
     {
-        return view('reports.assets', $this->assetsData());
+        return view('financial-reporting.reports.assets', $this->assetsData());
     }
 
     public function assetsPdf()
     {
-        return view('pdf.assets', $this->assetsData());
+        return view('financial-reporting.pdf.assets', $this->assetsData());
     }
 
     public function liabilities()
     {
-        return view('reports.liabilities', $this->liabilitiesData());
+        return view('financial-reporting.reports.liabilities', $this->liabilitiesData());
     }
 
     public function liabilitiesPdf()
     {
-        return view('pdf.liabilities', $this->liabilitiesData());
+        return view('financial-reporting.pdf.liabilities', $this->liabilitiesData());
     }
 
     public function cashflow()
     {
-        return view('reports.cashflow', $this->cashflowData());
+        return view('financial-reporting.reports.cashflow', $this->cashflowData());
     }
 
     public function cashflowPdf()
     {
-        return view('pdf.cashflow', $this->cashflowData());
+        return view('financial-reporting.pdf.cashflow', $this->cashflowData());
     }
 
     private function incomeData(): array
     {
-        // Pull the most recently generated Income Statement report
         $report = FinancialReport::where('report_type', 'Income Statement')
             ->latest('generated_at')
             ->firstOrFail();
@@ -119,8 +119,6 @@ class FinancialReportController extends Controller
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 
-        // Beginning cash = whatever cash-in-bank balance was on the latest Trial Balance,
-        // so the statement ties back to the books instead of using a made-up number.
         $beginningCash = \App\Models\TrialBalance::where('account_name', 'Cash in bank')
             ->latest('created_at')
             ->value('credit_amount') ?? 0;
