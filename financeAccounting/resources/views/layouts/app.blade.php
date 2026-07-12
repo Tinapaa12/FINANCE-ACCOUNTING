@@ -50,7 +50,7 @@
                 <x-sidebar-section title="Account Payables">
                     <x-sidebar-nav-item
                         href="{{ route('supplier-bills.index') }}"
-                        :active="request()->routeIs('supplier-bills*')"
+                        :active="request()->routeIs('supplier-bills*') || request()->routeIs('purchase-orders*') || request()->routeIs('goods-received-notes*')"
                         icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
                         Supplier Bills
                     </x-sidebar-nav-item>
@@ -68,8 +68,20 @@
                 </x-sidebar-section>
 
                 <x-sidebar-section title="Reports">
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>Financial Reports</x-sidebar-nav-item>
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>Tax and Compliance</x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('audit.index') }}"
+                        :active="request()->routeIs('audit*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Audit Trail
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
+                <x-sidebar-section title="Settings">
+                    <x-sidebar-nav-item
+                        href="{{ route('payment-methods.index') }}"
+                        :active="request()->routeIs('payment-methods*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>'>
+                        Payment Methods
+                    </x-sidebar-nav-item>
                 </x-sidebar-section>
             </nav>
         </aside>
@@ -98,6 +110,40 @@
 
         </div>
     </div>
+
+    <!-- Receipt Modal -->
+    <div id="receiptModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm items-center justify-center z-50" style="display:none;">
+        <div class="w-[500px] bg-white rounded-xl shadow-xl p-8" id="receiptContent">
+            <div class="text-center border-b border-gray-200 pb-4 mb-4">
+                <h2 class="text-2xl font-bold">RECEIPT</h2>
+                <p class="text-sm text-gray-500">Payment Receipt</p>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Receipt No.</span><span id="receiptNo" class="text-gray-900 font-semibold"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Bill No.</span><span id="receiptBillNo" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">PO No.</span><span id="receiptPoNo" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">GRN No.</span><span id="receiptGrnNo" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Supplier</span><span id="receiptSupplier" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Amount</span><span id="receiptAmount" class="text-gray-900 font-bold text-lg"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Payment Method</span><span id="receiptPaymentMethod" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Date Paid</span><span id="receiptDatePaid" class="text-gray-900"></span></div>
+                <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Status</span><span id="receiptStatus" class="text-green-600 font-semibold"></span></div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="printReceipt()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">Print</button>
+                <button type="button" onclick="closeReceiptModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    @media print {
+        body * { visibility: hidden; }
+        #receiptContent, #receiptContent * { visibility: visible; }
+        #receiptContent { position: fixed; left: 0; top: 0; width: 100%; padding: 40px; box-shadow: none; }
+        #receiptContent .flex.justify-end.gap-3 { display: none !important; }
+    }
+    </style>
 
     <script src="{{ asset('js/supplier-bills.js') }}"></script>
 </body>
