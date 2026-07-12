@@ -19,6 +19,9 @@
             .pdf-page { box-shadow: none !important; margin: 0 !important; }
         }
     </style>
+    @if(request()->query('download') === '1')
+        <script>window.addEventListener('DOMContentLoaded', function () { setTimeout(window.print, 500); });</script>
+    @endif
 </head>
 <body class="bg-gray-200 min-h-screen py-10">
 
