@@ -11,10 +11,12 @@ Route::get('/', fn() => redirect()->route('dashboard'));
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+Route::get('/chart-of-accounts/pdf', [ChartOfAccountsController::class, 'pdf'])->name('chart-of-accounts.pdf');
 Route::resource('chart-of-accounts', ChartOfAccountsController::class)->parameters([
     'chart-of-accounts' => 'chartOfAccount'
 ]);
 
+Route::get('/journal-entries/pdf', [JournalEntryController::class, 'pdf'])->name('journal-entries.pdf');
 Route::resource('journal-entries', JournalEntryController::class)->parameters([
     'journal-entries' => 'journalEntry'
 ]);

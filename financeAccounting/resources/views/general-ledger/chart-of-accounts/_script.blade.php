@@ -6,7 +6,6 @@ function chartOfAccounts() {
         selectedAccount: null,
         showAddModal: false,
         showSuccessModal: false,
-        showPDFModal: false,
         accounts: [],
         editingAccount: null,
         newAccount: { name: '', code: '', type: '', normal_balance: 'Debit', status: 'Active' },
@@ -103,7 +102,6 @@ function chartOfAccounts() {
             }
         },
 
-        exportPDF() { this.showPDFModal = true; }
     }
 }
 </script>

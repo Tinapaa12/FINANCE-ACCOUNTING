@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class JournalEntryController extends Controller
 {
+    public function pdf()
+    {
+        $entries = JournalEntry::with(['lines.account'])->latest()->get();
+        $accounts = ChartOfAccount::where('status', 'Active')->orderBy('account_code')
+            ->get(['account_id', 'account_code', 'account_name']);
+        return view('general-ledger.pdf.journal-entries', compact('entries', 'accounts'));
+    }
+
     public function index()
     {
         $entries = JournalEntry::with(['lines.account'])->latest()->paginate(10);

@@ -128,11 +128,13 @@
                 <div class="flex items-center gap-3">
                     @php
                         $pdfRoutes = [
-                            'reports.income'      => 'reports.income.pdf',
-                            'reports.assets'      => 'reports.assets.pdf',
-                            'reports.liabilities' => 'reports.liabilities.pdf',
-                            'reports.cashflow'    => 'reports.cashflow.pdf',
-                            'tax.compliance'      => 'tax.compliance.pdf',
+                            'reports.income'         => 'reports.income.pdf',
+                            'reports.assets'         => 'reports.assets.pdf',
+                            'reports.liabilities'    => 'reports.liabilities.pdf',
+                            'reports.cashflow'       => 'reports.cashflow.pdf',
+                            'tax.compliance'         => 'tax.compliance.pdf',
+                            'chart-of-accounts.index' => 'chart-of-accounts.pdf',
+                            'journal-entries.index'  => 'journal-entries.pdf',
                         ];
                         $currentPdfRoute = null;
                         foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
@@ -144,7 +146,7 @@
                     @if($currentPdfRoute)
                         <a href="{{ route($currentPdfRoute) }}" target="_blank"
                            class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
-                        <a href="{{ route($currentPdfRoute, ['download' => 1]) }}" target="_blank" class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">EXPORT PDF</a>
+                        <a href="{{ route($currentPdfRoute, ['print' => 1]) }}" target="_blank" class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">PRINT</a>
                     @endif
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">

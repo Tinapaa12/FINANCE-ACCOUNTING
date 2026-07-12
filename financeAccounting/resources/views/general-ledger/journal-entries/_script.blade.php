@@ -211,8 +211,6 @@ function journalEntries() {
                 alert('Network error');
             }
         },
-
-        exportPDF() { alert('PDF Export'); }
     }
 }
 </script>
