@@ -29,3 +29,5 @@ Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name
 Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
 Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar.payments');
 Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
+Route::post('/ar/invoices', [ARController::class, 'store'])->name('ar.invoices.store');
+Route::get('/ar/invoices/recent', [ARController::class, 'recentInvoices'])->name('ar.invoices.recent');

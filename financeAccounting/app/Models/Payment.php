@@ -7,11 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 class Payment extends Model
 {
     protected $fillable = [
-        'supplier_bill_id',
-        'amount',
-        'payment_date',
-        'method',
-        'reference',
-        'status',
+        'customer_id', 'reference_no', 'payment_date', 'method', 'amount', 'notes', 'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'payment_date' => 'date',
+        ];
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function invoice()
+    {
+        return $this->belongsTo(Invoice::class);
+    }
 }
