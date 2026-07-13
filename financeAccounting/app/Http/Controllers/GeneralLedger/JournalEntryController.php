@@ -71,6 +71,7 @@ class JournalEntryController extends Controller
     {
         $validated = $request->validate([
             'transaction_date' => 'required|date',
+            'reference_no' => 'nullable|string|max:50',
             'description' => 'required|string|max:500',
             'status' => 'required|in:Draft,Posted',
             'lines' => 'nullable|array|min:2',
@@ -83,6 +84,7 @@ class JournalEntryController extends Controller
         DB::transaction(function () use ($validated, $journalEntry) {
             $journalEntry->update([
                 'transaction_date' => $validated['transaction_date'],
+                'reference_no' => $validated['reference_no'] ?? $journalEntry->reference_no,
                 'description' => $validated['description'],
                 'status' => $validated['status'],
             ]);

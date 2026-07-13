@@ -43,7 +43,8 @@ Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar
 Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
 
 // Dummy Sales Transactions (simulates an external ERP Sales module)
-Route::get('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'index'])->name('sales-transactions.index');
+Route::get('/sales-transactions', fn() => redirect()->route('sales-transactions.create'))->name('sales-transactions.index');
+Route::get('/sales-transactions/create', [\App\Http\Controllers\SalesTransactionController::class, 'create'])->name('sales-transactions.create');
 Route::post('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'store'])->name('sales-transactions.store');
 Route::post('/sales-transactions/{salesTransaction}/mark-as-paid', [\App\Http\Controllers\SalesTransactionController::class, 'markAsPaid'])->name('sales-transactions.mark-as-paid');
 

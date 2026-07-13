@@ -44,13 +44,13 @@
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
-                <!-- Sales — dummy module simulating an external ERP Sales system -->
+                <!-- Sales — dummy module simulating an external ERP Sales module -->
                 <x-sidebar-section title="Sales">
                     <x-sidebar-nav-item
-                        href="{{ route('sales-transactions.index') }}"
+                        href="{{ route('sales-transactions.create') }}"
                         :active="request()->routeIs('sales-transactions.*')"
-                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />'>
-                        Transactions
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />'>
+                        New Transaction
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 

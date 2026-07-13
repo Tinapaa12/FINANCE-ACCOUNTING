@@ -13,7 +13,6 @@ function journalEntries() {
         editDescription: '',
         editStatus: '',
         editRef: '',
-        editLines: [],
         newJournal: { reference: '', date: '', description: '', status: 'Draft', lines: [] },
 
         get filteredEntries() {
@@ -27,14 +26,7 @@ function journalEntries() {
         },
 
         get displayLines() {
-            return this.editingEntry ? this.editLines : (this.selectedEntry ? this.selectedEntry.lines : []);
-        },
-
-        recalcTotals() {
-            const debit = this.editLines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
-            const credit = this.editLines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
-            this.selectedEntry.debit = debit;
-            this.selectedEntry.credit = credit;
+            return this.selectedEntry ? this.selectedEntry.lines : [];
         },
 
         init() {
@@ -82,39 +74,20 @@ function journalEntries() {
             this.editDescription = this.selectedEntry.description;
             this.editStatus = this.selectedEntry.status;
             this.editRef = this.selectedEntry.reference;
-            this.editLines = this.selectedEntry.lines.map(l => ({ ...l }));
             this.editingEntry = true;
         },
 
         cancelEdit() {
-            this.selectedEntry.debit = this.selectedEntry.lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
-            this.selectedEntry.credit = this.selectedEntry.lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
             this.editingEntry = false;
-        },
-
-        addLine() {
-            this.editLines.push({ account_id: '', account_code: '', account_name: '', description: '', debit: 0, credit: 0 });
-        },
-
-        removeLine(index) {
-            this.editLines.splice(index, 1);
-            this.recalcTotals();
         },
 
         async saveDetails() {
             const formData = new FormData();
             formData.append('transaction_date', this.editDate);
+            formData.append('reference_no', this.editRef);
             formData.append('description', this.editDescription);
             formData.append('status', this.editStatus);
             formData.append('_method', 'PUT');
-
-            const validLines = this.editLines.filter(l => l.account_id);
-            validLines.forEach((line, i) => {
-                formData.append('lines[' + i + '][account_id]', line.account_id);
-                formData.append('lines[' + i + '][description]', line.description);
-                formData.append('lines[' + i + '][debit]', line.debit || 0);
-                formData.append('lines[' + i + '][credit]', line.credit || 0);
-            });
 
             try {
                 const res = await fetch('/journal-entries/' + this.selectedEntry.journal_entry_id, {
