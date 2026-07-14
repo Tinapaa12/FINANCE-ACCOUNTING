@@ -1,5 +1,4 @@
-<?php
-
+<?php // Database configuration — connections (MySQL, SQLite), migrations, and Redis settings.
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 

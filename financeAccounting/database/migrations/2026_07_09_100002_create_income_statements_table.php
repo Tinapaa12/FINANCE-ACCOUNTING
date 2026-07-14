@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates income_statements table linked to a financial report. Stores period label and revenue/expense totals.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

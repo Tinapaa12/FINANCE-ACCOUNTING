@@ -1,5 +1,4 @@
-<?php
-
+<?php // TaxRecord model — tracks tax compliance records. Stores tax type, taxable amount, rate, computed tax, and filing status.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

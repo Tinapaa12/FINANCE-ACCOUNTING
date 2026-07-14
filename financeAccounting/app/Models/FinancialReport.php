@@ -1,5 +1,4 @@
-<?php
-
+<?php // FinancialReport model — represents a generated financial report. Tracks report type, period, and generation timestamp.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

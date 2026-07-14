@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates income_statement_lines table. Each line belongs to an income statement with name, amount, and type.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

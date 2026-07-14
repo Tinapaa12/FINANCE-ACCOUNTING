@@ -1,5 +1,4 @@
-<?php
-
+<?php // console.php — defines Artisan console commands for the application.
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 

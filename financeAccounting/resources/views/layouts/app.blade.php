@@ -19,201 +19,195 @@
     @yield('head')
 </head>
 <body class="bg-gray-100">
-<div class="flex h-screen overflow-hidden">
-
-    {{-- ============ SIDEBAR ============ --}}
-    <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 overflow-y-auto">
-        <div class="p-6 flex items-center gap-3 border-b border-slate-800">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                </svg>
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Finance and</h1>
+                    <h1 class="font-bold text-lg leading-tight">Accounting</h1>
+                </div>
             </div>
-            <div>
-                <h1 class="font-bold text-lg leading-tight">Finance and</h1>
-                <h1 class="font-bold text-lg leading-tight">Accounting</h1>
-            </div>
-        </div>
 
-        <nav class="flex-1 px-3 py-4 overflow-y-auto">
+            <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+                <x-sidebar-section title="Main">
+                    <x-sidebar-nav-item 
+                        href="{{ route('dashboard') }}" 
+                        :active="request()->routeIs('dashboard')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>'>
+                        Dashboard
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-            <x-sidebar-section title="General Ledger">
-                <x-sidebar-nav-item
-                    href="javascript:void(0)"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V9m3 8V5m3 12v-4M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" />'>
-                    Chart of Accounts
-                </x-sidebar-nav-item>
-                <x-sidebar-nav-item
-                    href="javascript:void(0)"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />'>
-                    Journal Entries
-                </x-sidebar-nav-item>
-            </x-sidebar-section>
+                <!-- Sales — dummy module simulating an external ERP Sales module -->
+                <x-sidebar-section title="Sales">
+                    <x-sidebar-nav-item
+                        href="{{ route('sales-transactions.create') }}"
+                        :active="request()->routeIs('sales-transactions.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />'>
+                        New Transaction
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-            <x-sidebar-section title="Account Payables">
-                <x-sidebar-nav-item
-                    href="javascript:void(0)"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />'>
-                    Supplier Bills
-                </x-sidebar-nav-item>
-                <x-sidebar-nav-item
-                    href="javascript:void(0)"
-                    icon='<rect x="2" y="6" width="20" height="13" rx="2" stroke-linecap="round" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 10h20M6 15h4" />'>
-                    Payments Made
-                </x-sidebar-nav-item>
-            </x-sidebar-section>
+                <x-sidebar-section title="General Ledger">
+                    <x-sidebar-nav-item 
+                        href="{{ route('chart-of-accounts.index') }}" 
+                        :active="request()->routeIs('chart-of-accounts.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Chart of Accounts
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item 
+                        href="{{ route('journal-entries.index') }}" 
+                        :active="request()->routeIs('journal-entries.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>'>
+                        Journal Entries
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-            <x-sidebar-section title="Account Receivables">
-                <x-sidebar-nav-item
-                    href="{{ route('ar.overview') }}"
-                    :active="request()->routeIs('ar.overview')"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />'>
-                    A/R Overview
-                </x-sidebar-nav-item>
-                <x-sidebar-nav-item
-                    href="{{ route('ar.payments') }}"
-                    :active="request()->routeIs('ar.payments')"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" />'>
-                    Payments Received
-                </x-sidebar-nav-item>
-                <x-sidebar-nav-item
-                    href="{{ route('ar.aging') }}"
-                    :active="request()->routeIs('ar.aging')"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2M12 3v4m-6 4h12M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z" />'>
-                    Aging Report
-                </x-sidebar-nav-item>
-            </x-sidebar-section>
+                <!-- Account Payables - left blank per user request -->
+                <x-sidebar-section title="Account Payables">
+                    <x-sidebar-nav-item href="javascript:void(0)"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Supplier Bills
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item href="javascript:void(0)"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'>
+                        Payments Made
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-            <x-sidebar-section title="Reports">
-                <x-sidebar-nav-item
-                    href="{{ route('reports.income') }}"
-                    :active="request()->routeIs('reports.*')"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l7 7-7 7zM3 5v14M9 19h9a2 2 0 002-2V7a2 2 0 00-2-2H9" />'>
-                    Financial Reports
-                </x-sidebar-nav-item>
-                <x-sidebar-nav-item
-                    href="{{ route('tax.compliance') }}"
-                    :active="request()->routeIs('tax.compliance')"
-                    icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />'>
-                    Tax and Compliance
-                </x-sidebar-nav-item>
-            </x-sidebar-section>
+                <x-sidebar-section title="Account Receivables">
+                    <x-sidebar-nav-item 
+                        href="{{ route('ar.overview') }}" 
+                        :active="request()->routeIs('ar.overview')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        A/R Overview
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item 
+                        href="{{ route('ar.payments') }}" 
+                        :active="request()->routeIs('ar.payments')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'>
+                        Payments Received
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item 
+                        href="{{ route('ar.aging') }}" 
+                        :active="request()->routeIs('ar.aging')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2M12 3v4m-6 4h12M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"></path>'>
+                        Aging Report
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-        </nav>
-    </aside>
+                <x-sidebar-section title="Reports">
+                    <x-sidebar-nav-item 
+                        href="{{ route('reports.income') }}" 
+                        :active="request()->routeIs('reports.income')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Financial Reports
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item 
+                        href="{{ route('tax.compliance') }}" 
+                        :active="request()->routeIs('tax.compliance')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Tax and Compliance
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item 
+                        href="{{ route('reports.manage') }}" 
+                        :active="request()->routeIs('reports.manage')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>'>
+                        Manage Data
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
 
-    {{-- ============ MAIN CONTENT ============ --}}
-    <div class="flex-1 flex flex-col overflow-hidden">
+            </nav>
+        </aside>
 
-        {{-- Top Header --}}
-        <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
-            <h2 class="text-xl font-bold text-gray-900">
-                @yield('page-title', trim($__env->yieldContent('page-heading')) ?: 'Financial Reports')
-            </h2>
-            <div class="flex items-center gap-4">
-                @php
-                    $pdfRoutes = [
-                        'reports.income'      => 'reports.income.pdf',
-                        'reports.assets'      => 'reports.assets.pdf',
-                        'reports.liabilities' => 'reports.liabilities.pdf',
-                        'reports.cashflow'    => 'reports.cashflow.pdf',
-                        'tax.compliance'      => 'tax.compliance.pdf',
-                    ];
-                    $currentPdfRoute = null;
-                    foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
-                        if (request()->routeIs($pageRoute)) {
-                            $currentPdfRoute = $pdfRoute;
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-900">@yield('page-title', trim($__env->yieldContent('page-heading')) ?: 'Dashboard')</h2>
+                <div class="flex items-center gap-3">
+                    @php
+                        $pdfRoutes = [
+                            'reports.income'         => 'reports.income.pdf',
+                            'reports.assets'         => 'reports.assets.pdf',
+                            'reports.liabilities'    => 'reports.liabilities.pdf',
+                            'reports.cashflow'       => 'reports.cashflow.pdf',
+                            'tax.compliance'         => 'tax.compliance.pdf',
+                            'chart-of-accounts.index' => 'chart-of-accounts.pdf',
+                            'journal-entries.index'  => 'journal-entries.pdf',
+                        ];
+                        $currentPdfRoute = null;
+                        foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
+                            if (request()->routeIs($pageRoute)) {
+                                $currentPdfRoute = $pdfRoute;
+                            }
                         }
-                    }
-                @endphp
-                @if($currentPdfRoute)
-                    <a href="{{ route($currentPdfRoute) }}" target="_blank"
-                       class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
-                    <button data-export-pdf class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">EXPORT PDF</button>
+                    @endphp
+                    @if($currentPdfRoute)
+                        <a href="{{ route($currentPdfRoute) }}" target="_blank"
+                           class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
+                        <a href="{{ route($currentPdfRoute, ['print' => 1]) }}" target="_blank" class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">PRINT</a>
+                    @endif
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">Admin User</p>
+                            <p class="text-xs text-gray-500">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-8">
+                @if(request()->routeIs('reports.*'))
+                    <div class="inline-flex bg-white rounded-lg border p-1 mb-6">
+                        <a href="{{ route('reports.income') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                  {{ request()->routeIs('reports.income') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Income Statements
+                        </a>
+                        <a href="{{ route('reports.assets') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                  {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Assets
+                        </a>
+                        <a href="{{ route('reports.liabilities') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                   {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Budget vs Actual
+                        </a>
+                        <a href="{{ route('reports.cashflow') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                  {{ request()->routeIs('reports.cashflow') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Cash Flow
+                        </a>
+                    </div>
                 @endif
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">Admin User</p>
-                        <p class="text-xs text-gray-500">Administrator</p>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        {{-- Page Content --}}
-        <main class="flex-1 overflow-y-auto p-8">
-
-            {{-- Report Tabs — only on the 4 report pages --}}
-            @if(request()->routeIs('reports.*'))
-                <div class="inline-flex bg-white rounded-lg border p-1 mb-6">
-                    <a href="{{ route('reports.income') }}"
-                       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                              {{ request()->routeIs('reports.income') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                        Income Statements
-                    </a>
-                    <a href="{{ route('reports.assets') }}"
-                       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                              {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                        Assets
-                    </a>
-                    <a href="{{ route('reports.liabilities') }}"
-                       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                              {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                        Liabilities
-                    </a>
-                    <a href="{{ route('reports.cashflow') }}"
-                       class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                              {{ request()->routeIs('reports.cashflow') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                        Cash Flow
-                    </a>
-                </div>
-            @endif
-
-            @yield('content')
-
-        </main>
-    </div>
-</div>
-
-{{-- ============ EXPORT SUCCESS MODAL ============ --}}
-<div id="export-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-xl w-[420px] p-10 text-center">
-        <div class="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-slate-800 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+                @yield('content')
+            </main>
         </div>
-        <p class="font-semibold text-xl mb-6">PDF EXPORTED!</p>
-        <button onclick="closeExportModal()" class="bg-slate-900 text-white text-sm font-medium px-8 py-2.5 rounded hover:bg-slate-800 transition-colors">
-            OKAY
-        </button>
     </div>
-</div>
 
-<script>
-    function openExportModal(e) {
-        if (e) e.preventDefault();
-        const modal = document.getElementById('export-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-    function closeExportModal() {
-        const modal = document.getElementById('export-modal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('[data-export-pdf]').forEach(function (btn) {
-            btn.addEventListener('click', openExportModal);
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-export-pdf]').forEach(function (btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('PDF EXPORTED!');
+                });
+            });
         });
-    });
-</script>
-
-@yield('scripts')
-@stack('scripts')
-
+    </script>
+    @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

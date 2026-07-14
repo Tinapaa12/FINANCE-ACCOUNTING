@@ -1,5 +1,4 @@
-<?php
-
+<?php // TrialBalance model — represents a trial balance line linked to a FinancialReport. Stores account-level debit/credit amounts.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

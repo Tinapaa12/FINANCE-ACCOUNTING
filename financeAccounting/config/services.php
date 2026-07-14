@@ -1,5 +1,4 @@
-<?php
-
+<?php // Services configuration — third-party API keys and service credentials.
 return [
 
     /*

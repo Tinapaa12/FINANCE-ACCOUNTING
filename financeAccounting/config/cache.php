@@ -1,5 +1,4 @@
-<?php
-
+<?php // Cache configuration — cache store driver, prefix, and store-specific settings.
 use Illuminate\Support\Str;
 
 return [

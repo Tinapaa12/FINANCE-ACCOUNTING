@@ -1,5 +1,4 @@
-<?php
-
+<?php // Authentication configuration — guards, password providers, and reset settings.
 use App\Models\User;
 
 return [

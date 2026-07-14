@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates financial_reports table. Tracks generated reports by type, period, and generation timestamp.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

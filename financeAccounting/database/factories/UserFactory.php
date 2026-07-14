@@ -1,5 +1,4 @@
-<?php
-
+<?php // UserFactory — generates fake User models for testing. Uses Laravel's factory system with randomized data.
 namespace Database\Factories;
 
 use App\Models\User;

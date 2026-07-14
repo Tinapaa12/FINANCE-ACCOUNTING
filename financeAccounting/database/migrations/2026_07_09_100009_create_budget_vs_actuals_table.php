@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates budget_vs_actuals table. Stores account-level budget vs actual data with variance and status.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

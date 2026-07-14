@@ -1,5 +1,4 @@
-<?php
-
+<?php // User model — represents authenticated users. Extends Laravel's Authenticatable base with fillable/hidden attributes.
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;

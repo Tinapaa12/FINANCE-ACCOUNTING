@@ -1,5 +1,4 @@
-<?php
-
+<?php // Payment model — represents a payment made against a supplier bill. Tracks amount paid, date, method, reference, and notes.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

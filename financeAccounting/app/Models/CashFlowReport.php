@@ -1,5 +1,4 @@
-<?php
-
+<?php // CashFlowReport model — represents a cash flow statement within a FinancialReport. Has many lines split into operating/investing/financing.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;

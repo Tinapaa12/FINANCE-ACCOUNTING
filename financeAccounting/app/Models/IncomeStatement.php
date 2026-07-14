@@ -1,5 +1,4 @@
-<?php
-
+<?php // IncomeStatement model — represents an income statement within a FinancialReport. Has many lines split into revenue/expense categories.
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
