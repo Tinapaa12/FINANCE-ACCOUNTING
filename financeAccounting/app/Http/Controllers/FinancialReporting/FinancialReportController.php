@@ -12,7 +12,9 @@ class FinancialReportController extends Controller
 {
     public function income()
     {
-        return view('financial-reporting.reports.income', $this->incomeData());
+        $data = $this->incomeData();
+
+        return view('financial-reporting.reports.income', $data);
     }
 
     public function incomePdf()
@@ -52,65 +54,162 @@ class FinancialReportController extends Controller
 
     private function incomeData(): array
     {
-        $report = FinancialReport::where('report_type', 'Income Statement')
-            ->latest('generated_at')
-            ->first();
+        $reportId = request('report_id');
+        $reports = FinancialReport::where('report_type', 'Income Statement')
+            ->orderByDesc('report_period_start')
+            ->get();
 
-        if (!$report) {
-            return ['month' => '', 'revenue' => [], 'expenses' => [], 'trialBalance' => []];
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
+
+        $revenue = [];
+        $expenses = [];
+        $trialBalance = [];
+
+        if ($report) {
+            $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->first();
+
+            if ($incomeStatement) {
+                $revenue = $incomeStatement->revenueLines()->get()
+                    ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
+                    ->toArray();
+
+                $expenses = $incomeStatement->expenseLines()->get()
+                    ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
+                    ->toArray();
+            }
+
+            $trialBalance = $report->trialBalanceLines()->orderBy('line_order')->get()
+                ->map(fn ($row) => [
+                    'account' => $row->account_name,
+                    'debit'   => $row->debit_amount,
+                    'credit'  => $row->credit_amount,
+                ])->toArray();
         }
-
-        $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->first();
-
-        if (!$incomeStatement) {
-            return ['month' => $report->report_period_start->format('F'), 'revenue' => [], 'expenses' => [], 'trialBalance' => []];
-        }
-
-        $revenue = $incomeStatement->revenueLines()->get()
-            ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
-            ->toArray();
-
-        $expenses = $incomeStatement->expenseLines()->get()
-            ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
-            ->toArray();
-
-        $trialBalance = $report->trialBalanceLines()->orderBy('line_order')->get()
-            ->map(fn ($row) => [
-                'account' => $row->account_name,
-                'debit'   => $row->debit_amount,
-                'credit'  => $row->credit_amount,
-            ])->toArray();
 
         return [
-            'month'        => $report->report_period_start->format('F'),
-            'revenue'      => $revenue,
-            'expenses'     => $expenses,
-            'trialBalance' => $trialBalance,
+            'reports'          => $reports,
+            'report'           => $report,
+            'selectedReportId' => $report?->report_id,
+            'month'            => $report?->report_period_start?->format('F') ?? 'N/A',
+            'revenue'          => $revenue,
+            'expenses'         => $expenses,
+            'trialBalance'     => $trialBalance,
         ];
     }
 
     private function assetsData(): array
     {
-        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->first();
+        $reports = FinancialReport::where('report_type', 'Balance Sheet')
+            ->orderByDesc('report_period_start')
+            ->get();
 
-        if (!$balanceSheet) {
-            return ['assets' => [], 'liabilities' => [], 'equity' => []];
+        $reportId = request('report_id');
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
+
+        if (!$report) {
+            return ['assets' => [], 'liabilities' => [], 'equity' => [], 'reports' => collect(), 'selectedReportId' => null, 'hasData' => false];
         }
 
-        $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
+        $assets      = [];
+        $liabilities = [];
+        $equity      = [];
+
+        $tbRows = \App\Models\TrialBalance::where('report_id', $report->report_id)->count();
+
+        if ($tbRows > 0) {
+            $rows = \App\Models\TrialBalance::select('trial_balances.account_name',
+                    \DB::raw('trial_balances.debit_amount - trial_balances.credit_amount as balance'),
+                    \DB::raw('COALESCE(chart_of_accounts.type, CASE
+                        WHEN trial_balances.debit_amount > 0 AND (trial_balances.credit_amount IS NULL OR trial_balances.credit_amount = 0) THEN "Asset"
+                        WHEN trial_balances.credit_amount > 0 AND (trial_balances.debit_amount IS NULL OR trial_balances.debit_amount = 0) THEN "Liability"
+                        ELSE "Equity"
+                    END) as type'))
+                ->leftJoin('chart_of_accounts', 'trial_balances.account_id', '=', 'chart_of_accounts.account_id')
+                ->where('trial_balances.report_id', $report->report_id)
+                ->orderBy('type')
+                ->orderByDesc('balance')
+                ->get();
+
+            foreach ($rows as $r) {
+                $item = ['label' => $r->account_name, 'amount' => (float) abs($r->balance)];
+                match ($r->type) {
+                    'Asset'     => $assets[] = $item,
+                    'Liability' => $liabilities[] = $item,
+                    'Equity'    => $equity[] = $item,
+                };
+            }
+        } else {
+            // Fallback: check manually added balance sheet lines
+            $balanceSheet = \App\Models\BalanceSheet::where('report_id', $report->report_id)->first();
+            if ($balanceSheet) {
+                foreach ($balanceSheet->assets()->get() as $l) {
+                    $assets[] = ['label' => $l->line_name, 'amount' => (float) $l->amount];
+                }
+                foreach ($balanceSheet->liabilities()->get() as $l) {
+                    $liabilities[] = ['label' => $l->line_name, 'amount' => (float) $l->amount];
+                }
+                foreach ($balanceSheet->equity()->get() as $l) {
+                    $equity[] = ['label' => $l->line_name, 'amount' => (float) $l->amount];
+                }
+            }
+
+            // If still empty, compute from all posted journal entries (cumulative)
+            if (empty($assets) && empty($liabilities) && empty($equity)) {
+                $rows = \App\Models\JournalEntryLine::select('chart_of_accounts.type', 'chart_of_accounts.account_name',
+                        \DB::raw('SUM(journal_entry_lines.debit - journal_entry_lines.credit) as balance'))
+                    ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+                    ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                    ->whereIn('chart_of_accounts.type', ['Asset', 'Liability', 'Equity'])
+                    ->where('journal_entries.status', 'Posted')
+                    ->groupBy('chart_of_accounts.type', 'chart_of_accounts.account_name')
+                    ->orderBy('chart_of_accounts.type')
+                    ->orderByDesc('balance')
+                    ->get();
+
+                foreach ($rows as $r) {
+                    $item = ['label' => $r->account_name, 'amount' => (float) abs($r->balance)];
+                    match ($r->type) {
+                        'Asset'     => $assets[] = $item,
+                        'Liability' => $liabilities[] = $item,
+                        'Equity'    => $equity[] = $item,
+                    };
+                }
+            }
+        }
 
         return [
-            'assets'      => $balanceSheet->assets()->get()->map($mapLine)->toArray(),
-            'liabilities' => $balanceSheet->liabilities()->get()->map($mapLine)->toArray(),
-            'equity'      => $balanceSheet->equity()->get()->map($mapLine)->toArray(),
+            'assets'           => $assets,
+            'liabilities'      => $liabilities,
+            'equity'           => $equity,
+            'reports'          => $reports,
+            'selectedReportId' => $report->report_id,
+            'hasData'          => !empty($assets) || !empty($liabilities) || !empty($equity),
         ];
     }
 
     private function liabilitiesData(): array
     {
-        $rows = BudgetVsActual::orderBy('created_at')->get();
+        $periods = BudgetVsActual::select('report_period_start')->distinct()->orderByDesc('report_period_start')->get()
+            ->map(fn ($r) => $r->report_period_start->format('F Y'))
+            ->unique();
+
+        $selectedPeriod = request('period', $periods->first() ?? now()->format('F Y'));
+
+        $start = \Carbon\Carbon::createFromFormat('F Y', $selectedPeriod)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+
+        $rows = BudgetVsActual::whereBetween('report_period_start', [$start, $end])
+            ->orWhereBetween('report_period_end', [$start, $end])
+            ->orderBy('created_at')
+            ->get();
 
         return [
+            'periods'    => $periods,
+            'period'     => $selectedPeriod,
             'reportDate' => $rows->first()?->report_period_end?->format('F j, Y') ?? '',
             'budgetVsActual' => $rows->map(fn ($row) => [
                 'account' => $row->account_name,
@@ -127,33 +226,87 @@ class FinancialReportController extends Controller
 
     private function cashflowData(): array
     {
-        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->first();
+        $reports = FinancialReport::where('report_type', 'Cash Flow Statement')
+            ->orderByDesc('report_period_start')
+            ->get();
 
-        if (!$cashFlow) {
+        $reportId = request('report_id');
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
+
+        if (!$report) {
             return [
-                'periodLabel' => '', 'operating' => [], 'investing' => [], 'financing' => [],
-                'totalOperating' => 0, 'totalInvesting' => 0, 'totalFinancing' => 0,
-                'netCashFlow' => 0, 'beginningCash' => 0, 'endingCash' => 0,
+                'reports' => $reports, 'selectedReportId' => null,
+                'periodLabel' => '', 'cashInLines' => [], 'cashOutLines' => [],
+                'totalCashIn' => 0, 'totalCashOut' => 0, 'netCashFlow' => 0,
+                'beginningCash' => 0, 'endingCash' => 0, 'hasData' => false,
             ];
         }
 
-        $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
+        $start = $report->report_period_start;
+        $end   = $report->report_period_end;
+
+        // Cash In = posted journal entries with Revenue-type accounts (credits)
+        $cashInLines = \App\Models\JournalEntryLine::select('account_name', \DB::raw('SUM(credit) as total'))
+            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+            ->where('chart_of_accounts.type', 'Revenue')
+            ->where('journal_entries.status', 'Posted')
+            ->whereBetween('journal_entries.transaction_date', [$start, $end])
+            ->groupBy('account_name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
+            ->toArray();
+
+        // Cash Out = posted journal entries with Expense-type accounts (debits)
+        $cashOutLines = \App\Models\JournalEntryLine::select('account_name', \DB::raw('SUM(debit) as total'))
+            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+            ->where('chart_of_accounts.type', 'Expense')
+            ->where('journal_entries.status', 'Posted')
+            ->whereBetween('journal_entries.transaction_date', [$start, $end])
+            ->groupBy('account_name')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
+            ->toArray();
+
+        // Also include manually added entries from cash_flow_report_lines
+        $manualLines = \App\Models\CashFlowReportLine::where('activity_type', 'Cash In')
+            ->orWhere('activity_type', 'Cash Out')
+            ->get()
+            ->map(fn ($l) => ['label' => $l->line_name, 'amount' => (float) $l->amount, 'type' => $l->activity_type]);
+
+        foreach ($manualLines as $ml) {
+            if ($ml['type'] === 'Cash In') {
+                $cashInLines[] = ['label' => $ml['label'], 'amount' => $ml['amount']];
+            } else {
+                $cashOutLines[] = ['label' => $ml['label'], 'amount' => abs($ml['amount'])];
+            }
+        }
+
+        $totalCashIn  = array_sum(array_column($cashInLines, 'amount'));
+        $totalCashOut = array_sum(array_column($cashOutLines, 'amount'));
+        $netCashFlow  = $totalCashIn - $totalCashOut;
 
         $beginningCash = \App\Models\TrialBalance::where('account_name', 'Cash in bank')
             ->latest('created_at')
             ->value('credit_amount') ?? 0;
 
         return [
-            'periodLabel'    => $cashFlow->period_label,
-            'operating'      => $cashFlow->operatingLines()->get()->map($mapLine)->toArray(),
-            'investing'      => $cashFlow->investingLines()->get()->map($mapLine)->toArray(),
-            'financing'      => $cashFlow->financingLines()->get()->map($mapLine)->toArray(),
-            'totalOperating' => $cashFlow->total_operating,
-            'totalInvesting' => $cashFlow->total_investing,
-            'totalFinancing' => $cashFlow->total_financing,
-            'netCashFlow'    => $cashFlow->net_cash_flow,
-            'beginningCash'  => (float) $beginningCash,
-            'endingCash'     => (float) $beginningCash + $cashFlow->net_cash_flow,
+            'reports'          => $reports,
+            'selectedReportId' => $report->report_id,
+            'periodLabel'      => $report->report_period_start->format('F Y'),
+            'cashInLines'      => $cashInLines,
+            'cashOutLines'     => $cashOutLines,
+            'totalCashIn'      => $totalCashIn,
+            'totalCashOut'     => $totalCashOut,
+            'netCashFlow'      => $netCashFlow,
+            'beginningCash'    => (float) $beginningCash,
+            'endingCash'       => (float) $beginningCash + $netCashFlow,
+            'hasData'          => true,
         ];
     }
 }

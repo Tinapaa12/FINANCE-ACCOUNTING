@@ -5,6 +5,7 @@ use App\Http\Controllers\GeneralLedger\JournalEntryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\FinancialReporting\TaxComplianceController;
+use App\Http\Controllers\FinancialReporting\ManageDataController;
 use App\Http\Controllers\ARController;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -36,6 +37,16 @@ Route::get('/reports/cashflow/pdf', [FinancialReportController::class, 'cashflow
 // Tax and Compliance
 Route::get('/tax-compliance', [TaxComplianceController::class, 'index'])->name('tax.compliance');
 Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name('tax.compliance.pdf');
+
+// Data Management — add your own data
+Route::get('/reports/manage', [ManageDataController::class, 'index'])->name('reports.manage');
+Route::post('/reports/manage/store-report', [ManageDataController::class, 'storeReport'])->name('reports.manage.store-report');
+Route::post('/reports/manage/store-income-line', [ManageDataController::class, 'storeIncomeLine'])->name('reports.manage.store-income-line');
+Route::post('/reports/manage/store-trial', [ManageDataController::class, 'storeTrialBalance'])->name('reports.manage.store-trial');
+Route::post('/reports/manage/store-balance', [ManageDataController::class, 'storeBalanceSheet'])->name('reports.manage.store-balance');
+Route::post('/reports/manage/store-cashflow', [ManageDataController::class, 'storeCashFlow'])->name('reports.manage.store-cashflow');
+Route::post('/reports/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('reports.manage.store-budget');
+Route::post('/reports/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('reports.manage.store-tax');
 
 // Accounts Receivable
 Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');

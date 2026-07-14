@@ -4,15 +4,30 @@
 @section('title', 'Income Statements')
 
 @section('content')
+    @if(!$report)
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <p class="text-yellow-800 font-medium">No data yet.</p>
+            <p class="text-yellow-600 text-sm mt-1">Add your first income statement data from the <a href="{{ route('reports.manage') }}" class="underline">Manage Data</a> page.</p>
+        </div>
+    @else
     <div class="flex flex-col lg:flex-row gap-6">
 
         {{-- LEFT: Income Statement --}}
         <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-semibold text-lg">Income statements</h2>
-                    <select class="border rounded px-3 py-1.5 text-sm">
-                        <option>{{ $month ?? 'September' }}</option>
+                    <div>
+                        <h2 class="font-semibold text-lg">Income statements</h2>
+                        <p class="text-xs text-gray-500">
+                            Period: {{ $report->report_period_start->format('M d, Y') }} — {{ $report->report_period_end->format('M d, Y') }}
+                        </p>
+                    </div>
+                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
+                        @foreach($reports as $r)
+                            <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
+                                {{ $r->report_period_start->format('F Y') }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -88,4 +103,5 @@
         </div>
 
     </div>
+    @endif
 @endsection

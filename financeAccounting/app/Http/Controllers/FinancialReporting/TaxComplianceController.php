@@ -8,7 +8,9 @@ class TaxComplianceController extends Controller
 {
     public function index()
     {
-        return view('financial-reporting.tax.compliance', $this->taxData());
+        $data = $this->taxData();
+
+        return view('financial-reporting.tax.compliance', $data);
     }
 
     public function pdf()
@@ -18,9 +20,10 @@ class TaxComplianceController extends Controller
 
     private function taxData(): array
     {
-        $period = 'July 2026';
+        $periods = TaxRecord::select('tax_period')->distinct()->orderByDesc('tax_period')->pluck('tax_period');
+        $selectedPeriod = request('period', $periods->first() ?? 'July 2026');
 
-        $records = TaxRecord::where('tax_period', $period)->get();
+        $records = TaxRecord::where('tax_period', $selectedPeriod)->get();
 
         $taxRecords = $records->map(fn ($r) => [
             'reference_type' => $r->reference_type,
@@ -33,7 +36,8 @@ class TaxComplianceController extends Controller
         ])->toArray();
 
         return [
-            'period'     => $period,
+            'periods'    => $periods,
+            'period'     => $selectedPeriod,
             'taxRecords' => $taxRecords,
             'summary'    => [
                 'total_taxable' => $records->sum('taxable_amount'),
