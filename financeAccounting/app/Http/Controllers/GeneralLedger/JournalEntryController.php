@@ -20,7 +20,7 @@ class JournalEntryController extends Controller
 
     public function index()
     {
-        $entries = JournalEntry::with(['lines.account'])->latest()->paginate(10);
+        $entries = JournalEntry::with(['lines.account', 'salesTransaction'])->latest()->paginate(10);
         $accounts = ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(['account_id', 'account_code', 'account_name']);
         return view('general-ledger.journal-entries.index', compact('entries', 'accounts'));
     }

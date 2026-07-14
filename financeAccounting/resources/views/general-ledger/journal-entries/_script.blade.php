@@ -39,7 +39,8 @@ function journalEntries() {
                     journal_entry_id: e.journal_entry_id,
                     transaction_date: e.transaction_date,
                     date: e.transaction_date ? new Date(e.transaction_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
-                    reference: e.reference_no,
+                    reference: e.sales_transaction ? e.sales_transaction.order_no : e.reference_no,
+                    reference_no: e.reference_no,
                     description: e.description,
                     status: e.status,
                     debit: totalDebit,
@@ -73,7 +74,7 @@ function journalEntries() {
             this.editDate = this.selectedEntry.transaction_date;
             this.editDescription = this.selectedEntry.description;
             this.editStatus = this.selectedEntry.status;
-            this.editRef = this.selectedEntry.reference;
+            this.editRef = this.selectedEntry.reference_no;
             this.editingEntry = true;
         },
 

@@ -4,6 +4,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class JournalEntry extends Model
 {
@@ -25,6 +26,11 @@ class JournalEntry extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(JournalEntryLine::class, 'journal_entry_id', 'journal_entry_id');
+    }
+
+    public function salesTransaction(): HasOne
+    {
+        return $this->hasOne(SalesTransaction::class, 'journal_entry_id', 'journal_entry_id');
     }
 
     public function totalDebit(): float
