@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Balance Sheet - Assets')
+@section('title', 'Balance Sheet')
 
 @section('page-title', 'Balance Sheet')
 
@@ -8,7 +8,7 @@
     @if(!$hasData)
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
             <p class="text-yellow-800 font-medium">No data yet.</p>
-            <p class="text-yellow-600 text-sm mt-1">Add journal entries or create a balance sheet period from the <a href="{{ route('reports.manage') }}" class="underline">Manage Data</a> page.</p>
+            <p class="text-yellow-600 text-sm mt-1">Add journal entries with Asset, Liability, and Equity accounts first.</p>
         </div>
     @else
     <div class="flex flex-col lg:flex-row gap-6">
@@ -17,6 +17,7 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold text-lg">Assets</h2>
                     <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
+                        <option value="">All periods</option>
                         @foreach($reports as $r)
                             <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
                                 {{ $r->report_period_start->format('F Y') }}

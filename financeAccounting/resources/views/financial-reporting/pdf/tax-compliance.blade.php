@@ -34,7 +34,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($taxRecords as $record)
+            @forelse($taxRecords as $record)
                 <tr class="border-b last:border-0">
                     <td class="py-2 px-3">{{ $record['reference_type'] }} #{{ $record['reference_id'] }}</td>
                     <td class="py-2 px-3">{{ $record['tax_type'] }}</td>
@@ -43,7 +43,11 @@
                     <td class="py-2 px-3 text-right">₱{{ number_format($record['tax_amount']) }}</td>
                     <td class="py-2 px-3">{{ ucfirst($record['filing_status']) }}</td>
                 </tr>
-            @endforeach
+            @empty
+                <tr>
+                    <td colspan="6" class="py-4 text-center text-gray-500">No tax records found.</td>
+                </tr>
+            @endforelse
         </tbody>
     </table>
 @endsection

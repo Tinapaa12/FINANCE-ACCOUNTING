@@ -5,7 +5,7 @@
 @section('pdf-title', 'Income Statement')
 
 @section('pdf-content')
-    <p class="text-sm text-gray-500 mb-6">For the month of {{ $month ?? 'September' }}</p>
+    <p class="text-sm text-gray-500 mb-6">{{ $report ? $report->report_period_start->format('M d, Y') . ' — ' . $report->report_period_end->format('M d, Y') : 'All periods' }}</p>
 
     <table class="w-full text-sm mb-8">
         <tr class="bg-green-50">

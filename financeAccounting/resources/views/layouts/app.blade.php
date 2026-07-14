@@ -189,8 +189,8 @@
                         </a>
                         <a href="{{ route('reports.assets') }}"
                            class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                                  {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                            Assets
+                                   {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Balance Sheet
                         </a>
                         <a href="{{ route('reports.liabilities') }}"
                            class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
