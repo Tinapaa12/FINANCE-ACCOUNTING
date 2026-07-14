@@ -2,8 +2,8 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
-use App\Models\BudgetVsActual;
-use App\Models\FinancialReport;
+use App\Models\FinancialReporting\BudgetVsActual;
+use App\Models\FinancialReporting\FinancialReport;
 
 class FinancialReportController extends Controller
 {
@@ -67,53 +67,49 @@ class FinancialReportController extends Controller
         $expenses = [];
         $trialBalance = [];
 
-        // Revenue from posted journal entries (Revenue-type accounts, credit side)
-        $revenue = \App\Models\JournalEntryLine::select('chart_of_accounts.account_name',
-                \DB::raw('SUM(journal_entry_lines.credit) as total'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('chart_of_accounts.type', 'Revenue')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('chart_of_accounts.account_name')
-            ->orderByDesc('total')
-            ->get()
-            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
-            ->toArray();
+        // All Revenue accounts (including zero-balance)
+        $revenue = \App\Models\GeneralLedger\ChartOfAccount::where('type', 'Revenue')->orderBy('account_name')->get()
+            ->map(function ($a) use ($start, $end) {
+                $totals = \App\Models\GeneralLedger\JournalEntryLine::select(
+                        \DB::raw('COALESCE(SUM(credit),0) as total'))
+                    ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                    ->where('journal_entry_lines.account_id', $a->account_id)
+                    ->where('journal_entries.status', 'Posted')
+                    ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+                    ->first();
+                return ['label' => $a->account_name, 'amount' => (float) $totals->total];
+            })->filter(fn ($r) => $r['amount'] > 0)->values()->toArray();
 
-        // Expenses from posted journal entries (Expense-type accounts, debit side)
-        $expenses = \App\Models\JournalEntryLine::select('chart_of_accounts.account_name',
-                \DB::raw('SUM(journal_entry_lines.debit) as total'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('chart_of_accounts.type', 'Expense')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('chart_of_accounts.account_name')
-            ->orderByDesc('total')
-            ->get()
-            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
-            ->toArray();
+        // All Expense accounts (including zero-balance)
+        $expenses = \App\Models\GeneralLedger\ChartOfAccount::where('type', 'Expense')->orderBy('account_name')->get()
+            ->map(function ($a) use ($start, $end) {
+                $totals = \App\Models\GeneralLedger\JournalEntryLine::select(
+                        \DB::raw('COALESCE(SUM(debit),0) as total'))
+                    ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                    ->where('journal_entry_lines.account_id', $a->account_id)
+                    ->where('journal_entries.status', 'Posted')
+                    ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+                    ->first();
+                return ['label' => $a->account_name, 'amount' => (float) $totals->total];
+            })->filter(fn ($r) => $r['amount'] > 0)->values()->toArray();
 
-        // Trial balance from posted journal entries
-        $tbRows = \App\Models\JournalEntryLine::select('chart_of_accounts.account_name',
-                \DB::raw('SUM(journal_entry_lines.debit) as debit_total'),
-                \DB::raw('SUM(journal_entry_lines.credit) as credit_total'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('chart_of_accounts.account_name')
-            ->orderBy('chart_of_accounts.account_name')
-            ->get();
-
-        foreach ($tbRows as $r) {
-            $trialBalance[] = [
-                'account' => $r->account_name,
-                'debit'   => (float) $r->debit_total,
-                'credit'  => (float) $r->credit_total,
-            ];
-        }
+        // Trial balance — all accounts, even zero-balance
+        $trialBalance = \App\Models\GeneralLedger\ChartOfAccount::orderBy('account_name')->get()
+            ->map(function ($a) use ($start, $end) {
+                $totals = \App\Models\GeneralLedger\JournalEntryLine::select(
+                        \DB::raw('COALESCE(SUM(debit),0) as debit_total'),
+                        \DB::raw('COALESCE(SUM(credit),0) as credit_total'))
+                    ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                    ->where('journal_entry_lines.account_id', $a->account_id)
+                    ->where('journal_entries.status', 'Posted')
+                    ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+                    ->first();
+                return [
+                    'account' => $a->account_name,
+                    'debit'   => (float) $totals->debit_total,
+                    'credit'  => (float) $totals->credit_total,
+                ];
+            })->toArray();
 
         return [
             'reports'          => $reports,
@@ -140,25 +136,27 @@ class FinancialReportController extends Controller
         $start = $report?->report_period_start;
         $end   = $report?->report_period_end;
 
-        $rows = \App\Models\JournalEntryLine::select('chart_of_accounts.type', 'chart_of_accounts.account_name',
-                \DB::raw('SUM(journal_entry_lines.debit - journal_entry_lines.credit) as balance'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->whereIn('chart_of_accounts.type', ['Asset', 'Liability', 'Equity'])
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('chart_of_accounts.type', 'chart_of_accounts.account_name')
-            ->orderBy('chart_of_accounts.type')
-            ->orderByDesc('balance')
-            ->get();
-
         $assets      = [];
         $liabilities = [];
         $equity      = [];
 
-        foreach ($rows as $r) {
-            $item = ['label' => $r->account_name, 'amount' => (float) abs($r->balance)];
-            match ($r->type) {
+        // All Asset/Liability/Equity accounts (including zero-balance)
+        $bsAccounts = \App\Models\GeneralLedger\ChartOfAccount::whereIn('type', ['Asset', 'Liability', 'Equity'])
+            ->orderBy('type')
+            ->orderBy('account_name')
+            ->get();
+
+        foreach ($bsAccounts as $a) {
+            $totals = \App\Models\GeneralLedger\JournalEntryLine::select(
+                    \DB::raw('COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0) as balance'))
+                ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                ->where('journal_entry_lines.account_id', $a->account_id)
+                ->where('journal_entries.status', 'Posted')
+                ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+                ->first();
+
+            $item = ['label' => $a->account_name, 'amount' => (float) abs($totals->balance)];
+            match ($a->type) {
                 'Asset'     => $assets[] = $item,
                 'Liability' => $liabilities[] = $item,
                 'Equity'    => $equity[] = $item,
@@ -204,7 +202,7 @@ class FinancialReportController extends Controller
         }
 
         // Get actuals from journal entries for the same accounts
-        $actuals = \App\Models\JournalEntryLine::select('chart_of_accounts.account_name',
+        $actuals = \App\Models\GeneralLedger\JournalEntryLine::select('chart_of_accounts.account_name',
                 \DB::raw('SUM(journal_entry_lines.debit) as debit_total'),
                 \DB::raw('SUM(journal_entry_lines.credit) as credit_total'))
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
@@ -263,7 +261,7 @@ class FinancialReportController extends Controller
         $end   = $report?->report_period_end;
 
         // Cash In = posted journal entries with Revenue-type accounts (credits)
-        $cashInLines = \App\Models\JournalEntryLine::select('account_name', \DB::raw('SUM(credit) as total'))
+        $cashInLines = \App\Models\GeneralLedger\JournalEntryLine::select('account_name', \DB::raw('SUM(credit) as total'))
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
             ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
             ->where('chart_of_accounts.type', 'Revenue')
@@ -276,7 +274,7 @@ class FinancialReportController extends Controller
             ->toArray();
 
         // Cash Out = posted journal entries with Expense-type accounts (debits)
-        $cashOutLines = \App\Models\JournalEntryLine::select('account_name', \DB::raw('SUM(debit) as total'))
+        $cashOutLines = \App\Models\GeneralLedger\JournalEntryLine::select('account_name', \DB::raw('SUM(debit) as total'))
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
             ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
             ->where('chart_of_accounts.type', 'Expense')
@@ -292,7 +290,7 @@ class FinancialReportController extends Controller
         $totalCashOut = array_sum(array_column($cashOutLines, 'amount'));
         $netCashFlow  = $totalCashIn - $totalCashOut;
 
-        $beginningCash = (float) \App\Models\JournalEntryLine::join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+        $beginningCash = (float) \App\Models\GeneralLedger\JournalEntryLine::join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
             ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
             ->where('chart_of_accounts.type', 'Asset')
             ->where('journal_entries.status', 'Posted')

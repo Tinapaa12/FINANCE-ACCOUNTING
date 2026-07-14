@@ -8,7 +8,7 @@
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Journal Entries</span>
-                <span class="font-semibold text-gray-900">{{ \App\Models\JournalEntry::count() }}</span>
+                <span class="font-semibold text-gray-900">{{ \App\Models\GeneralLedger\JournalEntry::count() }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Active Accounts</span>

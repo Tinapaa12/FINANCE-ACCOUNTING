@@ -2,16 +2,16 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
-use App\Models\BalanceSheet;
-use App\Models\BalanceSheetLine;
-use App\Models\BudgetVsActual;
-use App\Models\CashFlowReport;
-use App\Models\CashFlowReportLine;
-use App\Models\FinancialReport;
-use App\Models\IncomeStatement;
-use App\Models\IncomeStatementLine;
-use App\Models\TaxRecord;
-use App\Models\TrialBalance;
+use App\Models\FinancialReporting\BalanceSheet;
+use App\Models\FinancialReporting\BalanceSheetLine;
+use App\Models\FinancialReporting\BudgetVsActual;
+use App\Models\FinancialReporting\CashFlowReport;
+use App\Models\FinancialReporting\CashFlowReportLine;
+use App\Models\FinancialReporting\FinancialReport;
+use App\Models\FinancialReporting\IncomeStatement;
+use App\Models\FinancialReporting\IncomeStatementLine;
+use App\Models\FinancialReporting\TaxRecord;
+use App\Models\FinancialReporting\TrialBalance;
 use Illuminate\Http\Request;
 
 class ManageDataController extends Controller

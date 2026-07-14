@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\GeneralLedger;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChartOfAccount;
+use App\Models\GeneralLedger\ChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

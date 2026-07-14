@@ -1,7 +1,7 @@
 <?php
 namespace Database\Seeders;
 
-use App\Models\FinancialReport;
+use App\Models\FinancialReporting\FinancialReport;
 use Illuminate\Database\Seeder;
 
 class FinancialReportSeeder extends Seeder

@@ -1,7 +1,7 @@
 <?php // ChartOfAccountsSeeder — populates chart_of_accounts with standard account codes for all account types.
 namespace Database\Seeders;
 
-use App\Models\ChartOfAccount;
+use App\Models\GeneralLedger\ChartOfAccount;
 use Illuminate\Database\Seeder;
 
 class ChartOfAccountsSeeder extends Seeder

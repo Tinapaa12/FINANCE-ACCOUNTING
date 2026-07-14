@@ -1,9 +1,9 @@
 <?php // JournalEntrySeeder — creates sample journal entries with lines for testing. Includes example transactions.
 namespace Database\Seeders;
 
-use App\Models\ChartOfAccount;
-use App\Models\JournalEntry;
-use App\Models\JournalEntryLine;
+use App\Models\GeneralLedger\ChartOfAccount;
+use App\Models\GeneralLedger\JournalEntry;
+use App\Models\GeneralLedger\JournalEntryLine;
 use Illuminate\Database\Seeder;
 
 class JournalEntrySeeder extends Seeder
