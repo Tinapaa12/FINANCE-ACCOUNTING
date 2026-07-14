@@ -41,6 +41,27 @@ class JournalEntrySeeder extends Seeder
                     ['account_code' => '1020', 'debit' => 0, 'credit' => 8500],
                 ]
             ],
+            [
+                'transaction_date' => '2024-06-30',
+                'reference_no' => 'JE-2024-00129',
+                'description' => 'Sales to Customer B (on account)',
+                'status' => 'Posted',
+                'lines' => [
+                    ['account_code' => '1100', 'debit' => 150000, 'credit' => 0],
+                    ['account_code' => '4100', 'debit' => 0, 'credit' => 150000],
+                ]
+            ],
+            [
+                'transaction_date' => '2024-06-28',
+                'reference_no' => 'JE-2024-00130',
+                'description' => 'Sales to Customer C (with VAT)',
+                'status' => 'Posted',
+                'lines' => [
+                    ['account_code' => '1100', 'debit' => 112000, 'credit' => 0],
+                    ['account_code' => '4100', 'debit' => 0, 'credit' => 100000],
+                    ['account_code' => '2300', 'debit' => 0, 'credit' => 12000],
+                ]
+            ],
         ];
 
         foreach ($entries as $entryData) {

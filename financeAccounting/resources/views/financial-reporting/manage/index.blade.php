@@ -136,12 +136,12 @@
 
     @elseif($tab === 'budget')
         <div class="bg-white rounded-lg border p-5">
-            <h3 class="font-semibold mb-3">Add Budget vs Actual Entry</h3>
+            <h3 class="font-semibold mb-3">Add Budget Target</h3>
+            <p class="text-xs text-gray-500 mb-3">Actual amounts are auto-computed from posted journal entries in the General Ledger.</p>
             <form method="POST" action="{{ route('reports.manage.store-budget') }}" class="flex gap-3 items-end flex-wrap">
                 @csrf
                 <div><label class="text-xs text-gray-500 block mb-1">Account</label><input type="text" name="account_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Sales revenue"></div>
                 <div><label class="text-xs text-gray-500 block mb-1">Budget (₱)</label><input type="number" step="0.01" name="budget_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
-                <div><label class="text-xs text-gray-500 block mb-1">Actual (₱)</label><input type="number" step="0.01" name="actual_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">Period</label>
                     <select name="tax_period" required class="border rounded px-3 py-1.5 text-sm">

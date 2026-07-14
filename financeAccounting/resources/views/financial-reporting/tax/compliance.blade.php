@@ -45,7 +45,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($taxRecords as $record)
+                        @forelse($taxRecords as $record)
                             <tr class="border-b last:border-0 hover:bg-gray-50">
                                 <td class="py-3 px-4">{{ $record['reference_type'] }} #{{ $record['reference_id'] }}</td>
                                 <td class="py-3 px-4">{{ $record['tax_type'] }}</td>
@@ -65,7 +65,13 @@
                                     </span>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-gray-500">
+                                    No tax records yet. Add tax records via Manage Data → Tax Records tab.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
