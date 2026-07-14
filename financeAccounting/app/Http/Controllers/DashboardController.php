@@ -18,7 +18,7 @@ class DashboardController extends Controller
         $alerts = $this->dashboardService->getFinancialAlerts();
         $accountTypeCounts = $this->dashboardService->getAccountTypeCounts();
 
-        return view('dashboard', compact(
+        return view('dashboard.index', compact(
             'kpi',
             'recentEntries',
             'accountsSummary',

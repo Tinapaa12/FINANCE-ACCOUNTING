@@ -21,7 +21,10 @@ class ChartOfAccountsSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
-            ChartOfAccount::create($account);
+            ChartOfAccount::firstOrCreate(
+                ['account_code' => $account['account_code']],
+                $account
+            );
         }
     }
 }

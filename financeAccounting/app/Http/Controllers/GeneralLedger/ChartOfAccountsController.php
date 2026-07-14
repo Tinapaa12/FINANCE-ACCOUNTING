@@ -81,6 +81,14 @@ class ChartOfAccountsController extends Controller
 
     public function destroy(ChartOfAccount $chartOfAccount)
     {
+        if ($chartOfAccount->journalEntryLines()->exists()) {
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Cannot delete: account has journal entry transactions.'], 409);
+            }
+            return redirect()->route('chart-of-accounts.index')
+                ->with('error', 'Cannot delete: account has journal entry transactions.');
+        }
+
         $chartOfAccount->delete();
 
         if (request()->wantsJson()) {

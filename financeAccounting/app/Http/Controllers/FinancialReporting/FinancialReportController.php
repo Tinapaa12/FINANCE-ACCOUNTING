@@ -54,9 +54,17 @@ class FinancialReportController extends Controller
     {
         $report = FinancialReport::where('report_type', 'Income Statement')
             ->latest('generated_at')
-            ->firstOrFail();
+            ->first();
 
-        $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->firstOrFail();
+        if (!$report) {
+            return ['month' => '', 'revenue' => [], 'expenses' => [], 'trialBalance' => []];
+        }
+
+        $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->first();
+
+        if (!$incomeStatement) {
+            return ['month' => $report->report_period_start->format('F'), 'revenue' => [], 'expenses' => [], 'trialBalance' => []];
+        }
 
         $revenue = $incomeStatement->revenueLines()->get()
             ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
@@ -83,7 +91,11 @@ class FinancialReportController extends Controller
 
     private function assetsData(): array
     {
-        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->firstOrFail();
+        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->first();
+
+        if (!$balanceSheet) {
+            return ['assets' => [], 'liabilities' => [], 'equity' => []];
+        }
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 
@@ -115,7 +127,15 @@ class FinancialReportController extends Controller
 
     private function cashflowData(): array
     {
-        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->firstOrFail();
+        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->first();
+
+        if (!$cashFlow) {
+            return [
+                'periodLabel' => '', 'operating' => [], 'investing' => [], 'financing' => [],
+                'totalOperating' => 0, 'totalInvesting' => 0, 'totalFinancing' => 0,
+                'netCashFlow' => 0, 'beginningCash' => 0, 'endingCash' => 0,
+            ];
+        }
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 

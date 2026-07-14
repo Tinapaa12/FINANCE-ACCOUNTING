@@ -74,10 +74,7 @@
                                     </td>
                                     <td class="px-6 py-3.5">
                                         @if($txn->status === 'Pending')
-                                            <form action="{{ route('sales-transactions.mark-as-paid', $txn) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="text-xs font-medium text-blue-600 hover:text-blue-800">Mark as Paid</button>
-                                            </form>
+                                            <button @click="markAsPaid({{ $txn->sales_transaction_id }})" class="text-xs font-medium text-blue-600 hover:text-blue-800">Mark as Paid</button>
                                         @else
                                             <span class="inline-flex items-center gap-1 text-xs font-medium text-green-600">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -163,6 +160,27 @@
     function paymentApp() {
             return {
                 showPaymentModal: false,
+
+                async markAsPaid(id) {
+                    if (!confirm('Mark this transaction as Paid?')) return;
+                    try {
+                        const res = await fetch('/sales-transactions/' + id + '/mark-as-paid', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                        });
+                        if (res.ok) {
+                            window.location.reload();
+                        } else {
+                            const data = await res.json();
+                            alert(data.message || 'Failed to mark as paid');
+                        }
+                    } catch (e) {
+                        alert('Network error');
+                    }
+                },
             }
         }
 </script>

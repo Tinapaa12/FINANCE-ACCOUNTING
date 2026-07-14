@@ -43,11 +43,10 @@ class SalesTransactionController extends Controller
             ->with('success', 'Sales transaction ' . $transaction->order_no . ' created successfully.');
     }
 
-    public function markAsPaid(SalesTransaction $salesTransaction)
+    public function markAsPaid(Request $request, SalesTransaction $salesTransaction)
     {
         if ($salesTransaction->status === 'Paid') {
-            return redirect()->route('sales-transactions.create')
-                ->with('error', 'Transaction is already Paid.');
+            return redirect()->back()->with('error', 'Transaction is already Paid.');
         }
 
         $salesTransaction->update(['status' => 'Paid']);
@@ -55,11 +54,13 @@ class SalesTransactionController extends Controller
         try {
             FinancePostingService::postSale($salesTransaction);
         } catch (\Exception $e) {
-            return redirect()->route('sales-transactions.create')
-                ->with('error', 'Posting to Finance failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Posting to Finance failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('sales-transactions.create')
-            ->with('success', 'Transaction ' . $salesTransaction->order_no . ' marked as Paid and posted to Finance.');
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Transaction ' . $salesTransaction->order_no . ' marked as Paid.']);
+        }
+
+        return redirect()->back()->with('success', 'Transaction ' . $salesTransaction->order_no . ' marked as Paid and posted to Finance.');
     }
 }
