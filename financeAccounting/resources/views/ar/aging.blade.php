@@ -27,54 +27,22 @@
 
             <!-- 4 Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+                @foreach($summaryCards as $card)
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-emerald-400 to-[#22c55e]"></div>
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background: {{ $card->color }}"></div>
                     <div class="flex items-center justify-between">
-                        <p class="text-[14px] font-semibold text-[#16a34a]">Current (Not Due)</p>
-                        <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center"><i class="fas fa-check text-[#16a34a] text-[12px]"></i></div>
+                        <p class="text-[14px] font-semibold" style="color: {{ $card->color }}">{{ $card->label }}</p>
+                        <div class="w-8 h-8 rounded-full" style="background: {{ $card->color }}20; display: flex; align-items: center; justify-content: center">
+                            <i class="fas fa-check" style="color: {{ $card->color }}; font-size: 12px"></i>
+                        </div>
                     </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P98,000</p>
-                    <p class="text-[13px] text-gray-500">4 Invoices</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">P{{ number_format($card->total) }}</p>
+                    <p class="text-[13px] text-gray-500">{{ $card->count }} Invoices</p>
                     <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-[#22c55e] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 46 : 0) + '%'"></div>
+                        <div class="h-full rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? {{ $card->pct }} : 0) + '%'"></div>
                     </div>
                 </div>
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-300 to-[#fca5a5]"></div>
-                    <div class="flex items-center justify-between">
-                        <p class="text-[14px] font-semibold text-[#ef4444]">1 - 30 Days Overdue</p>
-                        <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-hourglass-start text-[#ef4444] text-[12px]"></i></div>
-                    </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P57,000</p>
-                    <p class="text-[13px] text-gray-500">3 Invoices</p>
-                    <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-300 to-[#ef4444] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 27 : 0) + '%'"></div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-400 to-[#f87171]"></div>
-                    <div class="flex items-center justify-between">
-                        <p class="text-[14px] font-semibold text-[#dc2626]">31 - 60 Days Overdue</p>
-                        <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-hourglass-half text-[#dc2626] text-[12px]"></i></div>
-                    </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P32,000</p>
-                    <p class="text-[13px] text-gray-500">2 Invoices</p>
-                    <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-400 to-[#dc2626] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 15 : 0) + '%'"></div>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-red-700 to-[#b91c1c]"></div>
-                    <div class="flex items-center justify-between">
-                        <p class="text-[14px] font-semibold text-[#b91c1c]">61+ Days Overdue</p>
-                        <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-triangle-exclamation text-[#b91c1c] text-[12px]"></i></div>
-                    </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P25,500</p>
-                    <p class="text-[13px] text-gray-500">3 invoices - urgent</p>
-                    <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-700 to-[#b91c1c] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 12 : 0) + '%'"></div>
-                    </div>
-                </div>
+                @endforeach
             </div>
 
             <!-- Detailed Aging Table -->
@@ -90,9 +58,8 @@
                                 <th class="px-5 py-3 text-left">Customer</th>
                                 <th class="px-5 py-3 text-center text-[#16a34a]">Current</th>
                                 <th class="px-5 py-3 text-center text-[#ef4444]">1-30 Days</th>
-                                <th class="px-5 py-3 text-center text-[#dc2626]">30-60 Days</th>
-                                <th class="px-5 py-3 text-center text-[#b91c1c]">61-90 Days</th>
-                                <th class="px-5 py-3 text-center text-[#991b1b]">91+ Days</th>
+                                <th class="px-5 py-3 text-center text-[#dc2626]">31-60 Days</th>
+                                <th class="px-5 py-3 text-center text-[#b91c1c]">61+ Days</th>
                                 <th class="px-5 py-3 text-center">Total</th>
                                 <th class="px-5 py-3 text-center">Risk</th>
                                 <th class="px-5 py-3 text-center">Action</th>
@@ -105,17 +72,17 @@
                                         <p class="font-medium text-gray-800" x-text="row.customer"></p>
                                         <p class="text-[12px] text-gray-400" x-text="row.email"></p>
                                     </td>
-                                    <td class="px-5 py-4 text-center" :class="row.current ? 'text-[#16a34a] font-medium' : 'text-gray-300'" x-text="row.current ? 'P'+row.current.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d1_30 ? 'text-[#ef4444] font-medium' : 'text-gray-300'" x-text="row.d1_30 ? 'P'+row.d1_30.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d31_60 ? 'text-[#dc2626] font-medium' : 'text-gray-300'" x-text="row.d31_60 ? 'P'+row.d31_60.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d61_90 ? 'text-[#b91c1c] font-medium' : 'text-gray-300'" x-text="row.d61_90 ? 'P'+row.d61_90.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d90 ? 'text-[#991b1b] font-medium' : 'text-gray-300'" x-text="row.d90 ? 'P'+row.d90.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center font-bold text-gray-900" x-text="'P' + (row.current+row.d1_30+row.d31_60+row.d61_90+row.d90).toLocaleString()"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.current ? 'text-[#16a34a] font-medium' : 'text-gray-300'" x-text="row.current ? 'P'+Number(row.current).toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d1_30 ? 'text-[#ef4444] font-medium' : 'text-gray-300'" x-text="row.d1_30 ? 'P'+Number(row.d1_30).toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d31_60 ? 'text-[#dc2626] font-medium' : 'text-gray-300'" x-text="row.d31_60 ? 'P'+Number(row.d31_60).toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d61_90 ? 'text-[#b91c1c] font-medium' : 'text-gray-300'" x-text="row.d61_90 ? 'P'+Number(row.d61_90).toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center font-bold text-gray-900" x-text="'P' + (Number(row.current)+Number(row.d1_30)+Number(row.d31_60)+Number(row.d61_90)).toLocaleString()"></td>
                                     <td class="px-5 py-4 text-center">
                                         <span class="px-3 py-1 rounded-full text-[12px] font-medium ring-1 ring-inset" 
                                               :class="{'bg-[#dcfce7] text-[#16a34a] ring-green-200': row.risk === 'Low', 
                                                        'bg-[#fef9c3] text-[#a16207] ring-yellow-200': row.risk === 'Medium', 
-                                                       'bg-[#fee2e2] text-[#dc2626] ring-red-200': row.risk === 'High'}">
+                                                       'bg-[#fee2e2] text-[#dc2626] ring-red-200': row.risk === 'High',
+                                                       'bg-[#fce7f3] text-[#be185d] ring-pink-200': row.risk === 'Critical'}">
                                             <span x-text="row.risk"></span>
                                         </span>
                                     </td>
@@ -128,12 +95,12 @@
                         <tfoot class="bg-gradient-to-r from-slate-50 to-slate-100/70 border-t-2 border-gray-200 font-bold text-gray-800 text-[14px]">
                             <tr>
                                 <td class="px-5 py-4">Total</td>
-                                <td class="px-5 py-4 text-center text-[#16a34a]">P98,000</td>
-                                <td class="px-5 py-4 text-center text-[#ef4444]">P57,000</td>
-                                <td class="px-5 py-4 text-center text-[#dc2626]">P32,000</td>
-                                <td class="px-5 py-4 text-center text-[#b91c1c]">P16,000</td>
-                                <td class="px-5 py-4 text-center text-[#991b1b]">P9,500</td>
-                                <td class="px-5 py-4 text-center text-[#4338ca]">P212,500</td>
+                                @foreach(['current', 'd1_30', 'd31_60', 'd61_90'] as $bucket)
+                                <td class="px-5 py-4 text-center" style="color: {{ match($bucket) {'current' => '#16a34a', 'd1_30' => '#ef4444', 'd31_60' => '#dc2626', 'd61_90' => '#b91c1c'} }}">
+                                    P{{ number_format($totals[$bucket]) }}
+                                </td>
+                                @endforeach
+                                <td class="px-5 py-4 text-center text-[#4338ca]">P{{ number_format($totalOverall) }}</td>
                                 <td></td><td></td>
                             </tr>
                         </tfoot>
@@ -162,16 +129,10 @@
                 lastRemindedCustomer: '',
                 overdueFilter: 'all',
                 barsLoaded: false,
-                agingData: [
-                    { customer: 'ABC Trading Co.', email: 'abc@trading.com', current: 0, d1_30: 0, d31_60: 0, d61_90: 16000, d90: 9500, risk: 'High' },
-                    { customer: 'Cruz & Sons', email: 'cruz@sons.com', current: 12000, d1_30: 0, d31_60: 0, d61_90: 0, d90: 0, risk: 'Low' },
-                    { customer: 'Reyes Corp', email: 'reyes@corp.com', current: 78000, d1_30: 0, d31_60: 0, d61_90: 0, d90: 0, risk: 'Low' },
-                    { customer: 'Lim Trading', email: 'lim@trading.com', current: 0, d1_30: 19500, d31_60: 0, d61_90: 0, d90: 0, risk: 'Medium' },
-                    { customer: 'Santos Ent.', email: 'santos@ent.com', current: 8000, d1_30: 28500, d31_60: 0, d61_90: 0, d90: 0, risk: 'Medium' },
-                ],
+                agingData: @json($customerRows),
                 get filteredAgingData() {
                     if (this.overdueFilter === 'overdue') {
-                        return this.agingData.filter(row => row.d1_30 > 0 || row.d31_60 > 0 || row.d61_90 > 0 || row.d90 > 0);
+                        return this.agingData.filter(row => row.d1_30 > 0 || row.d31_60 > 0 || row.d61_90 > 0);
                     }
                     return this.agingData;
                 },

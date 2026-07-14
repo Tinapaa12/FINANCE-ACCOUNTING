@@ -22,8 +22,14 @@ class Payment extends Model
         return $this->belongsTo(Customer::class);
     }
 
-    public function invoice()
+    public function applications()
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->hasMany(PaymentApplication::class);
+    }
+
+    public function invoices()
+    {
+        return $this->belongsToMany(Invoice::class, 'payment_applications')
+            ->withPivot('amount_applied');
     }
 }

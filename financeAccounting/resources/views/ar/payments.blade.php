@@ -19,22 +19,22 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 relative">
                 <div class="group bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex justify-between items-start relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-green-600"></div>
-                    <div><p class="text-[13px] text-gray-500 font-medium">Total Collected (This Month)</p><p class="text-3xl font-bold text-gray-900 mt-1">P50,500</p><p class="text-[13px] text-gray-400 mt-2">From 3 payments</p></div>
+                    <div><p class="text-[13px] text-gray-500 font-medium">Total Collected (This Month)</p><p class="text-3xl font-bold text-gray-900 mt-1">P{{ number_format($collectedThisMonth) }}</p><p class="text-[13px] text-gray-400 mt-2">From {{ $collectedCount }} payments</p></div>
                     <div class="bg-gradient-to-br from-emerald-500 to-green-600 p-3 rounded-full flex items-center justify-center w-12 h-12 shadow-md shadow-green-200 group-hover:scale-105 transition-transform"><i class="fas fa-hand-holding-usd text-xl text-white"></i></div>
                 </div>
                 <div class="group bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex justify-between items-start relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-600"></div>
-                    <div><p class="text-[13px] text-gray-500 font-medium">Cleared Payments</p><p class="text-3xl font-bold text-gray-900 mt-1">2</p><p class="text-[13px] text-gray-400 mt-2">Fully reconciled</p></div>
+                    <div><p class="text-[13px] text-gray-500 font-medium">Cleared Payments</p><p class="text-3xl font-bold text-gray-900 mt-1">{{ $clearedCount }}</p><p class="text-[13px] text-gray-400 mt-2">Fully reconciled</p></div>
                     <div class="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-full flex items-center justify-center w-12 h-12 shadow-md shadow-indigo-200 group-hover:scale-105 transition-transform"><i class="fas fa-check-circle text-xl text-white"></i></div>
                 </div>
                 <div class="group bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex justify-between items-start relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-orange-500"></div>
-                    <div><p class="text-[13px] text-gray-500 font-medium">Pending Clearance</p><p class="text-3xl font-bold text-gray-900 mt-1">1</p><p class="text-[13px] text-gray-400 mt-2">P28,500 - Santos Ent.</p></div>
+                    <div><p class="text-[13px] text-gray-500 font-medium">Pending Clearance</p><p class="text-3xl font-bold text-gray-900 mt-1">{{ $pendingCount }}</p><p class="text-[13px] text-gray-400 mt-2">P{{ number_format($pendingAmount) }}{{ $pendingCustomer ? ' - ' . $pendingCustomer->customer->name : '' }}</p></div>
                     <div class="bg-gradient-to-br from-amber-400 to-orange-500 p-3 rounded-full flex items-center justify-center w-12 h-12 shadow-md shadow-orange-200 group-hover:scale-105 transition-transform"><i class="fas fa-hourglass-half text-xl text-white"></i></div>
                 </div>
                 <div class="group bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex justify-between items-start relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
                     <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-fuchsia-600"></div>
-                    <div><p class="text-[13px] text-gray-500 font-medium">Top Payment Method</p><p class="text-3xl font-bold text-[#4338ca] mt-1">GCash</p><p class="text-[13px] text-gray-400 mt-2">Used in 1 of 3 payments</p></div>
+                    <div><p class="text-[13px] text-gray-500 font-medium">Top Payment Method</p><p class="text-3xl font-bold text-[#4338ca] mt-1">{{ $topMethodLabel }}</p><p class="text-[13px] text-gray-400 mt-2">Most used this period</p></div>
                     <div class="bg-gradient-to-br from-purple-500 to-fuchsia-600 p-3 rounded-full flex items-center justify-center w-12 h-12 shadow-md shadow-purple-200 group-hover:scale-105 transition-transform"><i class="fas fa-mobile-screen text-xl text-white"></i></div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <div class="lg:col-span-3 bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
                     <div class="p-6 pb-4 flex items-center justify-between border-b border-gray-50">
                         <h3 class="font-bold text-gray-800 text-[16px] flex items-center gap-2"><i class="fas fa-receipt text-indigo-500"></i> Payments Received</h3>
-                        <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full" x-text="paymentList.length + ' records'"></span>
+                        <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full" x-text="payments.length + ' records'"></span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-[14px] text-left">
@@ -61,18 +61,18 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
-                                <template x-for="(payment, idx) in paymentList" :key="payment.id">
+                                <template x-for="(payment, idx) in payments" :key="payment.id">
                                     <tr class="transition-colors" :class="idx % 2 === 0 ? 'bg-white hover:bg-indigo-50/50' : 'bg-[#fafbfc] hover:bg-indigo-50/50'">
                                         <td class="px-6 py-3.5 font-medium text-gray-800" x-text="payment.ref"></td>
                                         <td class="px-6 py-3.5 text-gray-600" x-text="payment.customer"></td>
                                         <td class="px-6 py-3.5 text-gray-500" x-text="payment.date"></td>
                                         <td class="px-6 py-3.5 text-gray-700">
                                             <span class="inline-flex items-center gap-1.5">
-                                                <i class="fas w-3.5 text-center" :class="{'fa-university text-blue-500': payment.method==='Bank Transfer', 'fa-mobile-screen text-fuchsia-500': payment.method==='GCash', 'fa-money-check text-emerald-500': payment.method==='Check'}"></i>
+                                                <i class="fas w-3.5 text-center" :class="{'fa-university text-blue-500': payment.method==='Bank Transfer', 'fa-mobile-screen text-fuchsia-500': payment.method==='Gcash', 'fa-money-check text-emerald-500': payment.method==='Check', 'fa-money-bill-wave text-yellow-500': payment.method==='Cash'}"></i>
                                                 <span x-text="payment.method"></span>
                                             </span>
                                         </td>
-                                        <td class="px-6 py-3.5 font-medium text-gray-900 text-right tabular-nums" x-text="'₱'+payment.amount.toLocaleString()"></td>
+                                        <td class="px-6 py-3.5 font-medium text-gray-900 text-right tabular-nums" x-text="'₱' + Number(payment.amount).toLocaleString()"></td>
                                         <td class="px-6 py-3.5 text-[13px] text-gray-600" x-text="payment.applied"></td>
                                         <td class="px-6 py-3.5">
                                             <span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset" 
@@ -82,6 +82,9 @@
                                         </td>
                                     </tr>
                                 </template>
+                                <tr x-show="payments.length === 0">
+                                    <td colspan="7" class="px-6 py-10 text-center text-gray-400 text-[14px]">No payments recorded yet.</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -100,12 +103,13 @@
                                          style="transition-duration: 1100ms;"
                                          :style="'width: ' + (barsLoaded ? method.pct : 0) + '%; background-color: ' + method.color"></div>
                                 </div>
-                                <span class="font-medium text-gray-800 tabular-nums" x-text="'₱' + method.amount.toLocaleString()"></span>
+                                <span class="font-medium text-gray-800 tabular-nums" x-text="'₱' + Number(method.amount).toLocaleString()"></span>
                             </div>
                         </template>
+                        <div x-show="methodBreakdown.length === 0" class="text-center text-gray-400 text-[13px] py-4">No payment data available.</div>
                     </div>
                     <div class="pt-4 border-t border-gray-100 flex justify-between text-[14px] font-bold relative">
-                        <span class="text-gray-800">Total Received</span><span class="text-[#4338ca]">P50,500</span>
+                        <span class="text-gray-800">Total Received</span><span class="text-[#4338ca]" x-text="'₱' + Number(totalReceived).toLocaleString()"></span>
                     </div>
                 </div>
             </div>
@@ -119,28 +123,46 @@
                 <h2 class="text-lg font-bold text-gray-800">Record Payment</h2>
                 <button @click="showPaymentModal = false" class="ml-auto text-gray-400 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
             </div>
+            <form @submit.prevent="submitPayment">
             <div class="space-y-4 text-[14px]">
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Customer <span class="text-red-500">*</span></label><select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]"><option>-- Select Customer --</option><option>ABC Trading Co.</option><option>Cruz & Sons</option><option>Lim Trading</option><option>Reyes Corp</option><option>Santos Enterprise</option></select></div>
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Apply to Invoice <span class="text-red-500">*</span></label><select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]"><option>-- Select Invoice --</option><option>INV-0001 - P45,000 (Overdue)</option><option>INV-0022 - P38,500 (Sent)</option><option>INV-0024 - P78,000 (Draft)</option><option>INV-0025 - P19,500 (Sent)</option></select></div>
+                <div>
+                    <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Customer <span class="text-red-500">*</span></label>
+                    <select x-model="form.customer_id" @change="updateInvoiceList" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
+                        <option value="">-- Select Customer --</option>
+                        @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Apply to Invoice <span class="text-red-500">*</span></label>
+                    <select x-model="form.invoice_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
+                        <option value="">-- Select Invoice --</option>
+                        <template x-for="inv in filteredInvoices" :key="inv.id">
+                            <option :value="inv.id" x-text="inv.invoice_number + ' - P' + Number(inv.total).toLocaleString() + ' (' + inv.status.charAt(0).toUpperCase() + inv.status.slice(1) + ')'"></option>
+                        </template>
+                    </select>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Amount Received <span class="text-red-500">*</span></label><input type="number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" placeholder="0.00"></div>
-                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Payment Date <span class="text-red-500">*</span></label><input type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" value="2026-07-07"></div>
+                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Amount Received <span class="text-red-500">*</span></label><input type="number" x-model="form.amount" step="0.01" min="0.01" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" placeholder="0.00" required></div>
+                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Payment Date <span class="text-red-500">*</span></label><input type="date" x-model="form.payment_date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required></div>
                 </div>
                 <div>
                     <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Payment Method <span class="text-red-500">*</span></label>
                     <div class="flex flex-wrap gap-3">
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Bank" checked> <i class="fas fa-university text-[14px]"></i> Bank</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="GCash"> <i class="fas fa-mobile-screen text-[14px]"></i> GCash</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Check"> <i class="fas fa-money-check text-[14px]"></i> Check</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Cash"> <i class="fas fa-money-bill-wave text-[14px]"></i> Cash</label>
+                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="bank_transfer" x-model="form.method"> <i class="fas fa-university text-[14px]"></i> Bank</label>
+                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="gcash" x-model="form.method"> <i class="fas fa-mobile-screen text-[14px]"></i> GCash</label>
+                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="check" x-model="form.method"> <i class="fas fa-money-check text-[14px]"></i> Check</label>
+                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="cash" x-model="form.method"> <i class="fas fa-money-bill-wave text-[14px]"></i> Cash</label>
                     </div>
                 </div>
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Notes <span class="text-gray-400 font-normal">(Optional)</span></label><textarea class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none text-[14px] bg-[#f9fafb]" rows="2" placeholder="e.g. Partial Payment for June Delivery"></textarea></div>
+                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Notes <span class="text-gray-400 font-normal">(Optional)</span></label><textarea x-model="form.notes" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none text-[14px] bg-[#f9fafb]" rows="2" placeholder="e.g. Partial Payment for June Delivery"></textarea></div>
             </div>
             <div class="mt-6 flex justify-end space-x-3 border-t pt-4">
-                <button @click="showPaymentModal = false" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-600 text-[14px] hover:bg-gray-50 transition">Cancel</button>
-                <button @click="showPaymentModal = false; alert('Payment Recorded Successfully!')" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-lg text-[14px] font-medium transition shadow-sm">Record</button>
+                <button @click="showPaymentModal = false" type="button" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-600 text-[14px] hover:bg-gray-50 transition">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-lg text-[14px] font-medium transition shadow-sm">Record Payment</button>
             </div>
+            </form>
         </div>
     </div>
 
@@ -153,18 +175,62 @@
             return {
                 showPaymentModal: false,
                 barsLoaded: false,
-                paymentList: [
-                    { id: 1, ref: 'REC-2024-0041', customer: 'Cruz & Sons', date: 'Jun 25', method: 'Bank Transfer', amount: 12000, applied: 'INV-0023 (Full)', status: 'Cleared' },
-                    { id: 2, ref: 'REC-2024-0042', customer: 'Lim Trading', date: 'Jun 26', method: 'GCash', amount: 10000, applied: 'INV-0025 (Partial)', status: 'Cleared' },
-                    { id: 3, ref: 'REC-2024-0043', customer: 'Santos Ent.', date: 'Jun 27', method: 'Check', amount: 28500, applied: 'INV-0022 (Full)', status: 'Pending' },
-                ],
-                methodBreakdown: [
-                    { label: 'Bank', amount: 10000, pct: 18, color: '#ef4444' },
-                    { label: 'Check', amount: 12000, pct: 24, color: '#22c55e' },
-                    { label: 'GCash', amount: 28500, pct: 58, color: '#3b82f6' },
-                ],
+                form: {
+                    customer_id: '',
+                    invoice_id: '',
+                    amount: '',
+                    payment_date: '{{ date("Y-m-d") }}',
+                    method: 'bank_transfer',
+                    notes: '',
+                },
+                payments: @json($payments),
+                allInvoices: @json($invoices),
+                methodBreakdown: @json($methodBreakdown),
+                totalReceived: {{ $totalReceived }},
+                get filteredInvoices() {
+                    if (!this.form.customer_id) return [];
+                    return this.allInvoices.filter(inv => inv.customer_id == this.form.customer_id);
+                },
                 init() {
                     setTimeout(() => { this.barsLoaded = true; }, 150);
+                },
+                updateInvoiceList() {
+                    this.form.invoice_id = '';
+                },
+                submitPayment() {
+                    if (!this.form.customer_id || !this.form.invoice_id || !this.form.amount || !this.form.method) {
+                        alert('Please fill in all required fields.');
+                        return;
+                    }
+
+                    fetch('{{ route("ar.payments.store") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                        body: JSON.stringify(this.form),
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.showPaymentModal = false;
+                            const p = data.payment;
+                            const methodLabels = { bank_transfer: 'Bank Transfer', gcash: 'Gcash', check: 'Check', cash: 'Cash' };
+                            this.payments.unshift({
+                                id: p.id,
+                                ref: p.reference_no,
+                                customer: p.customer.name,
+                                date: new Date(p.payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                                method: methodLabels[p.method] || 'Bank Transfer',
+                                amount: Number(p.amount),
+                                applied: p.applications.map(a => a.invoice.invoice_number + ' (Full)').join(', '),
+                                status: 'Pending',
+                            });
+                            this.form = { customer_id: '', invoice_id: '', amount: '', payment_date: '{{ date("Y-m-d") }}', method: 'bank_transfer', notes: '' };
+                            alert('Payment ' + p.reference_no + ' recorded successfully!');
+                        } else {
+                            alert('Error: ' + data.message);
+                        }
+                    })
+                    .catch(err => { alert('An error occurred. Please try again.'); });
                 }
             }
         }

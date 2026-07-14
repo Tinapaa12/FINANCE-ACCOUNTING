@@ -31,3 +31,4 @@ Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar
 Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
 Route::post('/ar/invoices', [ARController::class, 'store'])->name('ar.invoices.store');
 Route::get('/ar/invoices/recent', [ARController::class, 'recentInvoices'])->name('ar.invoices.recent');
+Route::post('/ar/payments', [ARController::class, 'storePayment'])->name('ar.payments.store');

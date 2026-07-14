@@ -73,12 +73,210 @@ class ARController extends Controller
 
     public function payments()
     {
-        return view('ar.payments');
+        $customers = Customer::orderBy('name')->get();
+        $invoices = Invoice::with('customer')->whereIn('status', ['draft', 'sent', 'overdue'])->orderBy('invoice_number')->get();
+
+        $payments = Payment::with(['customer', 'applications.invoice'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($p) {
+                $appliedText = $p->applications->map(fn($a) => $a->invoice->invoice_number . ' (Full)')->implode(', ');
+                return (object)[
+                    'id' => $p->id,
+                    'ref' => $p->reference_no,
+                    'customer' => $p->customer->name,
+                    'date' => $p->payment_date->format('M d'),
+                    'method' => ucwords(str_replace('_', ' ', $p->method)),
+                    'method_raw' => $p->method,
+                    'amount' => (float) $p->amount,
+                    'applied' => $appliedText ?: 'N/A',
+                    'status' => ucfirst($p->status),
+                ];
+            });
+
+        $collectedThisMonth = Payment::where('status', 'cleared')
+            ->whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->sum('amount');
+        $collectedCount = Payment::where('status', 'cleared')
+            ->whereMonth('payment_date', now()->month)
+            ->whereYear('payment_date', now()->year)
+            ->count();
+
+        $clearedCount = Payment::where('status', 'cleared')->count();
+        $pendingCount = Payment::where('status', 'pending')->count();
+        $pendingAmount = Payment::where('status', 'pending')->sum('amount');
+        $pendingCustomer = Payment::where('status', 'pending')->with('customer')->first();
+
+        $methodTotals = Payment::selectRaw("method, SUM(amount) as total")
+            ->groupBy('method')
+            ->orderByDesc('total')
+            ->get();
+
+        $totalReceived = Payment::sum('amount');
+        $topMethod = $methodTotals->first()?->method;
+        $topMethodLabel = $topMethod ? ucwords(str_replace('_', ' ', $topMethod)) : 'N/A';
+
+        $methodColors = [
+            'bank_transfer' => '#ef4444',
+            'gcash' => '#3b82f6',
+            'check' => '#22c55e',
+            'cash' => '#f59e0b',
+        ];
+        $methodIcons = [
+            'bank_transfer' => 'fa-university',
+            'gcash' => 'fa-mobile-screen',
+            'check' => 'fa-money-check',
+            'cash' => 'fa-money-bill-wave',
+        ];
+
+        $methodBreakdown = $methodTotals->map(function ($m) use ($totalReceived, $methodColors, $methodIcons) {
+            return (object)[
+                'label' => ucwords(str_replace('_', ' ', $m->method)),
+                'amount' => (float) $m->total,
+                'pct' => $totalReceived > 0 ? round(($m->total / $totalReceived) * 100) : 0,
+                'color' => $methodColors[$m->method] ?? '#6b7280',
+                'icon' => $methodIcons[$m->method] ?? 'fa-credit-card',
+            ];
+        });
+
+        return view('ar.payments', compact(
+            'customers', 'invoices', 'payments',
+            'collectedThisMonth', 'collectedCount',
+            'clearedCount', 'pendingCount', 'pendingAmount', 'pendingCustomer',
+            'topMethodLabel', 'totalReceived', 'methodBreakdown'
+        ));
+    }
+
+    public function storePayment(Request $request)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'invoice_id' => 'required|exists:invoices,id',
+            'amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'method' => 'required|in:bank_transfer,gcash,check,cash',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $lastRef = Payment::max('reference_no');
+        $nextNum = $lastRef ? (int) substr($lastRef, -4) + 1 : 1;
+        $refNo = 'REC-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+        DB::beginTransaction();
+        try {
+            $payment = Payment::create([
+                'customer_id' => $validated['customer_id'],
+                'reference_no' => $refNo,
+                'payment_date' => $validated['payment_date'],
+                'method' => $validated['method'],
+                'amount' => $validated['amount'],
+                'notes' => $validated['notes'],
+                'status' => 'pending',
+            ]);
+
+            $payment->applications()->create([
+                'invoice_id' => $validated['invoice_id'],
+                'amount_applied' => $validated['amount'],
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'payment' => $payment->load('customer', 'applications.invoice')]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function aging()
     {
-        return view('ar.aging');
+        $now = now();
+        $customers = Customer::with(['invoices' => function ($q) {
+            $q->whereIn('status', ['sent', 'overdue']);
+        }])->orderBy('name')->get();
+
+        $agingBuckets = ['current', 'd1_30', 'd31_60', 'd61_90'];
+        $bucketRanges = [
+            'current' => [-9999, 0],
+            'd1_30' => [1, 30],
+            'd31_60' => [31, 60],
+            'd61_90' => [61, 9999],
+        ];
+        $bucketLabels = [
+            'current' => 'Current (Not Due)',
+            'd1_30' => '1 - 30 Days Overdue',
+            'd31_60' => '31 - 60 Days Overdue',
+            'd61_90' => '61+ Days Overdue',
+        ];
+        $bucketColors = [
+            'current' => '#22c55e',
+            'd1_30' => '#fca5a5',
+            'd31_60' => '#f87171',
+            'd61_90' => '#ef4444',
+        ];
+
+        $today = $now->toDateString();
+
+        $customerRows = [];
+        $totals = array_fill_keys($agingBuckets, 0);
+        $totalOverall = 0;
+        $invoiceCounts = array_fill_keys($agingBuckets, 0);
+
+        foreach ($customers as $customer) {
+            $row = [
+                'customer' => $customer->name,
+                'email' => $customer->email,
+                'current' => 0,
+                'd1_30' => 0,
+                'd31_60' => 0,
+                'd61_90' => 0,
+            ];
+
+            foreach ($customer->invoices as $invoice) {
+                $daysOverdue = $now->diffInDays($invoice->due_date, false);
+                if ($daysOverdue < 0) $daysOverdue = 0;
+
+                foreach ($agingBuckets as $bucket) {
+                    [$min, $max] = $bucketRanges[$bucket];
+                    if ($daysOverdue >= $min && $daysOverdue <= $max) {
+                        $amount = (float) $invoice->total;
+                        $row[$bucket] += $amount;
+                        $totals[$bucket] += $amount;
+                        $totalOverall += $amount;
+                        $invoiceCounts[$bucket]++;
+                        break;
+                    }
+                }
+            }
+
+            if (array_sum(array_slice($row, 2)) > 0) {
+                $maxBucket = 0;
+                foreach (['d61_90', 'd31_60', 'd1_30'] as $b) {
+                    if ($row[$b] > 0) { $maxBucket = $b; break; }
+                }
+                $risk = match ($maxBucket) {
+                    'd1_30' => 'Medium',
+                    'd31_60' => 'High',
+                    'd61_90' => 'Critical',
+                    default => 'Low',
+                };
+                $row['risk'] = $risk;
+                $customerRows[] = (object) $row;
+            }
+        }
+
+        $summaryCards = [];
+        foreach ($agingBuckets as $bucket) {
+            $summaryCards[] = (object)[
+                'label' => $bucketLabels[$bucket],
+                'total' => $totals[$bucket],
+                'count' => $invoiceCounts[$bucket],
+                'pct' => $totalOverall > 0 ? round(($totals[$bucket] / $totalOverall) * 100) : 0,
+                'color' => $bucketColors[$bucket],
+            ];
+        }
+
+        return view('ar.aging', compact('customerRows', 'summaryCards', 'totals', 'totalOverall'));
     }
 
     public function store(Request $request)
