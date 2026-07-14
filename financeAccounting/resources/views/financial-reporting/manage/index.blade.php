@@ -84,6 +84,15 @@
             <h3 class="font-semibold mb-3">Add Balance Sheet Line</h3>
             <form method="POST" action="{{ route('reports.manage.store-balance') }}" class="flex gap-3 items-end flex-wrap">
                 @csrf
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Period</label>
+                    <select name="report_id" class="border rounded px-3 py-1.5 text-sm">
+                        <option value="">Auto-create period</option>
+                        @foreach($reports as $r)
+                            <option value="{{ $r->report_id }}">{{ $r->report_period_start->format('F Y') }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div><label class="text-xs text-gray-500 block mb-1">Line Name</label><input type="text" name="line_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Cash on hand"></div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">Section</label>
@@ -100,18 +109,26 @@
 
     @elseif($tab === 'cashflow')
         <div class="bg-white rounded-lg border p-5">
-            <h3 class="font-semibold mb-3">Add Cash Flow Line</h3>
+            <h3 class="font-semibold mb-3">Add Cash Flow Entry</h3>
             <form method="POST" action="{{ route('reports.manage.store-cashflow') }}" class="flex gap-3 items-end flex-wrap">
                 @csrf
                 <div>
-                    <label class="text-xs text-gray-500 block mb-1">Activity</label>
-                    <select name="activity_type" required class="border rounded px-3 py-1.5 text-sm">
-                        <option value="Operating">Operating</option>
-                        <option value="Investing">Investing</option>
-                        <option value="Financing">Financing</option>
+                    <label class="text-xs text-gray-500 block mb-1">Period</label>
+                    <select name="report_id" class="border rounded px-3 py-1.5 text-sm">
+                        <option value="">Current month</option>
+                        @foreach($reports as $r)
+                            <option value="{{ $r->report_id }}">{{ $r->report_period_start->format('F Y') }}</option>
+                        @endforeach
                     </select>
                 </div>
-                <div><label class="text-xs text-gray-500 block mb-1">Line Name</label><input type="text" name="line_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Cash received from customers"></div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Type</label>
+                    <select name="flow_type" required class="border rounded px-3 py-1.5 text-sm">
+                        <option value="Cash In">Cash In</option>
+                        <option value="Cash Out">Cash Out</option>
+                    </select>
+                </div>
+                <div><label class="text-xs text-gray-500 block mb-1">Account</label><input type="text" name="account_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Sales Revenue"></div>
                 <div><label class="text-xs text-gray-500 block mb-1">Amount (₱)</label><input type="number" step="0.01" name="amount" required class="border rounded px-3 py-1.5 text-sm"></div>
                 <button class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">Add</button>
             </form>

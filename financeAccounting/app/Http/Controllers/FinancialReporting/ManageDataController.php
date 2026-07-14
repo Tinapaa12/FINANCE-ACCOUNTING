@@ -19,7 +19,7 @@ class ManageDataController extends Controller
     public function index()
     {
         return view('financial-reporting.manage.index', [
-            'reports'        => FinancialReport::where('report_type', 'Income Statement')->orderByDesc('report_period_start')->get(),
+            'reports'        => FinancialReport::orderByDesc('report_period_start')->get(),
             'periods'        => TaxRecord::select('tax_period')->distinct()->orderByDesc('tax_period')->pluck('tax_period'),
             'reportPeriods'  => FinancialReport::select('report_period_start')->distinct()->orderByDesc('report_period_start')->get()->map(fn($r) => \Carbon\Carbon::parse($r->report_period_start)->format('F Y'))->unique(),
             'balanceSheet' => BalanceSheet::latest('generated_at')->first(),
@@ -172,28 +172,38 @@ class ManageDataController extends Controller
     public function storeBalanceSheet(Request $request)
     {
         $data = $request->validate([
+            'report_id' => 'nullable|exists:financial_reports,report_id',
             'line_name' => 'required|string|max:255',
             'section'   => 'required|in:Asset,Liability,Equity',
             'amount'    => 'required|numeric|min:0',
         ]);
 
-        $bs = BalanceSheet::latest('generated_at')->first();
+        $existing = null;
+        if ($data['report_id']) {
+            $existing = FinancialReport::find($data['report_id']);
+        }
 
-        if (!$bs) {
+        if ($existing && $existing->report_type === 'Balance Sheet') {
+            $report = $existing;
+        } else {
+            $periodStart = $existing ? $existing->report_period_start : now()->startOfMonth();
+            $periodEnd   = $existing ? $existing->report_period_end   : now()->endOfMonth();
             $report = FinancialReport::create([
                 'report_type'         => 'Balance Sheet',
-                'report_period_start' => now()->startOfMonth(),
-                'report_period_end'   => now()->endOfMonth(),
+                'report_period_start' => $periodStart,
+                'report_period_end'   => $periodEnd,
                 'generated_at'        => now(),
             ]);
-
-            $bs = BalanceSheet::create([
-                'report_id'      => $report->report_id,
-                'statement_title'=> 'Balance Sheet',
-                'period_label'   => 'As of ' . now()->format('F j, Y'),
-                'generated_at'   => now(),
-            ]);
         }
+
+        $bs = BalanceSheet::firstOrCreate(
+            ['report_id' => $report->report_id],
+            [
+                'statement_title' => 'Balance Sheet',
+                'period_label'    => 'As of ' . $report->report_period_end->format('F j, Y'),
+                'generated_at'    => now(),
+            ]
+        );
 
         BalanceSheetLine::create([
             'balance_sheet_id' => $bs->balance_sheet_id,
@@ -217,38 +227,44 @@ class ManageDataController extends Controller
     public function storeCashFlow(Request $request)
     {
         $data = $request->validate([
-            'activity_type' => 'required|in:Operating,Investing,Financing',
-            'line_name'     => 'required|string|max:255',
-            'amount'        => 'required|numeric',
+            'report_id'    => 'nullable|exists:financial_reports,report_id',
+            'flow_type'    => 'required|in:Cash In,Cash Out',
+            'account_name' => 'required|string|max:255',
+            'amount'       => 'required|numeric|min:0',
         ]);
 
-        $cf = CashFlowReport::latest('generated_at')->first();
+        $report = null;
+        if ($data['report_id']) {
+            $report = FinancialReport::find($data['report_id']);
+        }
 
-        if (!$cf) {
+        if (!$report) {
             $report = FinancialReport::create([
                 'report_type'         => 'Cash Flow Statement',
                 'report_period_start' => now()->startOfMonth(),
                 'report_period_end'   => now()->endOfMonth(),
                 'generated_at'        => now(),
             ]);
+        }
 
-            $cf = CashFlowReport::create([
-                'report_id'       => $report->report_id,
+        $cf = CashFlowReport::firstOrCreate(
+            ['report_id' => $report->report_id],
+            [
                 'statement_title' => 'Cash Flow Statement',
                 'period_label'    => 'For the Month Ended ' . now()->format('F Y'),
                 'generated_at'    => now(),
-            ]);
-        }
+            ]
+        );
 
         CashFlowReportLine::create([
             'cash_flow_id'  => $cf->cash_flow_id,
-            'activity_type' => $data['activity_type'],
-            'line_name'     => $data['line_name'],
-            'amount'        => $data['amount'],
+            'activity_type' => $data['flow_type'],
+            'line_name'     => $data['account_name'],
+            'amount'        => $data['flow_type'] === 'Cash Out' ? -abs($data['amount']) : abs($data['amount']),
             'line_order'    => 0,
         ]);
 
-        return redirect()->route('reports.manage', ['tab' => 'cashflow'])->with('success', 'Cash flow line added.');
+        return redirect()->route('reports.manage', ['tab' => 'cashflow'])->with('success', 'Cash flow entry added.');
     }
 
     public function destroyCashFlowLine(CashFlowReportLine $line)
