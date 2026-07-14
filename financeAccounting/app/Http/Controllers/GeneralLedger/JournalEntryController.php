@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\DB;
 
 class JournalEntryController extends Controller
 {
+    public function pdf()
+    {
+        $entries = JournalEntry::with(['lines.account'])->latest()->get();
+        $accounts = ChartOfAccount::where('status', 'Active')->orderBy('account_code')
+            ->get(['account_id', 'account_code', 'account_name']);
+        return view('general-ledger.pdf.journal-entries', compact('entries', 'accounts'));
+    }
+
     public function index()
     {
         $entries = JournalEntry::with(['lines.account'])->latest()->paginate(10);
@@ -63,6 +71,7 @@ class JournalEntryController extends Controller
     {
         $validated = $request->validate([
             'transaction_date' => 'required|date',
+            'reference_no' => 'nullable|string|max:50',
             'description' => 'required|string|max:500',
             'status' => 'required|in:Draft,Posted',
             'lines' => 'nullable|array|min:2',
@@ -75,6 +84,7 @@ class JournalEntryController extends Controller
         DB::transaction(function () use ($validated, $journalEntry) {
             $journalEntry->update([
                 'transaction_date' => $validated['transaction_date'],
+                'reference_no' => $validated['reference_no'] ?? $journalEntry->reference_no,
                 'description' => $validated['description'],
                 'status' => $validated['status'],
             ]);

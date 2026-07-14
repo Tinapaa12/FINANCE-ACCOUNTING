@@ -7,13 +7,9 @@ use Illuminate\Http\Request;
 
 class SalesTransactionController extends Controller
 {
-    public function index()
+    public function create()
     {
-        $transactions = SalesTransaction::with('journalEntry')
-            ->latest()
-            ->get();
-
-        return view('sales-transactions.index', compact('transactions'));
+        return view('sales-transactions.create');
     }
 
     public function store(Request $request)
@@ -38,19 +34,19 @@ class SalesTransactionController extends Controller
             try {
                 FinancePostingService::postSale($transaction);
             } catch (\Exception $e) {
-                return redirect()->route('sales-transactions.index')
+                return redirect()->route('sales-transactions.create')
                     ->with('error', 'Transaction created but posting to Finance failed: ' . $e->getMessage());
             }
         }
 
-        return redirect()->route('sales-transactions.index')
+        return redirect()->route('sales-transactions.create')
             ->with('success', 'Sales transaction ' . $transaction->order_no . ' created successfully.');
     }
 
     public function markAsPaid(SalesTransaction $salesTransaction)
     {
         if ($salesTransaction->status === 'Paid') {
-            return redirect()->route('sales-transactions.index')
+            return redirect()->route('sales-transactions.create')
                 ->with('error', 'Transaction is already Paid.');
         }
 
@@ -59,11 +55,11 @@ class SalesTransactionController extends Controller
         try {
             FinancePostingService::postSale($salesTransaction);
         } catch (\Exception $e) {
-            return redirect()->route('sales-transactions.index')
+            return redirect()->route('sales-transactions.create')
                 ->with('error', 'Posting to Finance failed: ' . $e->getMessage());
         }
 
-        return redirect()->route('sales-transactions.index')
+        return redirect()->route('sales-transactions.create')
             ->with('success', 'Transaction ' . $salesTransaction->order_no . ' marked as Paid and posted to Finance.');
     }
 }

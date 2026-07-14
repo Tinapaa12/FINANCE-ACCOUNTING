@@ -44,13 +44,13 @@
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
-                <!-- Sales — dummy module simulating an external ERP Sales system -->
+                <!-- Sales — dummy module simulating an external ERP Sales module -->
                 <x-sidebar-section title="Sales">
                     <x-sidebar-nav-item
-                        href="{{ route('sales-transactions.index') }}"
+                        href="{{ route('sales-transactions.create') }}"
                         :active="request()->routeIs('sales-transactions.*')"
-                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />'>
-                        Transactions
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />'>
+                        New Transaction
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
@@ -134,11 +134,13 @@
                 <div class="flex items-center gap-3">
                     @php
                         $pdfRoutes = [
-                            'reports.income'      => 'reports.income.pdf',
-                            'reports.assets'      => 'reports.assets.pdf',
-                            'reports.liabilities' => 'reports.liabilities.pdf',
-                            'reports.cashflow'    => 'reports.cashflow.pdf',
-                            'tax.compliance'      => 'tax.compliance.pdf',
+                            'reports.income'         => 'reports.income.pdf',
+                            'reports.assets'         => 'reports.assets.pdf',
+                            'reports.liabilities'    => 'reports.liabilities.pdf',
+                            'reports.cashflow'       => 'reports.cashflow.pdf',
+                            'tax.compliance'         => 'tax.compliance.pdf',
+                            'chart-of-accounts.index' => 'chart-of-accounts.pdf',
+                            'journal-entries.index'  => 'journal-entries.pdf',
                         ];
                         $currentPdfRoute = null;
                         foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
@@ -150,7 +152,7 @@
                     @if($currentPdfRoute)
                         <a href="{{ route($currentPdfRoute) }}" target="_blank"
                            class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
-                        <button data-export-pdf class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">EXPORT PDF</button>
+                        <a href="{{ route($currentPdfRoute, ['print' => 1]) }}" target="_blank" class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">PRINT</a>
                     @endif
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
@@ -195,40 +197,16 @@
         </div>
     </div>
 
-    <!-- Export Success Modal -->
-    <div id="export-modal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-xl w-[420px] p-10 text-center">
-            <div class="mx-auto mb-5 w-20 h-20 rounded-full border-2 border-slate-800 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <p class="font-semibold text-xl mb-6">PDF EXPORTED!</p>
-            <button onclick="closeExportModal()" class="bg-slate-900 text-white text-sm font-medium px-8 py-2.5 rounded hover:bg-slate-800 transition-colors">
-                OKAY
-            </button>
-        </div>
-    </div>
-
     <script>
-        function openExportModal(e) {
-            if (e) e.preventDefault();
-            const modal = document.getElementById('export-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-        function closeExportModal() {
-            const modal = document.getElementById('export-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('[data-export-pdf]').forEach(function (btn) {
-                btn.addEventListener('click', openExportModal);
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('PDF EXPORTED!');
+                });
             });
         });
     </script>
-
     @yield('scripts')
     @stack('scripts')
 </body>

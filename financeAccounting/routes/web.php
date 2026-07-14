@@ -12,10 +12,12 @@ Route::get('/', fn() => redirect()->route('dashboard'));
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+Route::get('/chart-of-accounts/pdf', [ChartOfAccountsController::class, 'pdf'])->name('chart-of-accounts.pdf');
 Route::resource('chart-of-accounts', ChartOfAccountsController::class)->parameters([
     'chart-of-accounts' => 'chartOfAccount'
 ]);
 
+Route::get('/journal-entries/pdf', [JournalEntryController::class, 'pdf'])->name('journal-entries.pdf');
 Route::resource('journal-entries', JournalEntryController::class)->parameters([
     'journal-entries' => 'journalEntry'
 ]);
@@ -52,7 +54,8 @@ Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar
 Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
 
 // Dummy Sales Transactions (simulates an external ERP Sales module)
-Route::get('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'index'])->name('sales-transactions.index');
+Route::get('/sales-transactions', fn() => redirect()->route('sales-transactions.create'))->name('sales-transactions.index');
+Route::get('/sales-transactions/create', [\App\Http\Controllers\SalesTransactionController::class, 'create'])->name('sales-transactions.create');
 Route::post('/sales-transactions', [\App\Http\Controllers\SalesTransactionController::class, 'store'])->name('sales-transactions.store');
 Route::post('/sales-transactions/{salesTransaction}/mark-as-paid', [\App\Http\Controllers\SalesTransactionController::class, 'markAsPaid'])->name('sales-transactions.mark-as-paid');
 
