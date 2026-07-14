@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
 {
-    protected $table = 'audit_logs';
-
     protected $fillable = [
         'loggable_id',
         'loggable_type',
@@ -17,14 +15,6 @@ class AuditLog extends Model
         'new_values',
         'user',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'old_values' => 'array',
-            'new_values' => 'array',
-        ];
-    }
 
     public function loggable()
     {

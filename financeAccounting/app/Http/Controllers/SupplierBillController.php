@@ -7,6 +7,7 @@ use App\Models\SupplierBill;
 use App\Models\Attachment;
 use App\Models\PurchaseOrder;
 use App\Models\GoodsReceivedNote;
+use App\Models\Payment;
 
 class SupplierBillController extends Controller
 {
@@ -17,7 +18,7 @@ class SupplierBillController extends Controller
         $direction = $request->input('direction', 'asc');
         $filterStatus = $request->input('filter_status');
         $filterMethod = $request->input('filter_method');
-        $tab = $request->input('tab', 'bills');
+        $tab = $request->input('tab', 'pos');
 
         $query = SupplierBill::query();
 
@@ -39,7 +40,7 @@ class SupplierBillController extends Controller
             $query->where('payment_method', $filterMethod);
         }
 
-        $supplierBills = $query->with(['attachments', 'payments'])->orderBy($sort, $direction)->paginate(6)->withQueryString();
+        $supplierBills = $query->with(['attachments', 'payments'])->orderBy($sort, $direction)->paginate(5)->withQueryString();
 
         $upcomingBills = SupplierBill::where('status', 'Pending')
             ->orderBy('due_date')
@@ -53,21 +54,11 @@ class SupplierBillController extends Controller
         $totalBillsAmount = SupplierBill::where('status', '!=', 'Paid')->sum('amount');
         $totalBillsCount = SupplierBill::where('status', '!=', 'Paid')->count();
 
-        $paidThisMonthAmount = SupplierBill::where('status', 'Paid')
-            ->whereMonth('paid_at', now()->month)
-            ->sum('amount');
+        $paidThisMonthAmount = Payment::whereMonth('payment_date', now()->month)->sum('amount');
+        $paidThisMonthCount = Payment::whereMonth('payment_date', now()->month)->count();
 
-        $paidThisMonthCount = SupplierBill::where('status', 'Paid')
-            ->whereMonth('paid_at', now()->month)
-            ->count();
-
-        $paymentsTodayAmount = SupplierBill::where('status', 'Paid')
-            ->whereDate('paid_at', today())
-            ->sum('amount');
-
-        $paymentsTodayCount = SupplierBill::where('status', 'Paid')
-            ->whereDate('paid_at', today())
-            ->count();
+        $paymentsTodayAmount = Payment::whereDate('payment_date', today())->sum('amount');
+        $paymentsTodayCount = Payment::whereDate('payment_date', today())->count();
 
         $pendingBillsAmount = SupplierBill::where('status', 'Pending')
             ->sum('amount');
@@ -83,8 +74,24 @@ class SupplierBillController extends Controller
             ->whereDate('due_date', '<', now())
             ->count();
 
-        $purchaseOrders = PurchaseOrder::orderBy('created_at', 'desc')->paginate(6)->withQueryString();
-        $grns = GoodsReceivedNote::with('purchaseOrder')->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
+        $poSearch = $request->input('po_search');
+        $purchaseOrders = PurchaseOrder::when($poSearch, function ($q) use ($poSearch) {
+            $q->where(function ($q) use ($poSearch) {
+                $q->where('po_no', 'like', "%{$poSearch}%")
+                  ->orWhere('supplier', 'like', "%{$poSearch}%")
+                  ->orWhere('status', 'like', "%{$poSearch}%");
+            });
+        })->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
+
+        $grnSearch = $request->input('grn_search');
+        $grns = GoodsReceivedNote::with('purchaseOrder')
+            ->when($grnSearch, function ($q) use ($grnSearch) {
+                $q->where(function ($q) use ($grnSearch) {
+                    $q->where('grn_no', 'like', "%{$grnSearch}%")
+                      ->orWhere('supplier', 'like', "%{$grnSearch}%")
+                      ->orWhere('status', 'like', "%{$grnSearch}%");
+                });
+            })->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
         $allPOs = PurchaseOrder::whereIn('status', ['Approved', 'Received'])->orderBy('po_no')->get();
 
         return view('supplier-bills.index', compact(
@@ -106,6 +113,8 @@ class SupplierBillController extends Controller
             'direction',
             'filterStatus',
             'filterMethod',
+            'poSearch',
+            'grnSearch',
             'tab',
             'purchaseOrders',
             'grns',
@@ -141,7 +150,7 @@ class SupplierBillController extends Controller
         ]);
 
         audit_log($bill, 'created', "Supplier bill #{$bill->bill_no} created for {$bill->supplier}");
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function approve($id)
@@ -153,7 +162,7 @@ class SupplierBillController extends Controller
             'approved_by' => auth()->user()->name ?? 'Manager',
         ]);
         audit_log($bill, 'approved', "Supplier bill #{$bill->bill_no} approved");
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function batchPay(Request $request)
@@ -175,7 +184,7 @@ class SupplierBillController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
 public function pay(Request $request, SupplierBill $supplierBill)
@@ -260,7 +269,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
             ]);
         }
 
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function update(Request $request, SupplierBill $supplierBill)
@@ -287,7 +296,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
         ]);
 
         audit_log($supplierBill, 'updated', "Supplier bill #{$supplierBill->bill_no} updated", $old, $supplierBill->toArray());
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function uploadAttachment(Request $request, $id)
@@ -303,7 +312,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
         ]);
-        return redirect()->route('supplier-bills.index');
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function downloadAttachment($id)
@@ -320,7 +329,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
     $bill->status = 'Paid';
     $bill->save();
 
-    return redirect()->route('supplier-bills.index');
+    return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
 }
 
 

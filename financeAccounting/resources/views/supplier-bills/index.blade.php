@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('page-title', $tab === 'bills' ? 'Supplier Bills' : ($tab === 'pos' ? 'Purchase Orders' : 'Goods Received Notes'))
+@section('page-title', 'Supplier Bills')
 
 @section('content')
 
@@ -41,36 +41,23 @@
 <div class="flex-1 min-w-0">
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
     <div class="flex border-b border-gray-200">
-        <a href="{{ route('supplier-bills.index', ['tab' => 'bills']) }}" class="px-6 py-4 text-sm font-medium no-underline {{ $tab === 'bills' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">Supplier Bills</a>
         <a href="{{ route('supplier-bills.index', ['tab' => 'pos']) }}" class="px-6 py-4 text-sm font-medium no-underline {{ $tab === 'pos' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">Purchase Orders</a>
         <a href="{{ route('supplier-bills.index', ['tab' => 'grns']) }}" class="px-6 py-4 text-sm font-medium no-underline {{ $tab === 'grns' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">Goods Received Notes</a>
+        <a href="{{ route('supplier-bills.index', ['tab' => 'bills']) }}" class="px-6 py-4 text-sm font-medium no-underline {{ $tab === 'bills' ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">Invoice</a>
     </div>
 
 @if($tab === 'bills')
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold">Supplier Bills</h2>
+        <h2 class="text-lg font-semibold">Invoice</h2>
         <div class="flex gap-3 items-center">
             <form method="GET" action="{{ route('supplier-bills.index') }}" class="flex flex-wrap gap-2 items-center">
                 <input type="hidden" name="tab" value="bills">
                 <input type="text" name="search" placeholder="Search bills..." value="{{ $search ?? '' }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <select name="filter_status" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Status</option>
-                    <option value="Pending" {{ $filterStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="Approved" {{ $filterStatus === 'Approved' ? 'selected' : '' }}>Approved</option>
-                    <option value="Paid" {{ $filterStatus === 'Paid' ? 'selected' : '' }}>Paid</option>
-                </select>
-                <select name="filter_method" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Methods</option>
-                    <option value="Cash" {{ $filterMethod === 'Cash' ? 'selected' : '' }}>Cash</option>
-                    <option value="Check" {{ $filterMethod === 'Check' ? 'selected' : '' }}>Check</option>
-                    <option value="Bank Transfer" {{ $filterMethod === 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                </select>
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Search</button>
-                @if(request('search') || request('filter_status') || request('filter_method'))
+                @if(request('search'))
                     <a href="{{ route('supplier-bills.index', ['tab' => 'bills']) }}" class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm no-underline hover:bg-gray-600">Clear</a>
                 @endif
             </form>
-            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors" onclick="openModal()">Add Bill</button>
         </div>
     </div>
 
@@ -130,53 +117,12 @@
     </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
         <div class="flex gap-1.5 items-center flex-wrap">
-            <button type="button" class="border-none cursor-pointer rounded-md bg-blue-500 text-white w-7 h-7 flex items-center justify-center hover:bg-blue-600 transition-colors"
-                onclick="openViewModal(
-                    {{ $bill->id }},
-                    '{{ $bill->supplier }}',
-                    {{ $bill->amount }},
-                    '{{ $bill->due_date }}',
-                    '{{ $bill->status }}',
-                    '{{ $bill->payment_method ?? '' }}',
-                    '{{ $bill->bill_no ?? '' }}',
-                    '{{ $bill->po_no ?? '' }}',
-                    '{{ $bill->grn_no ?? '' }}',
-                    {!! $attachJson !!},
-                    {!! $payJson !!},
-                    '{{ $bill->ewt_rate ?? '' }}',
-                    '{{ $bill->payment_terms ?? '' }}'
-                )" title="View">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
-            @if($bill->status === 'Pending')
-            <form action="{{ route('supplier-bills.approve', $bill->id) }}" method="POST" class="inline">
-                @csrf @method('PATCH')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-indigo-500 text-white px-2 py-1 text-xs font-medium hover:bg-indigo-600 transition-colors">Approve</button>
-            </form>
-            @endif
-            <button class="border-none cursor-pointer rounded-md bg-orange-500 text-white w-7 h-7 flex items-center justify-center hover:bg-orange-600 transition-colors"
-                onclick="editBill(
-                    {{ $bill->id }},
-                    '{{ $bill->supplier }}',
-                    {{ $bill->amount }},
-                    '{{ $bill->due_date }}',
-                    '{{ $bill->status }}',
-                    '{{ $bill->payment_method ?? '' }}',
-                    '{{ $bill->ewt_rate ?? '' }}',
-                    '{{ $bill->payment_terms ?? '' }}'
-                )" title="Edit">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-            </button>
-            <form action="{{ route('supplier-bills.destroy', $bill->id) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-red-500 text-white w-7 h-7 flex items-center justify-center hover:bg-red-600 transition-colors"
-                    onclick="return confirm('Delete this bill?')" title="Delete">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
-            </form>
-            @if($bill->status === 'Approved' && $bill->balance > 0)
+            @if(in_array($bill->status, ['Pending', 'Approved']) && $bill->balance > 0)
             <button type="button" onclick="openPaymentModal({{ $bill->id }}, {{ $bill->amount }}, {{ $bill->total_paid }}, '{{ $bill->payment_method ?? '' }}')"
                 class="border-none cursor-pointer rounded-md bg-green-600 text-white px-2 py-1 text-xs font-medium hover:bg-green-700 transition-colors">Pay</button>
+            @endif
+            @if($bill->status === 'Paid')
+            <span class="text-gray-400">—</span>
             @endif
         </div>
     </td>
@@ -197,19 +143,31 @@
 @elseif($tab === 'pos')
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Purchase Orders</h2>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors" onclick="openPOModal()">Add PO</button>
+        <div class="flex gap-3 items-center">
+            <form method="GET" action="{{ route('supplier-bills.index') }}" class="flex gap-2 items-center">
+                <input type="hidden" name="tab" value="pos">
+                <input type="text" name="po_search" placeholder="Search POs..." value="{{ $poSearch ?? '' }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Search</button>
+                @if(request('po_search'))
+                    <a href="{{ route('supplier-bills.index', ['tab' => 'pos']) }}" class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm no-underline hover:bg-gray-600">Clear</a>
+                @endif
+            </form>
+        </div>
     </div>
     <div class="w-full overflow-x-auto">
         <table class="w-full border-collapse">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order Date</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expected Delivery</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
+                    <th class="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
+                    <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
+                    <th class="w-[5%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
+                    <th class="w-[9%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Cost</th>
+                    <th class="w-[9%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
+                    <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order Date</th>
+                    <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expected Delivery</th>
+                    <th class="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -217,6 +175,9 @@
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-4 border-t border-gray-100 text-sm font-medium">{{ $po->po_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->supplier }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->item_name ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->qty ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($po->unit_cost ?? 0, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($po->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->order_date->format('M d, Y') }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->expected_delivery ? $po->expected_delivery->format('M d, Y') : 'N/A' }}</td>
@@ -230,24 +191,19 @@
         </span>
     </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
-        <div class="flex gap-2 items-center">
-            <button class="border-none cursor-pointer rounded-md bg-orange-500 text-white w-8 h-8 flex items-center justify-center hover:bg-orange-600 transition-colors"
-                onclick="editPO({{ $po->id }}, '{{ $po->supplier }}', {{ $po->amount }}, '{{ $po->order_date->format('Y-m-d') }}', '{{ $po->expected_delivery ? $po->expected_delivery->format('Y-m-d') : '' }}', '{{ $po->status }}', '{{ addslashes($po->description) }}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-            </button>
-            <form action="{{ route('purchase-orders.destroy', $po->id) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
-                    onclick="return confirm('Delete this PO?')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
-            </form>
+        <div class="flex gap-1.5 items-center flex-wrap">
+        @if($po->status === 'Pending')
+        <form action="{{ route('purchase-orders.approve', $po->id) }}" method="POST" class="inline">
+            @csrf @method('PATCH')
+            <button type="submit" class="border-none cursor-pointer rounded-md bg-indigo-500 text-white px-2 py-1 text-xs font-medium hover:bg-indigo-600 transition-colors">Approve</button>
+        </form>
+        @endif
         </div>
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="7" class="text-center px-4 py-8 text-gray-500">No purchase orders found.</td>
+    <td colspan="10" class="text-center px-4 py-8 text-gray-500">No purchase orders found.</td>
 </tr>
 @endforelse
             </tbody>
@@ -259,19 +215,31 @@
 @elseif($tab === 'grns')
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Goods Received Notes</h2>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors" onclick="openGRNModal()">Add GRN</button>
+        <div class="flex gap-3 items-center">
+            <form method="GET" action="{{ route('supplier-bills.index') }}" class="flex gap-2 items-center">
+                <input type="hidden" name="tab" value="grns">
+                <input type="text" name="grn_search" placeholder="Search GRNs..." value="{{ $grnSearch ?? '' }}" class="px-3 py-2 border border-gray-300 rounded-lg text-sm w-44 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Search</button>
+                @if(request('grn_search'))
+                    <a href="{{ route('supplier-bills.index', ['tab' => 'grns']) }}" class="px-4 py-2 bg-gray-500 text-white rounded-lg text-sm no-underline hover:bg-gray-600">Clear</a>
+                @endif
+            </form>
+        </div>
     </div>
     <div class="w-full overflow-x-auto">
         <table class="w-full border-collapse">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">GRN No.</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Received Date</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">GRN No.</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
+                    <th class="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
+                    <th class="w-[7%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ordered</th>
+                    <th class="w-[7%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Received</th>
+                    <th class="w-[14%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Received Date</th>
+                    <th class="w-[7%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="w-[8%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -279,6 +247,9 @@
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-4 border-t border-gray-100 text-sm font-medium">{{ $grn->grn_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->purchaseOrder?->po_no ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->item_name ?? $grn->purchaseOrder?->item_name ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->qty_ordered ?? ($grn->purchaseOrder?->qty ?? 'N/A') }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->qty_received ?? ($grn->purchaseOrder?->qty ?? 'N/A') }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->supplier }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($grn->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->received_date->format('M d, Y') }}</td>
@@ -290,24 +261,17 @@
         </span>
     </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
-        <div class="flex gap-2 items-center">
-            <button class="border-none cursor-pointer rounded-md bg-orange-500 text-white w-8 h-8 flex items-center justify-center hover:bg-orange-600 transition-colors"
-                onclick="editGRN({{ $grn->id }}, '{{ $grn->supplier }}', {{ $grn->amount }}, '{{ $grn->received_date->format('Y-m-d') }}', '{{ $grn->purchase_order_id }}', '{{ $grn->status }}', '{{ addslashes($grn->notes) }}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-            </button>
-            <form action="{{ route('goods-received-notes.destroy', $grn->id) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
-                    onclick="return confirm('Delete this GRN?')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
-            </form>
-        </div>
+        @if($grn->status === 'Pending')
+        <form action="{{ route('goods-received-notes.complete', $grn->id) }}" method="POST" class="inline">
+            @csrf @method('PATCH')
+            <button type="submit" class="border-none cursor-pointer rounded-md bg-green-600 text-white px-2 py-1 text-xs font-medium hover:bg-green-700 transition-colors">Complete</button>
+        </form>
+        @endif
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="7" class="text-center px-4 py-8 text-gray-500">No goods received notes found.</td>
+    <td colspan="10" class="text-center px-4 py-8 text-gray-500">No goods received notes found.</td>
 </tr>
 @endforelse
             </tbody>
@@ -321,7 +285,6 @@
 </div>
 </div>
 
-@if($tab === 'bills')
 <div class="w-80 shrink-0">
     <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
         <h2 class="text-lg font-semibold mb-4">Upcoming Supplier Bills</h2>
@@ -364,7 +327,6 @@
         @endif
     </div>
 </div>
-@endif
 
 </div>
 

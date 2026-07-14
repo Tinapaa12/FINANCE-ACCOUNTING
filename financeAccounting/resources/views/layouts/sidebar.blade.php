@@ -29,6 +29,18 @@
             Journal Entries
         </a>
 
+        <small class="block text-[#7d8ca2] mt-[22px] mb-[12px] text-[12px]">Inventory</small>
+
+        <a href="{{ route('inventory.index') }}" class="flex items-center gap-[12px] text-white no-underline p-[12px] rounded-[8px] mb-[6px] transition-colors duration-[.25s] hover:bg-[#1c3354] {{ request()->routeIs('inventory.index') || request()->routeIs('inventory.store') ? 'bg-[#4658e7]' : '' }}">
+            <span>📦</span>
+            Inventory
+        </a>
+
+        <a href="{{ route('inventory.tracking') }}" class="flex items-center gap-[12px] text-white no-underline p-[12px] rounded-[8px] mb-[6px] transition-colors duration-[.25s] hover:bg-[#1c3354] {{ request()->routeIs('inventory.tracking*') ? 'bg-[#4658e7]' : '' }}" style="padding-left:36px;font-size:13px;">
+            <span>📋</span>
+            Inventory Tracking
+        </a>
+
         <small class="block text-[#7d8ca2] mt-[22px] mb-[12px] text-[12px]">Account Payables</small>
 
         <a href="{{ route('supplier-bills.index') }}" class="flex items-center gap-[12px] text-white no-underline p-[12px] rounded-[8px] mb-[6px] transition-colors duration-[.25s] hover:bg-[#1c3354] {{ request()->routeIs('supplier-bills*') ? 'bg-[#4658e7]' : '' }}">

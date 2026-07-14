@@ -6,8 +6,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\GoodsReceivedNoteController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\AuditController;
+use App\Http\Controllers\InventoryController;
 
 
 Route::get('/', function () {
@@ -41,27 +40,11 @@ Route::post('/supplier-bills/batch-pay', [SupplierBillController::class, 'batchP
 Route::post('/payments', [PaymentController::class, 'store'])
     ->name('payments.store');
 
-Route::get('/payment-methods', [PaymentMethodController::class, 'index'])
-    ->name('payment-methods.index');
-
-Route::post('/payment-methods', [PaymentMethodController::class, 'store'])
-    ->name('payment-methods.store');
-
-Route::put('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])
-    ->name('payment-methods.update');
-
-Route::delete('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])
-    ->name('payment-methods.destroy');
-
 Route::post('/supplier-bills/{supplierBill}/attachments', [SupplierBillController::class, 'uploadAttachment'])
     ->name('supplier-bills.attachments.upload');
 
 Route::get('/attachments/{attachment}/download', [SupplierBillController::class, 'downloadAttachment'])
     ->name('attachments.download');
-
-Route::get('/audit', [AuditController::class, 'index'])
-    ->name('audit.index');
-
 
 Route::get('/payments', [PaymentController::class, 'index'])
     ->name('payments.index');
@@ -75,6 +58,12 @@ Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])
 Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])
     ->name('purchase-orders.update');
 
+Route::patch('/purchase-orders/{id}/approve', [PurchaseOrderController::class, 'approve'])
+    ->name('purchase-orders.approve');
+
+Route::patch('/purchase-orders/{id}/receive', [PurchaseOrderController::class, 'receive'])
+    ->name('purchase-orders.receive');
+
 Route::delete('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])
     ->name('purchase-orders.destroy');
 
@@ -87,5 +76,25 @@ Route::post('/goods-received-notes', [GoodsReceivedNoteController::class, 'store
 Route::put('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'update'])
     ->name('goods-received-notes.update');
 
+Route::patch('/goods-received-notes/{id}/complete', [GoodsReceivedNoteController::class, 'complete'])
+    ->name('goods-received-notes.complete');
+
 Route::delete('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'destroy'])
     ->name('goods-received-notes.destroy');
+
+Route::get('/inventory', [InventoryController::class, 'index'])
+    ->name('inventory.index');
+
+Route::post('/inventory', [InventoryController::class, 'store'])
+    ->name('inventory.store');
+
+Route::post('/inventory/stock-in', [InventoryController::class, 'stockIn'])
+    ->name('inventory.stock-in');
+Route::post('/inventory/stock-out', [InventoryController::class, 'stockOut'])
+    ->name('inventory.stock-out');
+Route::get('/inventory/tracking', [InventoryController::class, 'tracking'])
+    ->name('inventory.tracking');
+Route::post('/inventory/tracking/receive', [InventoryController::class, 'trackingReceive'])
+    ->name('inventory.tracking.receive');
+Route::get('/inventory/{id}/purchase', [InventoryController::class, 'purchase'])
+    ->name('inventory.purchase');

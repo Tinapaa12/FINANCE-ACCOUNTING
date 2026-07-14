@@ -9,6 +9,9 @@ class GoodsReceivedNote extends Model
     protected $fillable = [
         'grn_no',
         'purchase_order_id',
+        'item_name',
+        'qty_ordered',
+        'qty_received',
         'supplier',
         'amount',
         'received_date',

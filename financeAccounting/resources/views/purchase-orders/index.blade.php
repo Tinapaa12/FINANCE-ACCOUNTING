@@ -8,7 +8,6 @@
 
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Purchase Orders</h2>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors" onclick="openPOModal()">Add PO</button>
     </div>
 
     <div class="w-full overflow-x-auto">
@@ -17,7 +16,10 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Qty</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Cost</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order Date</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Expected Delivery</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
@@ -29,6 +31,9 @@
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-4 border-t border-gray-100 text-sm font-medium">{{ $po->po_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->supplier }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->item_name ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->qty ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($po->unit_cost ?? 0, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($po->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->order_date->format('M d, Y') }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $po->expected_delivery ? $po->expected_delivery->format('M d, Y') : 'N/A' }}</td>
@@ -42,24 +47,19 @@
         </span>
     </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
-        <div class="flex gap-2 items-center">
-            <button class="border-none cursor-pointer rounded-md bg-orange-500 text-white w-8 h-8 flex items-center justify-center hover:bg-orange-600 transition-colors"
-                onclick="editPO({{ $po->id }}, '{{ $po->supplier }}', {{ $po->amount }}, '{{ $po->order_date->format('Y-m-d') }}', '{{ $po->expected_delivery ? $po->expected_delivery->format('Y-m-d') : '' }}', '{{ $po->status }}', '{{ addslashes($po->description) }}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-            </button>
-            <form action="{{ route('purchase-orders.destroy', $po->id) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
-                    onclick="return confirm('Delete this PO?')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
-            </form>
+        <div class="flex gap-1.5 items-center flex-wrap">
+        @if($po->status === 'Pending')
+        <form action="{{ route('purchase-orders.approve', $po->id) }}" method="POST" class="inline">
+            @csrf @method('PATCH')
+            <button type="submit" class="border-none cursor-pointer rounded-md bg-indigo-500 text-white px-2 py-1 text-xs font-medium hover:bg-indigo-600 transition-colors">Approve</button>
+        </form>
+        @endif
         </div>
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="7" class="text-center px-4 py-8 text-gray-500">No purchase orders found.</td>
+    <td colspan="10" class="text-center px-4 py-8 text-gray-500">No purchase orders found.</td>
 </tr>
 @endforelse
             </tbody>

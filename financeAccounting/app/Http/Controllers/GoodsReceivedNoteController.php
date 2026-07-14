@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\GoodsReceivedNote;
 use App\Models\PurchaseOrder;
+use App\Models\SupplierBill;
 
 class GoodsReceivedNoteController extends Controller
 {
@@ -28,18 +29,41 @@ class GoodsReceivedNoteController extends Controller
 
         $nextId = GoodsReceivedNote::count() + 1;
 
-        GoodsReceivedNote::create([
+        $grnData = [
             'grn_no' => 'GRN-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
             'purchase_order_id' => $request->purchase_order_id,
+            'item_name' => $request->item_name,
+            'qty_ordered' => $request->qty_ordered,
+            'qty_received' => $request->qty_received,
             'supplier' => $request->supplier,
             'amount' => $request->amount,
             'received_date' => $request->received_date,
             'notes' => $request->notes,
             'status' => $request->status,
-        ]);
+        ];
 
         if ($request->purchase_order_id) {
-            PurchaseOrder::where('id', $request->purchase_order_id)->update(['status' => 'Received']);
+            $po = PurchaseOrder::find($request->purchase_order_id);
+            $grnData['item_name'] = $po->item_name;
+            $grnData['qty_ordered'] = $po->qty;
+            $grnData['qty_received'] = $po->qty;
+        }
+
+        $grn = GoodsReceivedNote::create($grnData);
+
+        if ($request->purchase_order_id) {
+            $po->update(['status' => 'Received']);
+
+            $billNextId = SupplierBill::count() + 1;
+            SupplierBill::create([
+                'bill_no' => 'BILL-' . str_pad($billNextId, 2, '0', STR_PAD_LEFT),
+                'po_no'   => $po->po_no,
+                'grn_no'  => $grn->grn_no,
+                'supplier' => $po->supplier,
+                'amount' => $po->amount,
+                'due_date' => now()->addDays(30),
+                'status' => 'Pending',
+            ]);
         }
 
         return redirect()->route('supplier-bills.index', ['tab' => 'grns']);
@@ -66,6 +90,18 @@ class GoodsReceivedNoteController extends Controller
         ]);
 
         return redirect()->route('supplier-bills.index', ['tab' => 'grns']);
+    }
+
+    public function complete($id)
+    {
+        $grn = GoodsReceivedNote::findOrFail($id);
+        $grn->update(['status' => 'Completed']);
+
+        if ($grn->purchase_order_id) {
+            PurchaseOrder::where('id', $grn->purchase_order_id)->update(['status' => 'Received']);
+        }
+
+        return redirect()->route('supplier-bills.index', ['tab' => 'bills']);
     }
 
     public function destroy(GoodsReceivedNote $goodsReceivedNote)

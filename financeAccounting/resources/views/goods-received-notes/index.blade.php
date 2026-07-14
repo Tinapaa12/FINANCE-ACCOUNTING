@@ -8,7 +8,6 @@
 
     <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 class="text-lg font-semibold">Goods Received Notes</h2>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors" onclick="openGRNModal()">Add GRN</button>
     </div>
 
     <div class="w-full overflow-x-auto">
@@ -17,6 +16,9 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">GRN No.</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">PO No.</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Ordered</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Received</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Received Date</th>
@@ -29,6 +31,9 @@
 <tr class="hover:bg-gray-50 transition-colors">
     <td class="px-4 py-4 border-t border-gray-100 text-sm font-medium">{{ $grn->grn_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->purchaseOrder?->po_no ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->item_name ?? $grn->purchaseOrder?->item_name ?? 'N/A' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->qty_ordered ?? ($grn->purchaseOrder?->qty ?? 'N/A') }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->qty_received ?? ($grn->purchaseOrder?->qty ?? 'N/A') }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->supplier }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($grn->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $grn->received_date->format('M d, Y') }}</td>
@@ -40,24 +45,17 @@
         </span>
     </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
-        <div class="flex gap-2 items-center">
-            <button class="border-none cursor-pointer rounded-md bg-orange-500 text-white w-8 h-8 flex items-center justify-center hover:bg-orange-600 transition-colors"
-                onclick="editGRN({{ $grn->id }}, '{{ $grn->supplier }}', {{ $grn->amount }}, '{{ $grn->received_date->format('Y-m-d') }}', '{{ $grn->purchase_order_id }}', '{{ $grn->status }}', '{{ addslashes($grn->notes) }}')">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-            </button>
-            <form action="{{ route('goods-received-notes.destroy', $grn->id) }}" method="POST" class="inline">
-                @csrf @method('DELETE')
-                <button type="submit" class="border-none cursor-pointer rounded-md bg-red-500 text-white w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
-                    onclick="return confirm('Delete this GRN?')">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                </button>
-            </form>
-        </div>
+        @if($grn->status === 'Pending')
+        <form action="{{ route('goods-received-notes.complete', $grn->id) }}" method="POST" class="inline">
+            @csrf @method('PATCH')
+            <button type="submit" class="border-none cursor-pointer rounded-md bg-green-600 text-white px-2 py-1 text-xs font-medium hover:bg-green-700 transition-colors">Complete</button>
+        </form>
+        @endif
     </td>
 </tr>
 @empty
 <tr>
-    <td colspan="7" class="text-center px-4 py-8 text-gray-500">No goods received notes found.</td>
+    <td colspan="10" class="text-center px-4 py-8 text-gray-500">No goods received notes found.</td>
 </tr>
 @endforelse
             </tbody>
