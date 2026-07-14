@@ -9,6 +9,7 @@ class IncomeStatementLine extends Model
 
     protected $fillable = [
         'income_statement_id', 'account_id', 'line_name', 'category', 'amount', 'line_order',
+        'report_period_start', 'report_period_end',
     ];
 
     public function incomeStatement()

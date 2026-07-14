@@ -7,7 +7,12 @@
 @section('content')
     <div class="space-y-6">
         <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-500">Period: {{ $period ?? '' }}</span>
+            <span class="text-sm text-gray-500">Period:</span>
+            <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                @foreach($periods as $p)
+                    <option value="{{ $p }}" @selected($p === $period)>{{ $p }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="grid grid-cols-3 gap-4">

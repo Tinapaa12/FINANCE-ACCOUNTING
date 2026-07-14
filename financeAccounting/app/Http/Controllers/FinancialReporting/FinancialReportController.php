@@ -12,7 +12,9 @@ class FinancialReportController extends Controller
 {
     public function income()
     {
-        return view('financial-reporting.reports.income', $this->incomeData());
+        $data = $this->incomeData();
+
+        return view('financial-reporting.reports.income', $data);
     }
 
     public function incomePdf()
@@ -52,38 +54,58 @@ class FinancialReportController extends Controller
 
     private function incomeData(): array
     {
-        $report = FinancialReport::where('report_type', 'Income Statement')
-            ->latest('generated_at')
-            ->firstOrFail();
+        $reportId = request('report_id');
+        $reports = FinancialReport::where('report_type', 'Income Statement')
+            ->orderByDesc('report_period_start')
+            ->get();
 
-        $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->firstOrFail();
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
 
-        $revenue = $incomeStatement->revenueLines()->get()
-            ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
-            ->toArray();
+        $revenue = [];
+        $expenses = [];
+        $trialBalance = [];
 
-        $expenses = $incomeStatement->expenseLines()->get()
-            ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
-            ->toArray();
+        if ($report) {
+            $incomeStatement = IncomeStatement::where('report_id', $report->report_id)->first();
 
-        $trialBalance = $report->trialBalanceLines()->orderBy('line_order')->get()
-            ->map(fn ($row) => [
-                'account' => $row->account_name,
-                'debit'   => $row->debit_amount,
-                'credit'  => $row->credit_amount,
-            ])->toArray();
+            if ($incomeStatement) {
+                $revenue = $incomeStatement->revenueLines()->get()
+                    ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
+                    ->toArray();
+
+                $expenses = $incomeStatement->expenseLines()->get()
+                    ->map(fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount])
+                    ->toArray();
+            }
+
+            $trialBalance = $report->trialBalanceLines()->orderBy('line_order')->get()
+                ->map(fn ($row) => [
+                    'account' => $row->account_name,
+                    'debit'   => $row->debit_amount,
+                    'credit'  => $row->credit_amount,
+                ])->toArray();
+        }
 
         return [
-            'month'        => $report->report_period_start->format('F'),
-            'revenue'      => $revenue,
-            'expenses'     => $expenses,
-            'trialBalance' => $trialBalance,
+            'reports'          => $reports,
+            'report'           => $report,
+            'selectedReportId' => $report?->report_id,
+            'month'            => $report?->report_period_start?->format('F') ?? 'N/A',
+            'revenue'          => $revenue,
+            'expenses'         => $expenses,
+            'trialBalance'     => $trialBalance,
         ];
     }
 
     private function assetsData(): array
     {
-        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->firstOrFail();
+        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->first();
+
+        if (!$balanceSheet) {
+            return ['assets' => [], 'liabilities' => [], 'equity' => [], 'hasData' => false];
+        }
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 
@@ -91,6 +113,7 @@ class FinancialReportController extends Controller
             'assets'      => $balanceSheet->assets()->get()->map($mapLine)->toArray(),
             'liabilities' => $balanceSheet->liabilities()->get()->map($mapLine)->toArray(),
             'equity'      => $balanceSheet->equity()->get()->map($mapLine)->toArray(),
+            'hasData'     => true,
         ];
     }
 
@@ -115,7 +138,15 @@ class FinancialReportController extends Controller
 
     private function cashflowData(): array
     {
-        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->firstOrFail();
+        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->first();
+
+        if (!$cashFlow) {
+            return [
+                'periodLabel' => '', 'operating' => [], 'investing' => [], 'financing' => [],
+                'totalOperating' => 0, 'totalInvesting' => 0, 'totalFinancing' => 0,
+                'netCashFlow' => 0, 'beginningCash' => 0, 'endingCash' => 0, 'hasData' => false,
+            ];
+        }
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 
@@ -134,6 +165,7 @@ class FinancialReportController extends Controller
             'netCashFlow'    => $cashFlow->net_cash_flow,
             'beginningCash'  => (float) $beginningCash,
             'endingCash'     => (float) $beginningCash + $cashFlow->net_cash_flow,
+            'hasData'        => true,
         ];
     }
 }
