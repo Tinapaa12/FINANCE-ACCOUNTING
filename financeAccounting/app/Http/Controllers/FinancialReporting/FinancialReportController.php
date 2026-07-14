@@ -101,27 +101,56 @@ class FinancialReportController extends Controller
 
     private function assetsData(): array
     {
-        $balanceSheet = BalanceSheet::with('report')->latest('generated_at')->first();
+        $reports = FinancialReport::where('report_type', 'Balance Sheet')
+            ->orderByDesc('report_period_start')
+            ->get();
+
+        $reportId = request('report_id');
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
+
+        if (!$report) {
+            return ['assets' => [], 'liabilities' => [], 'equity' => [], 'reports' => collect(), 'selectedReportId' => null, 'hasData' => false];
+        }
+
+        $balanceSheet = BalanceSheet::where('report_id', $report->report_id)->first();
 
         if (!$balanceSheet) {
-            return ['assets' => [], 'liabilities' => [], 'equity' => [], 'hasData' => false];
+            return ['assets' => [], 'liabilities' => [], 'equity' => [], 'reports' => $reports, 'selectedReportId' => $report->report_id, 'hasData' => false];
         }
 
         $mapLine = fn ($line) => ['label' => $line->line_name, 'amount' => (float) $line->amount];
 
         return [
-            'assets'      => $balanceSheet->assets()->get()->map($mapLine)->toArray(),
-            'liabilities' => $balanceSheet->liabilities()->get()->map($mapLine)->toArray(),
-            'equity'      => $balanceSheet->equity()->get()->map($mapLine)->toArray(),
-            'hasData'     => true,
+            'assets'           => $balanceSheet->assets()->get()->map($mapLine)->toArray(),
+            'liabilities'      => $balanceSheet->liabilities()->get()->map($mapLine)->toArray(),
+            'equity'           => $balanceSheet->equity()->get()->map($mapLine)->toArray(),
+            'reports'          => $reports,
+            'selectedReportId' => $report->report_id,
+            'hasData'          => true,
         ];
     }
 
     private function liabilitiesData(): array
     {
-        $rows = BudgetVsActual::orderBy('created_at')->get();
+        $periods = BudgetVsActual::select('report_period_start')->distinct()->orderByDesc('report_period_start')->get()
+            ->map(fn ($r) => $r->report_period_start->format('F Y'))
+            ->unique();
+
+        $selectedPeriod = request('period', $periods->first() ?? now()->format('F Y'));
+
+        $start = \Carbon\Carbon::createFromFormat('F Y', $selectedPeriod)->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+
+        $rows = BudgetVsActual::whereBetween('report_period_start', [$start, $end])
+            ->orWhereBetween('report_period_end', [$start, $end])
+            ->orderBy('created_at')
+            ->get();
 
         return [
+            'periods'    => $periods,
+            'period'     => $selectedPeriod,
             'reportDate' => $rows->first()?->report_period_end?->format('F j, Y') ?? '',
             'budgetVsActual' => $rows->map(fn ($row) => [
                 'account' => $row->account_name,
@@ -138,10 +167,29 @@ class FinancialReportController extends Controller
 
     private function cashflowData(): array
     {
-        $cashFlow = CashFlowReport::with('report')->latest('generated_at')->first();
+        $reports = FinancialReport::where('report_type', 'Cash Flow Statement')
+            ->orderByDesc('report_period_start')
+            ->get();
+
+        $reportId = request('report_id');
+        $report = $reportId
+            ? $reports->firstWhere('report_id', $reportId)
+            : $reports->first();
+
+        if (!$report) {
+            return [
+                'reports' => $reports, 'selectedReportId' => null,
+                'periodLabel' => '', 'operating' => [], 'investing' => [], 'financing' => [],
+                'totalOperating' => 0, 'totalInvesting' => 0, 'totalFinancing' => 0,
+                'netCashFlow' => 0, 'beginningCash' => 0, 'endingCash' => 0, 'hasData' => false,
+            ];
+        }
+
+        $cashFlow = CashFlowReport::where('report_id', $report->report_id)->first();
 
         if (!$cashFlow) {
             return [
+                'reports' => $reports, 'selectedReportId' => $report->report_id,
                 'periodLabel' => '', 'operating' => [], 'investing' => [], 'financing' => [],
                 'totalOperating' => 0, 'totalInvesting' => 0, 'totalFinancing' => 0,
                 'netCashFlow' => 0, 'beginningCash' => 0, 'endingCash' => 0, 'hasData' => false,
@@ -155,17 +203,19 @@ class FinancialReportController extends Controller
             ->value('credit_amount') ?? 0;
 
         return [
-            'periodLabel'    => $cashFlow->period_label,
-            'operating'      => $cashFlow->operatingLines()->get()->map($mapLine)->toArray(),
-            'investing'      => $cashFlow->investingLines()->get()->map($mapLine)->toArray(),
-            'financing'      => $cashFlow->financingLines()->get()->map($mapLine)->toArray(),
-            'totalOperating' => $cashFlow->total_operating,
-            'totalInvesting' => $cashFlow->total_investing,
-            'totalFinancing' => $cashFlow->total_financing,
-            'netCashFlow'    => $cashFlow->net_cash_flow,
-            'beginningCash'  => (float) $beginningCash,
-            'endingCash'     => (float) $beginningCash + $cashFlow->net_cash_flow,
-            'hasData'        => true,
+            'reports'          => $reports,
+            'selectedReportId' => $report->report_id,
+            'periodLabel'      => $cashFlow->period_label,
+            'operating'        => $cashFlow->operatingLines()->get()->map($mapLine)->toArray(),
+            'investing'        => $cashFlow->investingLines()->get()->map($mapLine)->toArray(),
+            'financing'        => $cashFlow->financingLines()->get()->map($mapLine)->toArray(),
+            'totalOperating'   => $cashFlow->total_operating,
+            'totalInvesting'   => $cashFlow->total_investing,
+            'totalFinancing'   => $cashFlow->total_financing,
+            'netCashFlow'      => $cashFlow->net_cash_flow,
+            'beginningCash'    => (float) $beginningCash,
+            'endingCash'       => (float) $beginningCash + $cashFlow->net_cash_flow,
+            'hasData'          => true,
         ];
     }
 }

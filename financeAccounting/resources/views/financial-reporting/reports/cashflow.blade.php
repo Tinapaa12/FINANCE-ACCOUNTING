@@ -4,6 +4,12 @@
 @section('title', 'Cash Flow Statement')
 
 @section('content')
+    @if(!$hasData)
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <p class="text-yellow-800 font-medium">No data yet.</p>
+            <p class="text-yellow-600 text-sm mt-1">Add your first cash flow data from the <a href="{{ route('reports.manage') }}" class="underline">Manage Data</a> page.</p>
+        </div>
+    @else
     <div class="flex flex-col lg:flex-row gap-6">
 
         {{-- LEFT: Activity breakdown --}}
@@ -11,7 +17,16 @@
             <div class="bg-white rounded-lg border p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold text-lg">Cash Flow Statement</h2>
-                    <span class="text-sm text-gray-500">{{ $periodLabel }}</span>
+                    <div class="flex items-center gap-3">
+                        <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
+                            @foreach($reports as $r)
+                                <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
+                                    {{ $r->report_period_start->format('F Y') }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span class="text-sm text-gray-500">{{ $periodLabel }}</span>
+                    </div>
                 </div>
 
                 {{-- Operating --}}
@@ -128,4 +143,5 @@
         </div>
 
     </div>
+    @endif
 @endsection

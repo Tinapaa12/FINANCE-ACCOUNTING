@@ -19,8 +19,9 @@ class ManageDataController extends Controller
     public function index()
     {
         return view('financial-reporting.manage.index', [
-            'reports'      => FinancialReport::where('report_type', 'Income Statement')->orderByDesc('report_period_start')->get(),
-            'periods'      => TaxRecord::select('tax_period')->distinct()->orderByDesc('tax_period')->pluck('tax_period'),
+            'reports'        => FinancialReport::where('report_type', 'Income Statement')->orderByDesc('report_period_start')->get(),
+            'periods'        => TaxRecord::select('tax_period')->distinct()->orderByDesc('tax_period')->pluck('tax_period'),
+            'reportPeriods'  => FinancialReport::select('report_period_start')->distinct()->orderByDesc('report_period_start')->get()->map(fn($r) => \Carbon\Carbon::parse($r->report_period_start)->format('F Y'))->unique(),
             'balanceSheet' => BalanceSheet::latest('generated_at')->first(),
             'cashFlow'     => CashFlowReport::latest('generated_at')->first(),
         ]);
@@ -140,14 +141,22 @@ class ManageDataController extends Controller
     public function storeBudget(Request $request)
     {
         $data = $request->validate([
-            'account_name'        => 'required|string|max:255',
-            'budget_amount'       => 'required|numeric|min:0',
-            'actual_amount'       => 'required|numeric|min:0',
-            'report_period_start' => 'required|date',
-            'report_period_end'   => 'required|date',
+            'account_name'  => 'required|string|max:255',
+            'budget_amount' => 'required|numeric|min:0',
+            'actual_amount' => 'required|numeric|min:0',
+            'tax_period'    => 'required|string|max:255',
         ]);
 
-        BudgetVsActual::create($data);
+        $start = \Carbon\Carbon::createFromFormat('F Y', $data['tax_period'])->startOfMonth();
+        $end   = $start->copy()->endOfMonth();
+
+        BudgetVsActual::create([
+            'account_name'        => $data['account_name'],
+            'budget_amount'       => $data['budget_amount'],
+            'actual_amount'       => $data['actual_amount'],
+            'report_period_start' => $start,
+            'report_period_end'   => $end,
+        ]);
 
         return redirect()->route('reports.manage', ['tab' => 'budget'])->with('success', 'Budget entry added.');
     }

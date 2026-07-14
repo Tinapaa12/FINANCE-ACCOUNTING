@@ -8,7 +8,14 @@
     <div class="bg-white rounded-lg border p-5">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-lg">Budget vs Actual</h2>
-            <span class="text-sm text-gray-500">{{ $reportDate ?? '' }}</span>
+            <div class="flex items-center gap-3">
+                <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                    @foreach($periods as $p)
+                        <option value="{{ $p }}" @selected($p === $period)>{{ $p }}</option>
+                    @endforeach
+                </select>
+                <span class="text-sm text-gray-500">{{ $reportDate ?? '' }}</span>
+            </div>
         </div>
 
         <div class="overflow-x-auto">

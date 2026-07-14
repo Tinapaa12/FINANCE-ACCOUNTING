@@ -182,8 +182,8 @@
                         </a>
                         <a href="{{ route('reports.liabilities') }}"
                            class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                                  {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
-                            Liabilities
+                                   {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Budget vs Actual
                         </a>
                         <a href="{{ route('reports.cashflow') }}"
                            class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors

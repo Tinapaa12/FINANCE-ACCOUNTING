@@ -125,8 +125,17 @@
                 <div><label class="text-xs text-gray-500 block mb-1">Account</label><input type="text" name="account_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Sales revenue"></div>
                 <div><label class="text-xs text-gray-500 block mb-1">Budget (₱)</label><input type="number" step="0.01" name="budget_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
                 <div><label class="text-xs text-gray-500 block mb-1">Actual (₱)</label><input type="number" step="0.01" name="actual_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
-                <div><label class="text-xs text-gray-500 block mb-1">Start</label><input type="date" name="report_period_start" required class="border rounded px-3 py-1.5 text-sm"></div>
-                <div><label class="text-xs text-gray-500 block mb-1">End</label><input type="date" name="report_period_end" required class="border rounded px-3 py-1.5 text-sm"></div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Period</label>
+                    <select name="tax_period" required class="border rounded px-3 py-1.5 text-sm">
+                        <option value="">Select period...</option>
+                        @forelse($reportPeriods as $p)
+                            <option value="{{ $p }}">{{ $p }}</option>
+                        @empty
+                            <option value="{{ now()->format('F Y') }}">{{ now()->format('F Y') }}</option>
+                        @endforelse
+                    </select>
+                </div>
                 <button class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">Add</button>
             </form>
         </div>
@@ -156,7 +165,8 @@
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">Period</label>
                     <select name="tax_period" required class="border rounded px-3 py-1.5 text-sm">
-                        @forelse($periods as $p)
+                        <option value="">Select period...</option>
+                        @forelse($reportPeriods as $p)
                             <option value="{{ $p }}">{{ $p }}</option>
                         @empty
                             <option value="{{ now()->format('F Y') }}">{{ now()->format('F Y') }}</option>
