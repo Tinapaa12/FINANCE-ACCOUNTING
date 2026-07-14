@@ -1,4 +1,5 @@
 <?php // Application configuration — timezone, locale, encryption key, and core Laravel settings.
+
 return [
 
     /*

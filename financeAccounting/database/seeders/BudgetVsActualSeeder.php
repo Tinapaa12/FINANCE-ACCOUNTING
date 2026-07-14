@@ -1,7 +1,7 @@
 <?php // BudgetVsActualSeeder — seeds budget targets for accounts that have journal entry activity.
 namespace Database\Seeders;
 
-use App\Models\BudgetVsActual;
+use App\Models\FinancialReporting\BudgetVsActual;
 use Illuminate\Database\Seeder;
 
 class BudgetVsActualSeeder extends Seeder

@@ -22,7 +22,8 @@
                             'bg-blue-100 text-blue-700': account.type === 'Asset',
                             'bg-orange-100 text-orange-700': account.type === 'Liability',
                             'bg-green-100 text-green-700': account.type === 'Revenue',
-                            'bg-purple-100 text-purple-700': account.type === 'Expense'
+                            'bg-purple-100 text-purple-700': account.type === 'Expense',
+                            'bg-pink-100 text-pink-700': account.type === 'Equity'
                         }" class="px-3 py-1 rounded-full text-xs font-medium" x-text="account.type"></span>
                     </td>
                     <td class="px-6 py-3 text-sm text-gray-600" x-text="account.normal_balance"></td>

@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
-use App\Models\TaxRecord;
+use App\Models\FinancialReporting\TaxRecord;
 
 class TaxComplianceController extends Controller
 {
