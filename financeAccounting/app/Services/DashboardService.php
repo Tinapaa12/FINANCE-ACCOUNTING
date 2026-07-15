@@ -26,13 +26,13 @@ class DashboardService
 
     public function getRecentJournalEntries(int $limit = 5): Collection
     {
-        return JournalEntry::with(['lines.account'])
+        return JournalEntry::with(['lines.account', 'salesTransaction'])
             ->latest()
             ->take($limit)
             ->get()
             ->map(fn(JournalEntry $entry) => [
                 'date' => $entry->transaction_date->format('F d, Y'),
-                'reference' => $entry->reference_no,
+                'reference' => $entry->salesTransaction?->order_no ?? $entry->reference_no,
                 'description' => $entry->description,
                 'status' => $entry->status,
             ]);
