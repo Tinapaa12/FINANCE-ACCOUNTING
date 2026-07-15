@@ -24,11 +24,11 @@ class JournalEntrySeeder extends Seeder
             [
                 'transaction_date' => '2024-06-29',
                 'reference_no' => 'JE-2024-00127',
-                'description' => 'Payment to Supplier X',
+                'description' => 'Purchase of Office Supplies on credit',
                 'status' => 'Posted',
                 'lines' => [
-                    ['account_code' => '2100', 'debit' => 25000, 'credit' => 0],
-                    ['account_code' => '1020', 'debit' => 0, 'credit' => 25000],
+                    ['account_code' => '6100', 'debit' => 25000, 'credit' => 0],
+                    ['account_code' => '2100', 'debit' => 0, 'credit' => 25000],
                 ]
             ],
             [

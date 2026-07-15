@@ -46,8 +46,7 @@
 
         <div class="flex items-center justify-between border-b pb-4 mb-6">
             <div>
-                <p class="font-bold text-lg">@yield('company-name', 'Murana')</p>
-                <p class="text-xs text-gray-400">Finance and Accounting</p>
+                <p class="font-bold text-lg">Finance and Accounting</p>
             </div>
             <div class="text-right text-xs text-gray-400">
                 <p>Generated: {{ now()->format('F j, Y g:i A') }}</p>

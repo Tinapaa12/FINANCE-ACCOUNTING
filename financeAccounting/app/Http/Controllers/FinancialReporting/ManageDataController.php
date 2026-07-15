@@ -2,113 +2,197 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
-use App\Models\FinancialReporting\BalanceSheet;
-use App\Models\FinancialReporting\BalanceSheetLine;
 use App\Models\FinancialReporting\BudgetVsActual;
-use App\Models\FinancialReporting\CashFlowReport;
-use App\Models\FinancialReporting\CashFlowReportLine;
 use App\Models\FinancialReporting\FinancialReport;
-use App\Models\FinancialReporting\IncomeStatement;
-use App\Models\FinancialReporting\IncomeStatementLine;
 use App\Models\FinancialReporting\TaxRecord;
-use App\Models\FinancialReporting\TrialBalance;
+use App\Models\GeneralLedger\ChartOfAccount;
+use App\Models\GeneralLedger\JournalEntry;
+use App\Models\GeneralLedger\JournalEntryLine;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ManageDataController extends Controller
 {
+    private function getReportPeriods()
+    {
+        $glPeriods = JournalEntry::where('status', 'Posted')
+            ->get()
+            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
+            ->keys();
+
+        $frPeriods = FinancialReport::select('report_period_start')->distinct()->get()
+            ->map(fn ($r) => Carbon::parse($r->report_period_start)->format('F Y'));
+
+        return $glPeriods->merge($frPeriods)->unique()->sortDesc()->values();
+    }
+
     public function index()
     {
         return view('financial-reporting.manage.index', [
-            'reports'        => FinancialReport::orderByDesc('report_period_start')->get(),
-            'periods'        => TaxRecord::select('tax_period')->distinct()->orderByDesc('tax_period')->pluck('tax_period'),
-            'reportPeriods'  => FinancialReport::select('report_period_start')->distinct()->orderByDesc('report_period_start')->get()->map(fn($r) => \Carbon\Carbon::parse($r->report_period_start)->format('F Y'))->unique(),
-            'balanceSheet' => BalanceSheet::latest('generated_at')->first(),
-            'cashFlow'     => CashFlowReport::latest('generated_at')->first(),
+            'reportPeriods' => $this->getReportPeriods(),
         ]);
     }
 
-    // === Income Statement ===
+    private function findOrCreateAccount(string $name, string $type, string $normalBalance): ChartOfAccount
+    {
+        return ChartOfAccount::firstOrCreate(
+            ['account_name' => $name],
+            [
+                'account_code'   => '9' . str_pad((intval(ChartOfAccount::max('account_code') ?? 9000) + 1), 4, '0', STR_PAD_LEFT),
+                'normal_balance' => $normalBalance,
+                'type'           => $type,
+                'status'         => 'Active',
+            ]
+        );
+    }
 
-    public function storeReport(Request $request)
+    private function getCashAccount(): ?ChartOfAccount
+    {
+        return ChartOfAccount::where('account_name', 'like', 'Cash%')->first();
+    }
+
+    private function postJournalEntry(string $period, string $description, array $lines): JournalEntry
+    {
+        $date = Carbon::parse('first day of ' . $period);
+
+        $entry = JournalEntry::create([
+            'transaction_date' => $date,
+            'reference_no'     => 'JE-MANUAL-' . now()->format('YmdHis'),
+            'description'      => $description,
+            'status'           => 'Posted',
+        ]);
+
+        foreach ($lines as $line) {
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->journal_entry_id,
+                'account_id'       => $line['account_id'],
+                'description'      => $description,
+                'debit'            => $line['debit'],
+                'credit'           => $line['credit'],
+            ]);
+        }
+
+        return $entry;
+    }
+
+    // === Quick-entry Income Statement ===
+
+    public function storeIncome(Request $request)
     {
         $data = $request->validate([
-            'report_period_start' => 'required|date',
-            'report_period_end'   => 'required|date',
+            'account_name' => 'required|string|max:255',
+            'category'     => 'required|in:Revenue,Expense',
+            'amount'       => 'required|numeric|min:0.01',
+            'period'       => 'required|string|max:255',
         ]);
 
-        $report = FinancialReport::create([
-            'report_type'         => 'Income Statement',
-            'report_period_start' => $data['report_period_start'],
-            'report_period_end'   => $data['report_period_end'],
-            'generated_at'        => now(),
-        ]);
+        $cash = $this->getCashAccount();
+        if (!$cash) {
+            return redirect()->route('reports.manage', ['tab' => 'income'])
+                ->with('success', 'Error: No Cash account found. Create one in Chart of Accounts first.');
+        }
 
-        IncomeStatement::create([
-            'report_id'      => $report->report_id,
-            'total_revenue'  => 0,
-            'total_expenses' => 0,
-        ]);
+        $isRevenue = $data['category'] === 'Revenue';
+        $account = $this->findOrCreateAccount($data['account_name'], $data['category'], $isRevenue ? 'Credit' : 'Debit');
+        $amount = (float) $data['amount'];
 
-        return redirect()->route('reports.manage')->with('success', 'Report period created. Now add lines below.');
+        if ($isRevenue) {
+            // DR Cash, CR Revenue
+            $this->postJournalEntry($data['period'], 'Revenue: ' . $data['account_name'], [
+                ['account_id' => $cash->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $account->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        } else {
+            // DR Expense, CR Cash
+            $this->postJournalEntry($data['period'], 'Expense: ' . $data['account_name'], [
+                ['account_id' => $account->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $cash->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        }
+
+        return redirect()->route('reports.manage', ['tab' => 'income'])->with('success', $data['category'] . ' entry added. It will appear on reports immediately.');
     }
 
-    public function storeIncomeLine(Request $request)
+    // === Quick-entry Balance Sheet ===
+
+    public function storeBalance(Request $request)
     {
         $data = $request->validate([
-            'income_statement_id' => 'required|exists:income_statements,income_statement_id',
-            'line_name'  => 'required|string|max:255',
-            'category'   => 'required|in:revenue,expense',
-            'amount'     => 'required|numeric|min:0',
+            'account_name' => 'required|string|max:255',
+            'section'      => 'required|in:Asset,Liability,Equity',
+            'amount'       => 'required|numeric|min:0.01',
+            'period'       => 'required|string|max:255',
         ]);
 
-        $stm = IncomeStatement::findOrFail($data['income_statement_id']);
-        $report = $stm->report;
+        $cash = $this->getCashAccount();
+        if (!$cash) {
+            return redirect()->route('reports.manage', ['tab' => 'balance'])
+                ->with('success', 'Error: No Cash account found. Create one in Chart of Accounts first.');
+        }
 
-        IncomeStatementLine::create([
-            'income_statement_id' => $data['income_statement_id'],
-            'line_name'  => $data['line_name'],
-            'category'   => $data['category'],
-            'amount'     => $data['amount'],
-            'line_order' => 0,
-            'report_period_start' => $report->report_period_start,
-            'report_period_end'   => $report->report_period_end,
-        ]);
+        $normalBalance = $data['section'] === 'Asset' ? 'Debit' : 'Credit';
+        $account = $this->findOrCreateAccount($data['account_name'], $data['section'], $normalBalance);
+        $amount = (float) $data['amount'];
 
-        return redirect()->route('reports.manage', ['tab' => 'income'])->with('success', 'Line added.');
+        if ($data['section'] === 'Asset') {
+            // DR Asset, CR Cash (buying asset)
+            $this->postJournalEntry($data['period'], 'Asset: ' . $data['account_name'], [
+                ['account_id' => $account->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $cash->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        } elseif ($data['section'] === 'Liability') {
+            // DR Cash, CR Liability (receiving loan)
+            $this->postJournalEntry($data['period'], 'Liability: ' . $data['account_name'], [
+                ['account_id' => $cash->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $account->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        } else {
+            // DR Cash, CR Equity (owner investment)
+            $this->postJournalEntry($data['period'], 'Equity: ' . $data['account_name'], [
+                ['account_id' => $cash->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $account->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        }
+
+        return redirect()->route('reports.manage', ['tab' => 'balance'])->with('success', 'Balance sheet entry added. It will appear on reports immediately.');
     }
 
-    public function destroyIncomeLine(IncomeStatementLine $line)
-    {
-        $line->delete();
-        return redirect()->route('reports.manage', ['tab' => 'income'])->with('success', 'Line deleted.');
-    }
+    // === Quick-entry Cash Flow ===
 
-    // === Trial Balance ===
-
-    public function storeTrialBalance(Request $request)
+    public function storeCashFlow(Request $request)
     {
         $data = $request->validate([
-            'report_id'     => 'required|exists:financial_reports,report_id',
-            'account_name'  => 'required|string|max:255',
-            'debit_amount'  => 'nullable|numeric|min:0',
-            'credit_amount' => 'nullable|numeric|min:0',
+            'flow_type'    => 'required|in:Cash In,Cash Out',
+            'account_name' => 'required|string|max:255',
+            'amount'       => 'required|numeric|min:0.01',
+            'period'       => 'required|string|max:255',
         ]);
 
-        TrialBalance::create([
-            'report_id'     => $data['report_id'],
-            'account_name'  => $data['account_name'],
-            'debit_amount'  => $data['debit_amount'],
-            'credit_amount' => $data['credit_amount'],
-            'line_order'    => 0,
-        ]);
+        $cash = $this->getCashAccount();
+        if (!$cash) {
+            return redirect()->route('reports.manage', ['tab' => 'cashflow'])
+                ->with('success', 'Error: No Cash account found. Create one in Chart of Accounts first.');
+        }
 
-        return redirect()->route('reports.manage', ['tab' => 'trial'])->with('success', 'Entry added.');
-    }
+        // Use a temporary account name for the other side
+        $otherAcct = $this->findOrCreateAccount($data['account_name'], 'Asset', 'Debit');
+        $amount = (float) $data['amount'];
 
-    public function destroyTrialBalance(TrialBalance $trialBalance)
-    {
-        $trialBalance->delete();
-        return redirect()->route('reports.manage', ['tab' => 'trial'])->with('success', 'Entry deleted.');
+        if ($data['flow_type'] === 'Cash In') {
+            // DR Cash, CR Other
+            $this->postJournalEntry($data['period'], 'Cash In: ' . $data['account_name'], [
+                ['account_id' => $cash->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $otherAcct->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        } else {
+            // DR Other, CR Cash
+            $this->postJournalEntry($data['period'], 'Cash Out: ' . $data['account_name'], [
+                ['account_id' => $otherAcct->account_id, 'debit' => $amount, 'credit' => 0],
+                ['account_id' => $cash->account_id, 'debit' => 0, 'credit' => $amount],
+            ]);
+        }
+
+        return redirect()->route('reports.manage', ['tab' => 'cashflow'])->with('success', 'Cash flow entry added. It will appear on reports immediately.');
     }
 
     // === Tax Records ===
@@ -146,7 +230,7 @@ class ManageDataController extends Controller
             'tax_period'    => 'required|string|max:255',
         ]);
 
-        $start = \Carbon\Carbon::createFromFormat('F Y', $data['tax_period'])->startOfMonth();
+        $start = Carbon::createFromFormat('F Y', $data['tax_period'])->startOfMonth();
         $end   = $start->copy()->endOfMonth();
 
         BudgetVsActual::create([
@@ -164,111 +248,5 @@ class ManageDataController extends Controller
     {
         $budgetVsActual->delete();
         return redirect()->route('reports.manage', ['tab' => 'budget'])->with('success', 'Budget entry deleted.');
-    }
-
-    // === Balance Sheet ===
-
-    public function storeBalanceSheet(Request $request)
-    {
-        $data = $request->validate([
-            'report_id' => 'nullable|exists:financial_reports,report_id',
-            'line_name' => 'required|string|max:255',
-            'section'   => 'required|in:Asset,Liability,Equity',
-            'amount'    => 'required|numeric|min:0',
-        ]);
-
-        $existing = null;
-        if ($data['report_id']) {
-            $existing = FinancialReport::find($data['report_id']);
-        }
-
-        if ($existing && $existing->report_type === 'Balance Sheet') {
-            $report = $existing;
-        } else {
-            $periodStart = $existing ? $existing->report_period_start : now()->startOfMonth();
-            $periodEnd   = $existing ? $existing->report_period_end   : now()->endOfMonth();
-            $report = FinancialReport::create([
-                'report_type'         => 'Balance Sheet',
-                'report_period_start' => $periodStart,
-                'report_period_end'   => $periodEnd,
-                'generated_at'        => now(),
-            ]);
-        }
-
-        $bs = BalanceSheet::firstOrCreate(
-            ['report_id' => $report->report_id],
-            [
-                'statement_title' => 'Balance Sheet',
-                'period_label'    => 'As of ' . $report->report_period_end->format('F j, Y'),
-                'generated_at'    => now(),
-            ]
-        );
-
-        BalanceSheetLine::create([
-            'balance_sheet_id' => $bs->balance_sheet_id,
-            'line_name'  => $data['line_name'],
-            'section'    => $data['section'],
-            'amount'     => $data['amount'],
-            'line_order' => 0,
-        ]);
-
-        return redirect()->route('reports.manage', ['tab' => 'balance'])->with('success', 'Balance sheet line added.');
-    }
-
-    public function destroyBalanceLine(BalanceSheetLine $line)
-    {
-        $line->delete();
-        return redirect()->route('reports.manage', ['tab' => 'balance'])->with('success', 'Line deleted.');
-    }
-
-    // === Cash Flow ===
-
-    public function storeCashFlow(Request $request)
-    {
-        $data = $request->validate([
-            'report_id'    => 'nullable|exists:financial_reports,report_id',
-            'flow_type'    => 'required|in:Cash In,Cash Out',
-            'account_name' => 'required|string|max:255',
-            'amount'       => 'required|numeric|min:0',
-        ]);
-
-        $report = null;
-        if ($data['report_id']) {
-            $report = FinancialReport::find($data['report_id']);
-        }
-
-        if (!$report) {
-            $report = FinancialReport::create([
-                'report_type'         => 'Cash Flow Statement',
-                'report_period_start' => now()->startOfMonth(),
-                'report_period_end'   => now()->endOfMonth(),
-                'generated_at'        => now(),
-            ]);
-        }
-
-        $cf = CashFlowReport::firstOrCreate(
-            ['report_id' => $report->report_id],
-            [
-                'statement_title' => 'Cash Flow Statement',
-                'period_label'    => 'For the Month Ended ' . now()->format('F Y'),
-                'generated_at'    => now(),
-            ]
-        );
-
-        CashFlowReportLine::create([
-            'cash_flow_id'  => $cf->cash_flow_id,
-            'activity_type' => $data['flow_type'],
-            'line_name'     => $data['account_name'],
-            'amount'        => $data['flow_type'] === 'Cash Out' ? -abs($data['amount']) : abs($data['amount']),
-            'line_order'    => 0,
-        ]);
-
-        return redirect()->route('reports.manage', ['tab' => 'cashflow'])->with('success', 'Cash flow entry added.');
-    }
-
-    public function destroyCashFlowLine(CashFlowReportLine $line)
-    {
-        $line->delete();
-        return redirect()->route('reports.manage', ['tab' => 'cashflow'])->with('success', 'Line deleted.');
     }
 }

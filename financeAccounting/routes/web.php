@@ -51,10 +51,8 @@ Route::middleware('app.auth')->group(function () {
     Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name('tax.compliance.pdf');
 
     Route::get('/reports/manage', [ManageDataController::class, 'index'])->name('reports.manage');
-    Route::post('/reports/manage/store-report', [ManageDataController::class, 'storeReport'])->name('reports.manage.store-report');
-    Route::post('/reports/manage/store-income-line', [ManageDataController::class, 'storeIncomeLine'])->name('reports.manage.store-income-line');
-    Route::post('/reports/manage/store-trial', [ManageDataController::class, 'storeTrialBalance'])->name('reports.manage.store-trial');
-    Route::post('/reports/manage/store-balance', [ManageDataController::class, 'storeBalanceSheet'])->name('reports.manage.store-balance');
+    Route::post('/reports/manage/store-income', [ManageDataController::class, 'storeIncome'])->name('reports.manage.store-income');
+    Route::post('/reports/manage/store-balance', [ManageDataController::class, 'storeBalance'])->name('reports.manage.store-balance');
     Route::post('/reports/manage/store-cashflow', [ManageDataController::class, 'storeCashFlow'])->name('reports.manage.store-cashflow');
     Route::post('/reports/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('reports.manage.store-budget');
     Route::post('/reports/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('reports.manage.store-tax');

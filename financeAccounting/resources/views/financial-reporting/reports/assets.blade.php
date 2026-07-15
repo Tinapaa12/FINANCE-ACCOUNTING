@@ -16,12 +16,9 @@
             <div class="bg-white rounded-lg border p-5">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold text-lg">Assets</h2>
-                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
-                        <option value="">All periods</option>
-                        @foreach($reports as $r)
-                            <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
-                                {{ $r->report_period_start->format('F Y') }}
-                            </option>
+                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                        @foreach($periods as $p)
+                            <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                         @endforeach
                     </select>
                 </div>

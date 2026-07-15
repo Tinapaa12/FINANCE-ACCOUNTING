@@ -18,20 +18,13 @@
                 <div class="flex items-center justify-between mb-4">
                     <div>
                         <h2 class="font-semibold text-lg">Income statements</h2>
-                        @if($report)
                         <p class="text-xs text-gray-500">
-                            Period: {{ $report->report_period_start->format('M d, Y') }} — {{ $report->report_period_end->format('M d, Y') }}
+                            Period: {{ $selectedPeriod ?? 'All periods' }}
                         </p>
-                        @else
-                        <p class="text-xs text-gray-500">Showing all periods</p>
-                        @endif
                     </div>
-                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
-                        <option value="">All periods</option>
-                        @foreach($reports as $r)
-                            <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
-                                {{ $r->report_period_start->format('F Y') }}
-                            </option>
+                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                        @foreach($periods as $p)
+                            <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                         @endforeach
                     </select>
                 </div>
