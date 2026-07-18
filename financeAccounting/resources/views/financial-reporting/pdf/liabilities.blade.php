@@ -5,7 +5,7 @@
 @section('pdf-title', 'Budget vs Actual')
 
 @section('pdf-content')
-    <p class="text-sm text-gray-500 mb-6">{{ $report?->report_period_start?->format('M Y') ?? 'All periods' }}</p>
+    <p class="text-sm text-gray-500 mb-6">{{ $selectedPeriod ?? 'All periods' }}</p>
 
     <table class="w-full text-sm">
         <thead>

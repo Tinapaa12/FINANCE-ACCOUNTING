@@ -1,9 +1,10 @@
-<?php // FinancialReportController — serves financial report pages and their PDF versions. Provides Income Statement, Balance Sheet, Cash Flow, and Budget vs Actual views with data from generated report models.
+<?php // FinancialReportController — serves financial report pages and their PDF versions. Periods are derived from posted journal entries, not from FinancialReport table.
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
 use App\Models\FinancialReporting\BudgetVsActual;
-use App\Models\FinancialReporting\FinancialReport;
+use App\Models\GeneralLedger\JournalEntry;
+use Carbon\Carbon;
 
 class FinancialReportController extends Controller
 {
@@ -49,19 +50,34 @@ class FinancialReportController extends Controller
         return view('financial-reporting.pdf.cashflow', $this->cashflowData());
     }
 
+    private function getPeriods(): array
+    {
+        return JournalEntry::where('status', 'Posted')
+            ->get()
+            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
+            ->keys()
+            ->sortDesc()
+            ->values()
+            ->toArray();
+    }
+
+    private function parsePeriod(?string $period): array
+    {
+        if (!$period) return [null, null];
+        $start = Carbon::parse('first day of ' . $period);
+        $end = Carbon::parse('last day of ' . $period);
+        return [$start, $end];
+    }
+
     private function incomeData(): array
     {
-        $reports = FinancialReport::where('report_type', 'Income Statement')
-            ->orderByDesc('report_period_start')
-            ->get();
+        $periods = $this->getPeriods();
+        $selectedPeriod = request('period');
+        if (!$selectedPeriod || !in_array($selectedPeriod, $periods)) {
+            $selectedPeriod = $periods[0] ?? null;
+        }
 
-        $reportId = request('report_id');
-        $report = $reportId
-            ? $reports->firstWhere('report_id', $reportId)
-            : $reports->first();
-
-        $start = $report?->report_period_start;
-        $end   = $report?->report_period_end;
+        [$start, $end] = $this->parsePeriod($selectedPeriod);
 
         $revenue = [];
         $expenses = [];
@@ -112,35 +128,29 @@ class FinancialReportController extends Controller
             })->toArray();
 
         return [
-            'reports'          => $reports,
-            'report'           => $report,
-            'selectedReportId' => $report?->report_id,
-            'month'            => $report?->report_period_start?->format('F') ?? 'All',
-            'revenue'          => $revenue,
-            'expenses'         => $expenses,
-            'trialBalance'     => $trialBalance,
+            'periods'        => $periods,
+            'selectedPeriod' => $selectedPeriod,
+            'revenue'        => $revenue,
+            'expenses'       => $expenses,
+            'trialBalance'   => $trialBalance,
         ];
     }
 
     private function assetsData(): array
     {
-        $reports = FinancialReport::where('report_type', 'Balance Sheet')
-            ->orderByDesc('report_period_start')
-            ->get();
+        $periods = $this->getPeriods();
+        $selectedPeriod = request('period');
+        if (!$selectedPeriod || !in_array($selectedPeriod, $periods)) {
+            $selectedPeriod = $periods[0] ?? null;
+        }
 
-        $reportId = request('report_id');
-        $report = $reportId
-            ? $reports->firstWhere('report_id', $reportId)
-            : $reports->first();
-
-        $start = $report?->report_period_start;
-        $end   = $report?->report_period_end;
+        [$start, $end] = $this->parsePeriod($selectedPeriod);
 
         $assets      = [];
         $liabilities = [];
         $equity      = [];
 
-        // All Asset/Liability/Equity accounts (including zero-balance)
+        // All Asset/Liability/Equity accounts
         $bsAccounts = \App\Models\GeneralLedger\ChartOfAccount::whereIn('type', ['Asset', 'Liability', 'Equity'])
             ->orderBy('type')
             ->orderBy('account_name')
@@ -148,14 +158,19 @@ class FinancialReportController extends Controller
 
         foreach ($bsAccounts as $a) {
             $totals = \App\Models\GeneralLedger\JournalEntryLine::select(
-                    \DB::raw('COALESCE(SUM(debit),0) - COALESCE(SUM(credit),0) as balance'))
+                    \DB::raw('COALESCE(SUM(debit),0) as debit_total'),
+                    \DB::raw('COALESCE(SUM(credit),0) as credit_total'))
                 ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
                 ->where('journal_entry_lines.account_id', $a->account_id)
                 ->where('journal_entries.status', 'Posted')
                 ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
                 ->first();
 
-            $item = ['label' => $a->account_name, 'amount' => (float) abs($totals->balance)];
+            $balance = $a->normal_balance === 'Credit'
+                ? (float) $totals->credit_total - (float) $totals->debit_total
+                : (float) $totals->debit_total - (float) $totals->credit_total;
+
+            $item = ['label' => $a->account_name, 'amount' => max($balance, 0)];
             match ($a->type) {
                 'Asset'     => $assets[] = $item,
                 'Liability' => $liabilities[] = $item,
@@ -163,27 +178,48 @@ class FinancialReportController extends Controller
             };
         }
 
+        // Compute net income → Retained Earnings to balance the equation
+        $totalRevenue = (float) \App\Models\GeneralLedger\JournalEntryLine::join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+            ->where('chart_of_accounts.type', 'Revenue')
+            ->where('journal_entries.status', 'Posted')
+            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+            ->sum('credit');
+
+        $totalExpenses = (float) \App\Models\GeneralLedger\JournalEntryLine::join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+            ->where('chart_of_accounts.type', 'Expense')
+            ->where('journal_entries.status', 'Posted')
+            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
+            ->sum('debit');
+
+        $netIncome = $totalRevenue - $totalExpenses;
+
+        if ($netIncome > 0) {
+            $equity[] = ['label' => 'Retained Earnings', 'amount' => $netIncome];
+        } elseif ($netIncome < 0) {
+            $equity[] = ['label' => 'Retained Earnings (Deficit)', 'amount' => abs($netIncome)];
+        }
+
         return [
-            'assets'           => $assets,
-            'liabilities'      => $liabilities,
-            'equity'           => $equity,
-            'reports'          => $reports,
-            'report'           => $report,
-            'selectedReportId' => $report?->report_id,
-            'hasData'          => !empty($assets) || !empty($liabilities) || !empty($equity),
+            'assets'          => $assets,
+            'liabilities'     => $liabilities,
+            'equity'          => $equity,
+            'periods'         => $periods,
+            'selectedPeriod'  => $selectedPeriod,
+            'hasData'         => true,
         ];
     }
 
     private function liabilitiesData(): array
     {
-        $reports = FinancialReport::orderByDesc('report_period_start')->get();
-        $reportId = request('report_id');
-        $report = $reportId
-            ? $reports->firstWhere('report_id', $reportId)
-            : $reports->first();
+        $periods = $this->getPeriods();
+        $selectedPeriod = request('period');
+        if (!$selectedPeriod || !in_array($selectedPeriod, $periods)) {
+            $selectedPeriod = $periods[0] ?? null;
+        }
 
-        $start = $report?->report_period_start;
-        $end   = $report?->report_period_end;
+        [$start, $end] = $this->parsePeriod($selectedPeriod);
 
         $budgetRows = BudgetVsActual::when($start && $end, fn ($q) => $q
                 ->whereBetween('report_period_start', [$start, $end])
@@ -194,10 +230,9 @@ class FinancialReportController extends Controller
 
         if ($budgetRows->isEmpty()) {
             return [
-                'reports'          => $reports,
-                'report'           => $report,
-                'selectedReportId' => $report?->report_id,
-                'budgetVsActual'   => [],
+                'periods'        => $periods,
+                'selectedPeriod' => $selectedPeriod,
+                'budgetVsActual' => [],
             ];
         }
 
@@ -214,9 +249,8 @@ class FinancialReportController extends Controller
             ->keyBy('account_name');
 
         return [
-            'reports'          => $reports,
-            'report'           => $report,
-            'selectedReportId' => $report?->report_id,
+            'periods'        => $periods,
+            'selectedPeriod' => $selectedPeriod,
             'budgetVsActual' => $budgetRows->map(function ($row) use ($actuals) {
                 $accountName = $row->account_name;
                 $budgetAmount = (float) $row->budget_amount;
@@ -248,68 +282,91 @@ class FinancialReportController extends Controller
 
     private function cashflowData(): array
     {
-        $reports = FinancialReport::where('report_type', 'Cash Flow Statement')
-            ->orderByDesc('report_period_start')
-            ->get();
+        $periods = $this->getPeriods();
+        $selectedPeriod = request('period');
+        if (!$selectedPeriod || !in_array($selectedPeriod, $periods)) {
+            $selectedPeriod = $periods[0] ?? null;
+        }
 
-        $reportId = request('report_id');
-        $report = $reportId
-            ? $reports->firstWhere('report_id', $reportId)
-            : $reports->first();
+        [$start, $end] = $this->parsePeriod($selectedPeriod);
 
-        $start = $report?->report_period_start;
-        $end   = $report?->report_period_end;
+        // Cash accounts
+        $cashAccountIds = \App\Models\GeneralLedger\ChartOfAccount::where('account_name', 'like', 'Cash%')
+            ->pluck('account_id');
 
-        // Cash In = posted journal entries with Revenue-type accounts (credits)
-        $cashInLines = \App\Models\GeneralLedger\JournalEntryLine::select('account_name', \DB::raw('SUM(credit) as total'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('chart_of_accounts.type', 'Revenue')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('account_name')
-            ->orderByDesc('total')
-            ->get()
-            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
-            ->toArray();
+        // Cash In = debit lines to Cash accounts where the credit side is NOT Cash (internal transfer)
+        $cashInLines = collect();
+        if ($cashAccountIds->isNotEmpty()) {
+            $cashInLines = \App\Models\GeneralLedger\JournalEntryLine::selectRaw('coa.account_name, SUM(jel.debit) as total')
+                ->from('journal_entry_lines as jel')
+                ->join('chart_of_accounts as coa', 'jel.account_id', '=', 'coa.account_id')
+                ->join('journal_entries as je', 'jel.journal_entry_id', '=', 'je.journal_entry_id')
+                ->whereIn('jel.account_id', $cashAccountIds)
+                ->where('jel.debit', '>', 0)
+                ->where('je.status', 'Posted')
+                ->when($start && $end, fn ($q) => $q->whereBetween('je.transaction_date', [$start, $end]))
+                ->whereExists(function ($q) use ($cashAccountIds) {
+                    $q->selectRaw(1)
+                      ->from('journal_entry_lines as jel2')
+                      ->whereColumn('jel2.journal_entry_id', 'jel.journal_entry_id')
+                      ->whereNotIn('jel2.account_id', $cashAccountIds);
+                })
+                ->groupBy('coa.account_name')
+                ->get()
+                ->map(fn ($r) => ['label' => $r->account_name . ' (received)', 'amount' => (float) $r->total]);
+        }
 
-        // Cash Out = posted journal entries with Expense-type accounts (debits)
-        $cashOutLines = \App\Models\GeneralLedger\JournalEntryLine::select('account_name', \DB::raw('SUM(debit) as total'))
-            ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('chart_of_accounts.type', 'Expense')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('account_name')
-            ->orderByDesc('total')
-            ->get()
-            ->map(fn ($r) => ['label' => $r->account_name, 'amount' => (float) $r->total])
-            ->toArray();
+        // Cash Out = credit lines to Cash accounts where the debit side is an Expense/AP
+        $cashOutLines = collect();
+        if ($cashAccountIds->isNotEmpty()) {
+            $cashOutLines = \App\Models\GeneralLedger\JournalEntryLine::selectRaw('coa.account_name, SUM(jel.credit) as total')
+                ->from('journal_entry_lines as jel')
+                ->join('chart_of_accounts as coa', 'jel.account_id', '=', 'coa.account_id')
+                ->join('journal_entries as je', 'jel.journal_entry_id', '=', 'je.journal_entry_id')
+                ->whereIn('jel.account_id', $cashAccountIds)
+                ->where('jel.credit', '>', 0)
+                ->where('je.status', 'Posted')
+                ->when($start && $end, fn ($q) => $q->whereBetween('je.transaction_date', [$start, $end]))
+                ->whereExists(function ($q) use ($cashAccountIds) {
+                    $q->selectRaw(1)
+                      ->from('journal_entry_lines as jel2')
+                      ->join('chart_of_accounts as coa2', 'jel2.account_id', '=', 'coa2.account_id')
+                      ->whereColumn('jel2.journal_entry_id', 'jel.journal_entry_id')
+                      ->whereNotIn('jel2.account_id', $cashAccountIds)
+                      ->whereIn('coa2.type', ['Expense', 'Liability']);
+                })
+                ->groupBy('coa.account_name')
+                ->get()
+                ->map(fn ($r) => ['label' => $r->account_name . ' (paid)', 'amount' => (float) $r->total]);
+        }
 
-        $totalCashIn  = array_sum(array_column($cashInLines, 'amount'));
-        $totalCashOut = array_sum(array_column($cashOutLines, 'amount'));
+        $totalCashIn  = $cashInLines->sum('amount');
+        $totalCashOut = $cashOutLines->sum('amount');
         $netCashFlow  = $totalCashIn - $totalCashOut;
 
-        $beginningCash = (float) \App\Models\GeneralLedger\JournalEntryLine::join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
-            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
-            ->where('chart_of_accounts.type', 'Asset')
-            ->where('journal_entries.status', 'Posted')
-            ->when($start && $end, fn ($q) => $q->where('journal_entries.transaction_date', '<', $start))
-            ->select(\DB::raw('COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) as balance'))
-            ->value('balance');
+        // Beginning cash balance from transactions before the period
+        $beginningCash = 0;
+        if ($start && $cashAccountIds->isNotEmpty()) {
+            $beginningCash = (float) \App\Models\GeneralLedger\JournalEntryLine::whereIn('account_id', $cashAccountIds)
+                ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+                ->where('journal_entries.status', 'Posted')
+                ->where('journal_entries.transaction_date', '<', $start)
+                ->selectRaw('COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) as balance')
+                ->value('balance');
+        }
 
         return [
-            'reports'          => $reports,
-            'selectedReportId' => $report?->report_id,
-            'periodLabel'      => $report?->report_period_start?->format('F Y') ?? 'All',
-            'cashInLines'      => $cashInLines,
-            'cashOutLines'     => $cashOutLines,
-            'totalCashIn'      => $totalCashIn,
-            'totalCashOut'     => $totalCashOut,
-            'netCashFlow'      => $netCashFlow,
-            'beginningCash'    => (float) $beginningCash,
-            'endingCash'       => (float) $beginningCash + $netCashFlow,
-            'hasData'          => true,
+            'periods'        => $periods,
+            'selectedPeriod' => $selectedPeriod,
+            'periodLabel'    => $selectedPeriod ?? 'All',
+            'cashInLines'    => $cashInLines->toArray(),
+            'cashOutLines'   => $cashOutLines->toArray(),
+            'totalCashIn'    => $totalCashIn,
+            'totalCashOut'   => $totalCashOut,
+            'netCashFlow'    => $netCashFlow,
+            'beginningCash'  => $beginningCash,
+            'endingCash'     => $beginningCash + $netCashFlow,
+            'hasData'        => true,
         ];
     }
 }

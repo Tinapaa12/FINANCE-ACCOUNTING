@@ -3,6 +3,7 @@ function journalEntries() {
     return {
         filter: 'All',
         searchQuery: '',
+        selectedMonth: '',
         selectedEntry: null,
         showAddModal: false,
         showSuccessModal: false,
@@ -15,9 +16,19 @@ function journalEntries() {
         editRef: '',
         newJournal: { reference: '', date: '', description: '', status: 'Draft', lines: [] },
 
+        get months() {
+            const year = new Date().getFullYear();
+            return Array.from({ length: 12 }, (_, i) => {
+                const d = new Date(year, i, 1);
+                const mm = String(i + 1).padStart(2, '0');
+                return { value: `${year}-${mm}`, label: d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) };
+            });
+        },
+
         get filteredEntries() {
             let result = this.entries;
             if (this.filter !== 'All') result = result.filter(e => e.status === this.filter);
+            if (this.selectedMonth) result = result.filter(e => e.transaction_date && e.transaction_date.startsWith(this.selectedMonth));
             if (this.searchQuery) {
                 const q = this.searchQuery.toLowerCase();
                 result = result.filter(e => e.reference.toLowerCase().includes(q) || e.description.toLowerCase().includes(q));

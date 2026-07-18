@@ -68,7 +68,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" class="py-8 text-center text-gray-500">
-                                    No tax records yet. Add tax records via Manage Data → Tax Records tab.
+                                    No tax transactions this period. Add journal entries with VAT/Tax accounts first.
                                 </td>
                             </tr>
                         @endforelse

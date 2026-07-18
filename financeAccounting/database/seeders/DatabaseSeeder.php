@@ -10,7 +10,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ChartOfAccountsSeeder::class,
             JournalEntrySeeder::class,
-            FinancialReportSeeder::class,
             BudgetVsActualSeeder::class,
         ]);
     }

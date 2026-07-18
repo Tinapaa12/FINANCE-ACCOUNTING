@@ -9,15 +9,10 @@
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-lg">Budget vs Actual</h2>
             <div>
-                @if($report)
-                    <span class="text-sm text-gray-500 mr-3">{{ $report->report_period_start->format('M d, Y') }} — {{ $report->report_period_end->format('M d, Y') }}</span>
-                @endif
-                <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
-                    <option value="">All periods</option>
-                    @foreach($reports as $r)
-                        <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
-                            {{ $r->report_period_start->format('F Y') }}
-                        </option>
+                <span class="text-sm text-gray-500 mr-3">{{ $selectedPeriod ?? 'All periods' }}</span>
+                <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                    @foreach($periods as $p)
+                        <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                     @endforeach
                 </select>
             </div>
