@@ -1,4 +1,4 @@
-<?php // TaxComplianceController — auto-computes tax data from the General Ledger. Finds tax accounts (VAT, EWT, etc.), computes balances from posted journal entries, and merges with manual filing status overrides from tax_records.
+<?php
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
@@ -6,6 +6,8 @@ use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
 use App\Models\FinancialReporting\TaxRecord;
+use App\Models\Sales\SalesTransaction;
+use App\Models\AccountPayable\SupplierBill;
 use Carbon\Carbon;
 
 class TaxComplianceController extends Controller
@@ -23,15 +25,6 @@ class TaxComplianceController extends Controller
 
     private function taxData(): array
     {
-        // Find tax-related accounts by name pattern
-        $taxAccountIds = ChartOfAccount::where(function ($q) {
-            $q->where('account_name', 'like', '%VAT%')
-              ->orWhere('account_name', 'like', '%Tax%')
-              ->orWhere('account_name', 'like', '%EWT%')
-              ->orWhere('account_name', 'like', '%Withholding%');
-        })->pluck('account_id');
-
-        // Periods from posted journal entry dates
         $periods = JournalEntry::where('status', 'Posted')
             ->get()
             ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
@@ -44,6 +37,14 @@ class TaxComplianceController extends Controller
         $end = Carbon::parse('last day of ' . $selectedPeriod);
 
         $taxRecords = [];
+
+        // 1. GL tax accounts (VAT, EWT, etc.)
+        $taxAccountIds = ChartOfAccount::where(function ($q) {
+            $q->where('account_name', 'like', '%VAT%')
+              ->orWhere('account_name', 'like', '%Tax%')
+              ->orWhere('account_name', 'like', '%EWT%')
+              ->orWhere('account_name', 'like', '%Withholding%');
+        })->pluck('account_id');
 
         if ($taxAccountIds->isNotEmpty()) {
             $lines = JournalEntryLine::with(['journalEntry', 'account'])
@@ -61,7 +62,6 @@ class TaxComplianceController extends Controller
                 $taxAmount = max($taxAmount, 0);
                 if ($taxAmount <= 0) continue;
 
-                // Taxable base from non-tax-account lines in the same entry
                 $otherLines = JournalEntryLine::where('journal_entry_id', $jeId)
                     ->whereNotIn('account_id', $taxAccountIds)
                     ->get();
@@ -71,7 +71,6 @@ class TaxComplianceController extends Controller
 
                 $rate = $taxableAmount > 0 ? round($taxAmount / $taxableAmount * 100, 2) : 0;
 
-                // Derive tax type from account name
                 $taxType = 'VAT';
                 if (stripos($account->account_name, 'EWT') !== false) $taxType = 'EWT';
                 elseif (stripos($account->account_name, 'Withholding') !== false) $taxType = 'Withholding Tax';
@@ -89,7 +88,38 @@ class TaxComplianceController extends Controller
             }
         }
 
-        // Merge manual TaxRecord overrides (for filing status tracking)
+        // 2. AR tax data from SalesTransactions (EWT-bearing invoices)
+        $sales = SalesTransaction::whereBetween('created_at', [$start, $end])->get();
+        foreach ($sales as $s) {
+            $taxRecords[] = [
+                'reference_type' => 'Sales Transaction',
+                'reference_id'   => $s->sales_transaction_id,
+                'tax_type'       => 'VAT',
+                'taxable_amount' => (float) $s->total_amount,
+                'tax_rate'       => 12,
+                'tax_amount'     => round((float) $s->total_amount * 0.12 / 1.12, 2),
+                'filing_status'  => $s->is_posted_to_finance ? 'filed' : 'pending',
+            ];
+        }
+
+        // 3. AP tax data from SupplierBills (EWT-bearing bills)
+        $bills = SupplierBill::whereBetween('created_at', [$start, $end])
+            ->whereNotNull('ewt_rate')
+            ->where('ewt_rate', '>', 0)
+            ->get();
+        foreach ($bills as $b) {
+            $taxRecords[] = [
+                'reference_type' => 'Supplier Bill',
+                'reference_id'   => $b->id,
+                'tax_type'       => 'EWT',
+                'taxable_amount' => (float) $b->amount,
+                'tax_rate'       => (float) $b->ewt_rate,
+                'tax_amount'     => round((float) $b->amount * (float) $b->ewt_rate / 100, 2),
+                'filing_status'  => $b->status === 'Paid' ? 'paid' : 'pending',
+            ];
+        }
+
+        // 4. Merge manual TaxRecord overrides (filing status tracking)
         $manualRecords = TaxRecord::where('tax_period', $selectedPeriod)->get();
         foreach ($manualRecords as $mr) {
             $matched = false;

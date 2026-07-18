@@ -51,11 +51,10 @@ Route::middleware('app.auth')->group(function () {
     Route::get('/tax-compliance/pdf', [TaxComplianceController::class, 'pdf'])->name('tax.compliance.pdf');
 
     Route::get('/reports/manage', [ManageDataController::class, 'index'])->name('reports.manage');
-    Route::post('/reports/manage/store-income', [ManageDataController::class, 'storeIncome'])->name('reports.manage.store-income');
-    Route::post('/reports/manage/store-balance', [ManageDataController::class, 'storeBalance'])->name('reports.manage.store-balance');
-    Route::post('/reports/manage/store-cashflow', [ManageDataController::class, 'storeCashFlow'])->name('reports.manage.store-cashflow');
     Route::post('/reports/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('reports.manage.store-budget');
+    Route::delete('/reports/manage/budget/{budgetVsActual}', [ManageDataController::class, 'destroyBudget'])->name('reports.manage.destroy-budget');
     Route::post('/reports/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('reports.manage.store-tax');
+    Route::delete('/reports/manage/tax/{taxRecord}', [ManageDataController::class, 'destroyTaxRecord'])->name('reports.manage.destroy-tax');
 
     // Accounts Receivable
     Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
