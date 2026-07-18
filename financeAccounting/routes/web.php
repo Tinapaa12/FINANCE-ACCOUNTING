@@ -9,10 +9,12 @@ use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\FinancialReporting\TaxComplianceController;
 use App\Http\Controllers\FinancialReporting\ManageDataController;
 use App\Http\Controllers\ARController;
-use App\Http\Controllers\SupplierBillController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PurchaseOrderController;
-use App\Http\Controllers\GoodsReceivedNoteController;
+use App\Http\Controllers\AccountPayable\SupplierBillController;
+use App\Http\Controllers\AccountPayable\PaymentController;
+
+use App\Http\Controllers\Procurement\PurchaseOrderController as ProcurementPurchaseOrderController;
+use App\Http\Controllers\Procurement\GoodsReceiptController;
+use App\Http\Controllers\Procurement\MatchingController;
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -77,17 +79,24 @@ Route::middleware('app.auth')->group(function () {
     Route::post('/supplier-bills/{supplierBill}/attachments', [SupplierBillController::class, 'uploadAttachment'])->name('supplier-bills.attachments.upload');
     Route::get('/attachments/{attachment}/download', [SupplierBillController::class, 'downloadAttachment'])->name('attachments.download');
 
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments', [\App\Http\Controllers\AccountPayable\PaymentController::class, 'index'])->name('payments.index');
+    Route::post('/payments', [\App\Http\Controllers\AccountPayable\PaymentController::class, 'store'])->name('payments.store');
 
-    Route::get('/purchase-orders', [PurchaseOrderController::class, 'index'])->name('purchase-orders.index');
-    Route::post('/purchase-orders', [PurchaseOrderController::class, 'store'])->name('purchase-orders.store');
-    Route::put('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
-    Route::delete('/purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'destroy'])->name('purchase-orders.destroy');
+    // Procurement
+    Route::get('/procurement/purchase-orders', [ProcurementPurchaseOrderController::class, 'index'])->name('procurement.po.index');
+    Route::post('/procurement/purchase-orders', [ProcurementPurchaseOrderController::class, 'store'])->name('procurement.po.store');
+    Route::put('/procurement/purchase-orders/{id}', [ProcurementPurchaseOrderController::class, 'update'])->name('procurement.po.update');
+    Route::patch('/procurement/purchase-orders/{id}/send', [ProcurementPurchaseOrderController::class, 'send'])->name('procurement.po.send');
+    Route::patch('/procurement/purchase-orders/{id}/confirm', [ProcurementPurchaseOrderController::class, 'confirm'])->name('procurement.po.confirm');
+    Route::patch('/procurement/purchase-orders/{id}/deliver', [ProcurementPurchaseOrderController::class, 'markDelivered'])->name('procurement.po.deliver');
+    Route::patch('/procurement/purchase-orders/{id}/cancel', [ProcurementPurchaseOrderController::class, 'cancel'])->name('procurement.po.cancel');
 
-    Route::get('/goods-received-notes', [GoodsReceivedNoteController::class, 'index'])->name('goods-received-notes.index');
-    Route::post('/goods-received-notes', [GoodsReceivedNoteController::class, 'store'])->name('goods-received-notes.store');
-    Route::put('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'update'])->name('goods-received-notes.update');
-    Route::delete('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'destroy'])->name('goods-received-notes.destroy');
+    Route::get('/procurement/goods-receipts', [GoodsReceiptController::class, 'index'])->name('procurement.gr.index');
+    Route::get('/procurement/goods-receipts/create', [GoodsReceiptController::class, 'create'])->name('procurement.gr.create');
+    Route::post('/procurement/goods-receipts', [GoodsReceiptController::class, 'store'])->name('procurement.gr.store');
+    Route::patch('/procurement/goods-receipts/{id}/complete', [GoodsReceiptController::class, 'complete'])->name('procurement.gr.complete');
 
+    Route::get('/procurement/matching', [MatchingController::class, 'index'])->name('procurement.matching.index');
+    Route::post('/procurement/matching', [MatchingController::class, 'match'])->name('procurement.matching.match');
+    Route::patch('/procurement/matching/{bill}/resolve', [MatchingController::class, 'resolve'])->name('procurement.matching.resolve');
 });

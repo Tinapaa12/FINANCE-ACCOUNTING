@@ -4,7 +4,7 @@ namespace App\Services;
 use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
-use App\Models\AccountsPayable\SupplierBill;
+use App\Models\AccountPayable\SupplierBill;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -14,12 +14,14 @@ class DashboardService
     {
         $revenue = $this->getTotalByAccountType('Revenue', 'credit');
         $expenses = $this->getTotalByAccountType('Expense', 'debit');
-        $netProfit = $revenue - $expenses;
+        $paidBills = SupplierBill::where('status', 'Paid')->sum('amount');
+        $totalExpenses = $expenses + $paidBills;
+        $netProfit = $revenue - $totalExpenses;
         $cashBalance = $this->getCashBalance();
 
         return [
             'total_revenue' => $revenue,
-            'total_expenses' => $expenses,
+            'total_expenses' => $totalExpenses,
             'net_profit' => $netProfit,
             'cash_balance' => $cashBalance,
         ];
@@ -54,10 +56,15 @@ class DashboardService
 
     public function getChartData(): array
     {
+        $year = now()->year;
         $months = collect(range(1, 12))->map(fn(int $m) => [
             'month' => date('M', mktime(0, 0, 0, $m, 1)),
             'revenue' => $this->getMonthlyTotal($m, 'Revenue', 'credit'),
-            'expenses' => $this->getMonthlyTotal($m, 'Expense', 'debit'),
+            'expenses' => $this->getMonthlyTotal($m, 'Expense', 'debit')
+                + (float) SupplierBill::where('status', 'Paid')
+                    ->whereYear('paid_at', $year)
+                    ->whereMonth('paid_at', $m)
+                    ->sum('amount'),
         ]);
 
         return [
@@ -177,9 +184,9 @@ class DashboardService
                     ->whereMonth('transaction_date', $m))
                 ->sum('debit');
 
-            $apCashOut = (float) SupplierBill::whereIn('status', ['Approved', 'Paid'])
-                ->whereYear('created_at', $year)
-                ->whereMonth('created_at', $m)
+            $apCashOut = (float) SupplierBill::where('status', 'Paid')
+                ->whereYear('paid_at', $year)
+                ->whereMonth('paid_at', $m)
                 ->sum('amount');
 
             $cashOut = $glCashOut + $apCashOut;
