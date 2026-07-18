@@ -1,4 +1,4 @@
-<div class="grid grid-cols-2 gap-4">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <h3 class="text-sm font-bold text-gray-900 mb-4">Cash Flow Overview</h3>
         <div class="flex items-center gap-4 mb-2 text-xs">

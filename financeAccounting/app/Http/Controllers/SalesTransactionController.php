@@ -18,7 +18,7 @@ class SalesTransactionController extends Controller
             'customer_name'  => 'required|string|max:255',
             'total_amount'   => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer,Installment',
-            'status'         => 'required|in:Pending,Paid',
+            'status'         => 'required|in:Draft,Sent,Overdue,Cleared,Paid',
         ]);
 
         $year = now()->format('Y');
@@ -45,8 +45,8 @@ class SalesTransactionController extends Controller
 
     public function markAsPaid(Request $request, SalesTransaction $salesTransaction)
     {
-        if ($salesTransaction->status === 'Paid') {
-            return redirect()->back()->with('error', 'Transaction is already Paid.');
+        if (in_array($salesTransaction->status, ['Paid', 'Cleared'])) {
+            return redirect()->back()->with('error', 'Transaction is already Paid or Cleared.');
         }
 
         $salesTransaction->update(['status' => 'Paid']);

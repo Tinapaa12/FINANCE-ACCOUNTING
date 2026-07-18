@@ -1,4 +1,4 @@
-<div class="col-span-3 space-y-4">
+<div class="lg:col-span-3 space-y-4">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <h3 class="text-sm font-bold text-gray-900 mb-3">Accounts Summary</h3>
         <div class="space-y-2 text-sm">

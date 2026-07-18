@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('customer_name', 255);
             $table->decimal('total_amount', 15, 2)->default(0.00);
             $table->enum('payment_method', ['Cash', 'Credit Card', 'Bank Transfer', 'Installment']);
-            $table->enum('status', ['Pending', 'Paid'])->default('Pending');
+            $table->enum('status', ['Draft', 'Sent', 'Overdue', 'Cleared', 'Paid'])->default('Draft');
             $table->boolean('is_posted_to_finance')->default(false);
             $table->unsignedBigInteger('journal_entry_id')->nullable();
             $table->timestamps();

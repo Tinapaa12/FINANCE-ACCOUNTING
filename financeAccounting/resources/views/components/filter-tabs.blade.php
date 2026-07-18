@@ -1,6 +1,6 @@
 @props(['active', 'options'])
 
-<div class="flex gap-2 mb-4">
+<div class="flex flex-wrap gap-2 mb-4">
     @foreach($options as $value => $label)
         <button 
             @click="{{ $active }} = '{{ $value }}'" 

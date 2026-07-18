@@ -53,7 +53,10 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                         <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
-                            <option value="Pending" {{ old('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="Draft" {{ old('status') === 'Draft' ? 'selected' : '' }}>Draft</option>
+                            <option value="Sent" {{ old('status') === 'Sent' ? 'selected' : '' }}>Sent</option>
+                            <option value="Overdue" {{ old('status') === 'Overdue' ? 'selected' : '' }}>Overdue</option>
+                            <option value="Cleared" {{ old('status') === 'Cleared' ? 'selected' : '' }}>Cleared</option>
                             <option value="Paid" {{ old('status') === 'Paid' ? 'selected' : '' }}>Paid</option>
                         </select>
                         <p class="text-xs text-gray-400 mt-1">If set to <strong>Paid</strong>, a journal entry will be automatically created in Finance.</p>

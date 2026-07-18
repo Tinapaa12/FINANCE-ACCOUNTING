@@ -57,9 +57,11 @@ Route::middleware('app.auth')->group(function () {
     Route::post('/reports/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('reports.manage.store-budget');
     Route::post('/reports/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('reports.manage.store-tax');
 
+    // Accounts Receivable
     Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
     Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar.payments');
     Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
+    Route::post('/ar/invoices', [ARController::class, 'storeInvoice'])->name('ar.invoices.store');
 
     Route::get('/sales-transactions', fn() => redirect()->route('sales-transactions.create'))->name('sales-transactions.index');
     Route::get('/sales-transactions/create', [\App\Http\Controllers\SalesTransactionController::class, 'create'])->name('sales-transactions.create');
