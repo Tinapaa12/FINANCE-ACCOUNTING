@@ -67,13 +67,21 @@
                                     <td class="px-6 py-3.5 font-medium text-gray-900 text-right tabular-nums">₱{{ number_format($txn->total_amount, 2) }}</td>
                                     <td class="px-6 py-3.5 text-gray-700">{{ $txn->payment_method }}</td>
                                     <td class="px-6 py-3.5">
-                                        <span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset 
-                                              {{ $txn->status === 'Paid' ? 'bg-[#f0fdf4] text-[#15803d] ring-green-200' : 'bg-[#fffbeb] text-[#b45309] ring-amber-200' }}">
+                                        @php
+                                        $statusColors = [
+                                            'Draft' => 'bg-[#eff6ff] text-[#1d4ed8] ring-blue-200',
+                                            'Sent' => 'bg-[#fef9c3] text-[#a16207] ring-yellow-200',
+                                            'Overdue' => 'bg-[#fff7ed] text-[#c2410c] ring-orange-200',
+                                            'Cleared' => 'bg-[#f0fdf4] text-[#15803d] ring-green-200',
+                                            'Paid' => 'bg-[#f0fdf4] text-[#15803d] ring-green-200',
+                                        ];
+                                        @endphp
+                                        <span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset {{ $statusColors[$txn->status] ?? 'bg-gray-100 text-gray-600 ring-gray-200' }}">
                                             {{ $txn->status }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-3.5">
-                                        @if($txn->status === 'Pending')
+                                        @if(!in_array($txn->status, ['Paid', 'Cleared']))
                                             <button @click="markAsPaid({{ $txn->sales_transaction_id }})" class="text-xs font-medium text-blue-600 hover:text-blue-800">Mark as Paid</button>
                                         @else
                                             <span class="inline-flex items-center gap-1 text-xs font-medium text-green-600">

@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
+use App\Models\AccountsPayable\SupplierBill;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -26,13 +27,13 @@ class DashboardService
 
     public function getRecentJournalEntries(int $limit = 5): Collection
     {
-        return JournalEntry::with(['lines.account'])
+        return JournalEntry::with(['lines.account', 'salesTransaction'])
             ->latest()
             ->take($limit)
             ->get()
             ->map(fn(JournalEntry $entry) => [
                 'date' => $entry->transaction_date->format('F d, Y'),
-                'reference' => $entry->reference_no,
+                'reference' => $entry->salesTransaction?->order_no ?? $entry->reference_no,
                 'description' => $entry->description,
                 'status' => $entry->status,
             ]);
@@ -115,9 +116,15 @@ class DashboardService
 
     private function getTotalByAccountType(string $type, string $column): float
     {
-        return (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', $type))
+        $glTotal = (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', $type))
             ->whereHas('journalEntry', fn($q) => $q->where('status', 'Posted'))
             ->sum($column);
+
+        if ($type === 'Expense') {
+            $glTotal += (float) SupplierBill::whereIn('status', ['Approved', 'Paid'])->sum('amount');
+        }
+
+        return $glTotal;
     }
 
     private function getCashBalance(): float
@@ -136,11 +143,20 @@ class DashboardService
     private function getMonthlyTotal(int $month, string $type, string $column): float
     {
         $year = now()->year;
-        return (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', $type))
+        $glTotal = (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', $type))
             ->whereHas('journalEntry', fn($q) => $q->where('status', 'Posted')
                 ->whereYear('transaction_date', $year)
                 ->whereMonth('transaction_date', $month))
             ->sum($column);
+
+        if ($type === 'Expense') {
+            $glTotal += (float) SupplierBill::whereIn('status', ['Approved', 'Paid'])
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->sum('amount');
+        }
+
+        return $glTotal;
     }
 
     private function getCashFlowChartData(): array
@@ -155,11 +171,18 @@ class DashboardService
                     ->whereMonth('transaction_date', $m))
                 ->sum('credit');
 
-            $cashOut = (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', 'Expense'))
+            $glCashOut = (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', 'Expense'))
                 ->whereHas('journalEntry', fn($q) => $q->where('status', 'Posted')
                     ->whereYear('transaction_date', $year)
                     ->whereMonth('transaction_date', $m))
                 ->sum('debit');
+
+            $apCashOut = (float) SupplierBill::whereIn('status', ['Approved', 'Paid'])
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $m)
+                ->sum('amount');
+
+            $cashOut = $glCashOut + $apCashOut;
 
             $months[] = [
                 'month' => date('M', mktime(0, 0, 0, $m, 1)),

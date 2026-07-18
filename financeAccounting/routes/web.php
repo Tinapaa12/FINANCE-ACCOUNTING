@@ -13,8 +13,6 @@ use App\Http\Controllers\SupplierBillController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\GoodsReceivedNoteController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\AuditController;
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -57,9 +55,11 @@ Route::middleware('app.auth')->group(function () {
     Route::post('/reports/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('reports.manage.store-budget');
     Route::post('/reports/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('reports.manage.store-tax');
 
+    // Accounts Receivable
     Route::get('/ar/overview', [ARController::class, 'overview'])->name('ar.overview');
     Route::get('/ar/payments-received', [ARController::class, 'payments'])->name('ar.payments');
     Route::get('/ar/aging-report', [ARController::class, 'aging'])->name('ar.aging');
+    Route::post('/ar/invoices', [ARController::class, 'storeInvoice'])->name('ar.invoices.store');
 
     Route::get('/sales-transactions', fn() => redirect()->route('sales-transactions.create'))->name('sales-transactions.index');
     Route::get('/sales-transactions/create', [\App\Http\Controllers\SalesTransactionController::class, 'create'])->name('sales-transactions.create');
@@ -90,10 +90,4 @@ Route::middleware('app.auth')->group(function () {
     Route::put('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'update'])->name('goods-received-notes.update');
     Route::delete('/goods-received-notes/{goodsReceivedNote}', [GoodsReceivedNoteController::class, 'destroy'])->name('goods-received-notes.destroy');
 
-    Route::get('/payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
-    Route::post('/payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
-    Route::put('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('payment-methods.update');
-    Route::delete('/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
-
-    Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 });

@@ -33,10 +33,10 @@
                         <p class="text-[14px] font-semibold text-[#16a34a]">Current (Not Due)</p>
                         <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center"><i class="fas fa-check text-[#16a34a] text-[12px]"></i></div>
                     </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P98,000</p>
-                    <p class="text-[13px] text-gray-500">4 Invoices</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">₱{{ number_format($currentAmount) }}</p>
+                    <p class="text-[13px] text-gray-500">{{ $currentCount }} Invoices</p>
                     <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-emerald-400 to-[#22c55e] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 46 : 0) + '%'"></div>
+                        <div class="h-full bg-gradient-to-r from-emerald-400 to-[#22c55e] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? {{ $pctCurrent }} : 0) + '%'"></div>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
@@ -45,10 +45,10 @@
                         <p class="text-[14px] font-semibold text-[#ef4444]">1 - 30 Days Overdue</p>
                         <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-hourglass-start text-[#ef4444] text-[12px]"></i></div>
                     </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P57,000</p>
-                    <p class="text-[13px] text-gray-500">3 Invoices</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">₱{{ number_format($d1_30Amount) }}</p>
+                    <p class="text-[13px] text-gray-500">{{ $d1_30Count }} Invoices</p>
                     <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-300 to-[#ef4444] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 27 : 0) + '%'"></div>
+                        <div class="h-full bg-gradient-to-r from-red-300 to-[#ef4444] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? {{ $pct1_30 }} : 0) + '%'"></div>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
@@ -57,10 +57,10 @@
                         <p class="text-[14px] font-semibold text-[#dc2626]">31 - 60 Days Overdue</p>
                         <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-hourglass-half text-[#dc2626] text-[12px]"></i></div>
                     </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P32,000</p>
-                    <p class="text-[13px] text-gray-500">2 Invoices</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">₱{{ number_format($d31_60Amount) }}</p>
+                    <p class="text-[13px] text-gray-500">{{ $d31_60Count }} Invoices</p>
                     <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-400 to-[#dc2626] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 15 : 0) + '%'"></div>
+                        <div class="h-full bg-gradient-to-r from-red-400 to-[#dc2626] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? {{ $pct31_60 }} : 0) + '%'"></div>
                     </div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 relative overflow-hidden hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
@@ -69,10 +69,10 @@
                         <p class="text-[14px] font-semibold text-[#b91c1c]">61+ Days Overdue</p>
                         <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center"><i class="fas fa-triangle-exclamation text-[#b91c1c] text-[12px]"></i></div>
                     </div>
-                    <p class="text-2xl font-bold text-gray-900 mt-1">P25,500</p>
-                    <p class="text-[13px] text-gray-500">3 invoices - urgent</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">₱{{ number_format($d61_90Amount + $d90Amount) }}</p>
+                    <p class="text-[13px] text-gray-500">{{ $d61_90Count + $d90Count }} invoices - urgent</p>
                     <div class="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                        <div class="h-full bg-gradient-to-r from-red-700 to-[#b91c1c] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? 12 : 0) + '%'"></div>
+                        <div class="h-full bg-gradient-to-r from-red-700 to-[#b91c1c] rounded-full transition-all ease-out" style="transition-duration: 1100ms;" :style="'width: ' + (barsLoaded ? {{ $pct61_90 + $pct90 }} : 0) + '%'"></div>
                     </div>
                 </div>
             </div>
@@ -103,18 +103,17 @@
                                 <tr class="transition-colors" :class="idx % 2 === 0 ? 'bg-white hover:bg-indigo-50/50' : 'bg-[#fafbfc] hover:bg-indigo-50/50'">
                                     <td class="px-5 py-4">
                                         <p class="font-medium text-gray-800" x-text="row.customer"></p>
-                                        <p class="text-[12px] text-gray-400" x-text="row.email"></p>
                                     </td>
-                                    <td class="px-5 py-4 text-center" :class="row.current ? 'text-[#16a34a] font-medium' : 'text-gray-300'" x-text="row.current ? 'P'+row.current.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d1_30 ? 'text-[#ef4444] font-medium' : 'text-gray-300'" x-text="row.d1_30 ? 'P'+row.d1_30.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d31_60 ? 'text-[#dc2626] font-medium' : 'text-gray-300'" x-text="row.d31_60 ? 'P'+row.d31_60.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d61_90 ? 'text-[#b91c1c] font-medium' : 'text-gray-300'" x-text="row.d61_90 ? 'P'+row.d61_90.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center" :class="row.d90 ? 'text-[#991b1b] font-medium' : 'text-gray-300'" x-text="row.d90 ? 'P'+row.d90.toLocaleString() : '-'"></td>
-                                    <td class="px-5 py-4 text-center font-bold text-gray-900" x-text="'P' + (row.current+row.d1_30+row.d31_60+row.d61_90+row.d90).toLocaleString()"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.current ? 'text-[#16a34a] font-medium' : 'text-gray-300'" x-text="row.current ? '₱'+row.current.toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d1_30 ? 'text-[#ef4444] font-medium' : 'text-gray-300'" x-text="row.d1_30 ? '₱'+row.d1_30.toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d31_60 ? 'text-[#dc2626] font-medium' : 'text-gray-300'" x-text="row.d31_60 ? '₱'+row.d31_60.toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d61_90 ? 'text-[#b91c1c] font-medium' : 'text-gray-300'" x-text="row.d61_90 ? '₱'+row.d61_90.toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center" :class="row.d90 ? 'text-[#991b1b] font-medium' : 'text-gray-300'" x-text="row.d90 ? '₱'+row.d90.toLocaleString() : '-'"></td>
+                                    <td class="px-5 py-4 text-center font-bold text-gray-900" x-text="'₱' + (row.current+row.d1_30+row.d31_60+row.d61_90+row.d90).toLocaleString()"></td>
                                     <td class="px-5 py-4 text-center">
-                                        <span class="px-3 py-1 rounded-full text-[12px] font-medium ring-1 ring-inset" 
-                                              :class="{'bg-[#dcfce7] text-[#16a34a] ring-green-200': row.risk === 'Low', 
-                                                       'bg-[#fef9c3] text-[#a16207] ring-yellow-200': row.risk === 'Medium', 
+                                        <span class="px-3 py-1 rounded-full text-[12px] font-medium ring-1 ring-inset"
+                                              :class="{'bg-[#dcfce7] text-[#16a34a] ring-green-200': row.risk === 'Low',
+                                                       'bg-[#fef9c3] text-[#a16207] ring-yellow-200': row.risk === 'Medium',
                                                        'bg-[#fee2e2] text-[#dc2626] ring-red-200': row.risk === 'High'}">
                                             <span x-text="row.risk"></span>
                                         </span>
@@ -128,12 +127,12 @@
                         <tfoot class="bg-gradient-to-r from-slate-50 to-slate-100/70 border-t-2 border-gray-200 font-bold text-gray-800 text-[14px]">
                             <tr>
                                 <td class="px-5 py-4">Total</td>
-                                <td class="px-5 py-4 text-center text-[#16a34a]">P98,000</td>
-                                <td class="px-5 py-4 text-center text-[#ef4444]">P57,000</td>
-                                <td class="px-5 py-4 text-center text-[#dc2626]">P32,000</td>
-                                <td class="px-5 py-4 text-center text-[#b91c1c]">P16,000</td>
-                                <td class="px-5 py-4 text-center text-[#991b1b]">P9,500</td>
-                                <td class="px-5 py-4 text-center text-[#4338ca]">P212,500</td>
+                                <td class="px-5 py-4 text-center text-[#16a34a]">₱{{ number_format($grandCurrent) }}</td>
+                                <td class="px-5 py-4 text-center text-[#ef4444]">₱{{ number_format($grandD1_30) }}</td>
+                                <td class="px-5 py-4 text-center text-[#dc2626]">₱{{ number_format($grandD31_60) }}</td>
+                                <td class="px-5 py-4 text-center text-[#b91c1c]">₱{{ number_format($grandD61_90) }}</td>
+                                <td class="px-5 py-4 text-center text-[#991b1b]">₱{{ number_format($grandD90) }}</td>
+                                <td class="px-5 py-4 text-center text-[#4338ca]">₱{{ number_format($grandTotal) }}</td>
                                 <td></td><td></td>
                             </tr>
                         </tfoot>
@@ -162,13 +161,7 @@
                 lastRemindedCustomer: '',
                 overdueFilter: 'all',
                 barsLoaded: false,
-                agingData: [
-                    { customer: 'ABC Trading Co.', email: 'abc@trading.com', current: 0, d1_30: 0, d31_60: 0, d61_90: 16000, d90: 9500, risk: 'High' },
-                    { customer: 'Cruz & Sons', email: 'cruz@sons.com', current: 12000, d1_30: 0, d31_60: 0, d61_90: 0, d90: 0, risk: 'Low' },
-                    { customer: 'Reyes Corp', email: 'reyes@corp.com', current: 78000, d1_30: 0, d31_60: 0, d61_90: 0, d90: 0, risk: 'Low' },
-                    { customer: 'Lim Trading', email: 'lim@trading.com', current: 0, d1_30: 19500, d31_60: 0, d61_90: 0, d90: 0, risk: 'Medium' },
-                    { customer: 'Santos Ent.', email: 'santos@ent.com', current: 8000, d1_30: 28500, d31_60: 0, d61_90: 0, d90: 0, risk: 'Medium' },
-                ],
+                agingData: {!! json_encode($customers) !!},
                 get filteredAgingData() {
                     if (this.overdueFilter === 'overdue') {
                         return this.agingData.filter(row => row.d1_30 > 0 || row.d31_60 > 0 || row.d61_90 > 0 || row.d90 > 0);

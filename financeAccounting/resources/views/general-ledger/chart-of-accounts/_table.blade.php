@@ -1,23 +1,23 @@
 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    <div class="overflow-y-auto" style="max-height: 568px;">
-    <table class="w-full">
+    <div class="overflow-x-auto overflow-y-auto" style="max-height: 568px;">
+    <table class="w-full min-w-[640px]">
         <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Name</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Normal Balance</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Balance</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Code</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Name</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Normal Balance</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Current Balance</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
             <template x-for="account in filteredAccounts" :key="account.code">
                 <tr @click="selectAccount(account)" :class="selectedAccount && selectedAccount.code === account.code ? 'bg-blue-50' : 'hover:bg-gray-50'" class="cursor-pointer transition-colors">
-                    <td class="px-6 py-3 text-sm text-gray-900 font-medium" x-text="account.code"></td>
-                    <td class="px-6 py-3 text-sm text-gray-900" x-text="account.name"></td>
-                    <td class="px-6 py-3">
+                    <td class="px-4 sm:px-6 py-3 text-sm text-gray-900 font-medium whitespace-nowrap" x-text="account.code"></td>
+                    <td class="px-4 sm:px-6 py-3 text-sm text-gray-900 truncate max-w-[200px]" x-text="account.name"></td>
+                    <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
                         <span :class="{
                             'bg-blue-100 text-blue-700': account.type === 'Asset',
                             'bg-orange-100 text-orange-700': account.type === 'Liability',
@@ -26,9 +26,9 @@
                             'bg-pink-100 text-pink-700': account.type === 'Equity'
                         }" class="px-3 py-1 rounded-full text-xs font-medium" x-text="account.type"></span>
                     </td>
-                    <td class="px-6 py-3 text-sm text-gray-600" x-text="account.normal_balance"></td>
-                    <td class="px-6 py-3 text-sm font-medium" :class="account.current_balance >= 0 ? 'text-green-600' : 'text-red-600'" x-text="'₱' + account.current_balance.toLocaleString()"></td>
-                    <td class="px-6 py-3">
+                    <td class="px-4 sm:px-6 py-3 text-sm text-gray-600 whitespace-nowrap" x-text="account.normal_balance"></td>
+                    <td class="px-4 sm:px-6 py-3 text-sm font-medium whitespace-nowrap" :class="account.current_balance >= 0 ? 'text-green-600' : 'text-red-600'" x-text="'₱' + account.current_balance.toLocaleString()"></td>
+                    <td class="px-4 sm:px-6 py-3 whitespace-nowrap">
                         <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700" x-text="account.status"></span>
                     </td>
                     <td class="px-6 py-3">
