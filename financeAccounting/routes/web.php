@@ -9,8 +9,8 @@ use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\FinancialReporting\TaxComplianceController;
 use App\Http\Controllers\FinancialReporting\ManageDataController;
 use App\Http\Controllers\ARController;
-use App\Http\Controllers\SupplierBillController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\AccountPayable\SupplierBillController;
+use App\Http\Controllers\AccountPayable\PaymentController;
 
 use App\Http\Controllers\Procurement\PurchaseOrderController as ProcurementPurchaseOrderController;
 use App\Http\Controllers\Procurement\GoodsReceiptController;

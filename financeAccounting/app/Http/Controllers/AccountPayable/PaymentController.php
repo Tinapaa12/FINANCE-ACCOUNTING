@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AccountPayable;
+
+use App\Http\Controllers\Controller;
 
 use App\Models\AccountPayable\SupplierBill;
 use App\Models\AccountPayable\Payment;
