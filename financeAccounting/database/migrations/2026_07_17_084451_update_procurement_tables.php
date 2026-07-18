@@ -9,13 +9,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE purchase_orders MODIFY COLUMN status VARCHAR(50) NOT NULL DEFAULT 'Draft'");
-
         DB::table('purchase_orders')->where('status', 'Pending')->update(['status' => 'Draft']);
         DB::table('purchase_orders')->where('status', 'Approved')->update(['status' => 'Confirmed']);
         DB::table('purchase_orders')->where('status', 'Received')->update(['status' => 'Delivered']);
-
-        DB::statement("ALTER TABLE purchase_orders MODIFY COLUMN status ENUM('Draft','Sent','Confirmed','Delivered','Cancelled') NOT NULL DEFAULT 'Draft'");
 
         Schema::table('purchase_orders', function (Blueprint $table) {
             $table->timestamp('sent_at')->nullable()->after('expected_delivery');
@@ -29,15 +25,13 @@ return new class extends Migration
         });
 
         Schema::table('supplier_bills', function (Blueprint $table) {
-            $table->enum('matching_status', ['Unmatched','Partially Matched','Matched','Flagged'])->default('Unmatched')->after('status');
+            $table->string('matching_status', 50)->default('Unmatched')->after('status');
             $table->text('matching_notes')->nullable()->after('matching_status');
         });
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE purchase_orders MODIFY COLUMN status ENUM('Pending','Approved','Received','Cancelled') NOT NULL DEFAULT 'Pending'");
-
         Schema::table('purchase_orders', function (Blueprint $table) {
             $table->dropColumn(['sent_at', 'confirmed_at', 'delivered_at']);
         });
