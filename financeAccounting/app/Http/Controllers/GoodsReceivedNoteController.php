@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\GoodsReceivedNote;
-use App\Models\PurchaseOrder;
-use App\Models\SupplierBill;
+use App\Models\AccountsPayable\GoodsReceivedNote;
+use App\Models\AccountsPayable\PurchaseOrder;
+use App\Models\AccountsPayable\SupplierBill;
 
 class GoodsReceivedNoteController extends Controller
 {
@@ -13,7 +13,7 @@ class GoodsReceivedNoteController extends Controller
     {
         $grns = GoodsReceivedNote::with('purchaseOrder')->orderBy('created_at', 'desc')->paginate(6);
         $purchaseOrders = PurchaseOrder::whereIn('status', ['Approved', 'Received'])->orderBy('po_no')->get();
-        return view('goods-received-notes.index', compact('grns', 'purchaseOrders'));
+        return view('accounts-payable.goods-received-notes.index', compact('grns', 'purchaseOrders'));
     }
 
     public function store(Request $request)

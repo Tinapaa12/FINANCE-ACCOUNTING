@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PurchaseOrder;
-use App\Models\GoodsReceivedNote;
-use App\Models\SupplierBill;
+use App\Models\AccountsPayable\PurchaseOrder;
+use App\Models\AccountsPayable\GoodsReceivedNote;
+use App\Models\AccountsPayable\SupplierBill;
 
 class PurchaseOrderController extends Controller
 {
     public function index()
     {
         $purchaseOrders = PurchaseOrder::orderBy('created_at', 'desc')->paginate(6);
-        return view('purchase-orders.index', compact('purchaseOrders'));
+        return view('accounts-payable.purchase-orders.index', compact('purchaseOrders'));
     }
 
     public function store(Request $request)

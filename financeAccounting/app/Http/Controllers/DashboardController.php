@@ -1,25 +1,30 @@
-<?php
-
+<?php // DashboardController — serves the main dashboard view. Aggregates KPI data, recent journal entries, account summaries, chart data, financial alerts, and account type counts via DashboardService.
 namespace App\Http\Controllers;
 
-use App\Models\SupplierBill;
+use App\Services\DashboardService;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private readonly DashboardService $dashboardService
+    ) {}
+
     public function index()
     {
-        $totalBillsAmount = SupplierBill::sum('amount');
-        $totalBillsCount = SupplierBill::count();
-        $pendingBillsCount = SupplierBill::where('status', 'Pending')->count();
-        $paidThisMonthAmount = SupplierBill::where('status', 'Paid')
-            ->whereMonth('updated_at', now()->month)
-            ->sum('amount');
+        $kpi = $this->dashboardService->getKpiData();
+        $recentEntries = $this->dashboardService->getRecentJournalEntries();
+        $accountsSummary = $this->dashboardService->getAccountsSummary();
+        $chartData = $this->dashboardService->getChartData();
+        $alerts = $this->dashboardService->getFinancialAlerts();
+        $accountTypeCounts = $this->dashboardService->getAccountTypeCounts();
 
-        return view('dashboard', compact(
-            'totalBillsAmount',
-            'totalBillsCount',
-            'pendingBillsCount',
-            'paidThisMonthAmount'
+        return view('dashboard.index', compact(
+            'kpi',
+            'recentEntries',
+            'accountsSummary',
+            'chartData',
+            'alerts',
+            'accountTypeCounts'
         ));
     }
 }

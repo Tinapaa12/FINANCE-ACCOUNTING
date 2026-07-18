@@ -1,4 +1,8 @@
-<div class="mb-4">
-    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">{{ $title }}</p>
-    {{ $slot }}
+@props(['title'])
+
+<div class="mt-6">
+    <p class="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">{{ $title }}</p>
+    <div class="space-y-1">
+        {{ $slot }}
+    </div>
 </div>

@@ -6,14 +6,18 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Finance and Accounting')</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .content-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
-        .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
+        [x-cloak] { display: none !important; }
+        .bg-dot-grid { background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px); background-size: 22px 22px; }
+        .content-scroll::-webkit-scrollbar-track { background: #f1f5f9; } .content-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; }
         [id$="Modal"].active{display:flex!important}
     </style>
+    @yield('head')
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen overflow-hidden">
@@ -42,26 +46,50 @@
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
+                <x-sidebar-section title="Dummy">
+                    <x-sidebar-nav-item
+                        href="{{ route('sales-transactions.create') }}"
+                        :active="request()->routeIs('sales-transactions.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />'>
+                        New Transaction
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('reports.manage') }}"
+                        :active="request()->routeIs('reports.manage')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>'>
+                        Manage Data
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('audit.index') }}"
+                        :active="request()->routeIs('audit*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Audit Trail
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('payment-methods.index') }}"
+                        :active="request()->routeIs('payment-methods*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>'>
+                        Payment Methods
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
+
                 <x-sidebar-section title="General Ledger">
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>Chart of Accounts</x-sidebar-nav-item>
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>'>Journal Entries</x-sidebar-nav-item>
-                </x-sidebar-section>
-
-                <x-sidebar-section title="Inventory">
                     <x-sidebar-nav-item
-                        href="{{ route('inventory.index') }}"
-                        :active="request()->routeIs('inventory.index') || request()->routeIs('inventory.store')"
-                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>'>
-                        Inventory
+                        href="{{ route('chart-of-accounts.index') }}"
+                        :active="request()->routeIs('chart-of-accounts.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Chart of Accounts
                     </x-sidebar-nav-item>
                     <x-sidebar-nav-item
-                        href="{{ route('inventory.tracking') }}"
-                        :active="request()->routeIs('inventory.tracking*')"
-                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>'>
-                        Inventory Tracking
+                        href="{{ route('journal-entries.index') }}"
+                        :active="request()->routeIs('journal-entries.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>'>
+                        Journal Entries
                     </x-sidebar-nav-item>
                 </x-sidebar-section>
 
+
+                
                 <x-sidebar-section title="Account Payables">
                     <x-sidebar-nav-item
                         href="{{ route('supplier-bills.index') }}"
@@ -78,10 +106,40 @@
                 </x-sidebar-section>
 
                 <x-sidebar-section title="Account Receivables">
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>A/R Overview</x-sidebar-nav-item>
-                    <x-sidebar-nav-item href="#" icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'>Payments Received</x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('ar.overview') }}"
+                        :active="request()->routeIs('ar.overview')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        A/R Overview
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('ar.payments') }}"
+                        :active="request()->routeIs('ar.payments')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>'>
+                        Payments Received
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('ar.aging') }}"
+                        :active="request()->routeIs('ar.aging')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 018 0v2M12 3v4m-6 4h12M5 11h14a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2z"></path>'>
+                        Aging Report
+                    </x-sidebar-nav-item>
                 </x-sidebar-section>
 
+                <x-sidebar-section title="Reports">
+                    <x-sidebar-nav-item
+                        href="{{ route('reports.income') }}"
+                        :active="request()->routeIs('reports.*')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Financial Reports
+                    </x-sidebar-nav-item>
+                    <x-sidebar-nav-item
+                        href="{{ route('tax.compliance') }}"
+                        :active="request()->routeIs('tax.compliance')"
+                        icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>'>
+                        Tax and Compliance
+                    </x-sidebar-nav-item>
+                </x-sidebar-section>
             </nav>
         </aside>
 
@@ -90,23 +148,82 @@
 
             <!-- Top Header -->
             <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between">
-                <h2 class="text-xl font-bold text-gray-900">@yield('page-title', 'Dashboard')</h2>
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">Admin User</p>
-                        <p class="text-xs text-gray-500">Administrator</p>
+                <h2 class="text-xl font-bold text-gray-900">@yield('page-title', trim($__env->yieldContent('page-heading')) ?: 'Dashboard')</h2>
+                <div class="flex items-center gap-3">
+                    @php
+                        $pdfRoutes = [
+                            'reports.income'         => 'reports.income.pdf',
+                            'reports.assets'         => 'reports.assets.pdf',
+                            'reports.liabilities'    => 'reports.liabilities.pdf',
+                            'reports.cashflow'       => 'reports.cashflow.pdf',
+                            'tax.compliance'         => 'tax.compliance.pdf',
+                            'chart-of-accounts.index' => 'chart-of-accounts.pdf',
+                            'journal-entries.index'  => 'journal-entries.pdf',
+                        ];
+                        $currentPdfRoute = null;
+                        foreach ($pdfRoutes as $pageRoute => $pdfRoute) {
+                            if (request()->routeIs($pageRoute)) {
+                                $currentPdfRoute = $pdfRoute;
+                            }
+                        }
+                    @endphp
+                    @if($currentPdfRoute)
+                        <a href="{{ route($currentPdfRoute) }}" target="_blank"
+                           class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">VIEW PDF</a>
+                        <a href="{{ route($currentPdfRoute, ['print' => 1]) }}" target="_blank" class="border px-3 py-1.5 rounded text-sm font-medium hover:bg-gray-50 transition-colors">PRINT</a>
+                    @endif
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="flex items-center gap-2 cursor-pointer">
+                            <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-semibold text-gray-900">{{ session('auth_username', 'Admin User') }}</p>
+                                <p class="text-xs text-gray-500">Administrator</p>
+                            </div>
+                        </button>
+                        <div x-show="open" @click.away="open = false" x-transition
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-8 content-scroll">
+            <main class="flex-1 overflow-y-auto p-8">
+                @if(request()->routeIs('reports.*'))
+                    <div class="inline-flex bg-white rounded-lg border p-1 mb-6">
+                        <a href="{{ route('reports.income') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                  {{ request()->routeIs('reports.income') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Income Statements
+                        </a>
+                        <a href="{{ route('reports.assets') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                   {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Balance Sheet
+                        </a>
+                        <a href="{{ route('reports.liabilities') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                   {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Budget vs Actual
+                        </a>
+                        <a href="{{ route('reports.cashflow') }}"
+                           class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
+                                  {{ request()->routeIs('reports.cashflow') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                            Cash Flow
+                        </a>
+                    </div>
+                @endif
                 @yield('content')
             </main>
-
         </div>
     </div>
 
@@ -144,6 +261,18 @@
     }
     </style>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-export-pdf]').forEach(function (btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('PDF EXPORTED!');
+                });
+            });
+        });
+    </script>
     <script src="{{ asset('js/supplier-bills.js') }}"></script>
+    @yield('scripts')
+    @stack('scripts')
 </body>
 </html>

@@ -58,5 +58,9 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 =======
-# accountPayable
->>>>>>> 68922d56bb200f414e6df1c41d69f3ccb3709879
+composer install
+copy .env.example .env
+php artisan key:generate
+
+MAKE SURE TO INSTALL
+>>>>>>> origin/paymentsMade

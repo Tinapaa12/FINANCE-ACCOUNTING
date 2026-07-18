@@ -1,5 +1,4 @@
-<?php
-
+<?php // Queue configuration — connection drivers (database, redis, sqs) and job settings.
 return [
 
     /*

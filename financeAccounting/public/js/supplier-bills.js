@@ -27,7 +27,10 @@ function viewBill(btn) {
     document.getElementById("viewAmount").textContent = cells[4].textContent;
     document.getElementById("viewDue").textContent = cells[5].textContent;
     document.getElementById("viewStatus").textContent = cells[6].textContent;
+<<<<<<< HEAD
+=======
     document.getElementById("viewPaymentMethod").textContent = row.getAttribute('data-payment-method') || '';
+>>>>>>> origin/paymentsMade
 
     document.getElementById("viewModal").classList.add("active");
 }
@@ -46,15 +49,22 @@ document.getElementById("viewModal").addEventListener("click", function (e) {
 
 let editingRow = null;
 
+<<<<<<< HEAD
+function editBill(id, supplier, amount, dueDate, status)
+=======
 function editBill(id, supplier, amount, dueDate, status, paymentMethod, ewtRate, terms)
+>>>>>>> origin/paymentsMade
 {
     document.getElementById('editSupplier').value = supplier;
     document.getElementById('editAmount').value = amount;
     document.getElementById('editDue').value = dueDate;
     document.getElementById('editStatus').value = status;
+<<<<<<< HEAD
+=======
     document.getElementById('editPaymentMethod').value = paymentMethod;
     document.getElementById('editEwtRate').value = ewtRate || '';
     document.getElementById('editPaymentTerms').value = terms || '';
+>>>>>>> origin/paymentsMade
 
     document.getElementById('editBillForm').action =
         "/supplier-bills/" + id;
@@ -71,6 +81,8 @@ document.getElementById("editModal").addEventListener("click", function (e) {
 function closeEditModal() {
     document.getElementById("editModal").classList.remove("active");
 }
+<<<<<<< HEAD
+=======
 // ---------- PAID (AJAX) ----------
 
 function markAsPaid(id, btn) {
@@ -185,6 +197,7 @@ function printReceipt() {
     window.print();
 }
 
+>>>>>>> origin/paymentsMade
 // ---------- GLOBAL ----------
 
 window.openModal = openModal;
@@ -193,7 +206,10 @@ window.viewBill = viewBill;
 window.closeViewModal = closeViewModal;
 window.editBill = editBill;
 window.closeEditModal = closeEditModal;
+<<<<<<< HEAD
+=======
 window.markAsPaid = markAsPaid;
 window.showReceipt = showReceipt;
 window.closeReceiptModal = closeReceiptModal;
 window.printReceipt = printReceipt;
+>>>>>>> origin/paymentsMade

@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates supplier_bills table for Accounts Payable. Tracks bill number, PO/GRN, supplier, amount, due date, and status.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

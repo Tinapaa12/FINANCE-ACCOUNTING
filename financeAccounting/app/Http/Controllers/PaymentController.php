@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SupplierBill;
-use App\Models\Payment;
+use App\Models\AccountsPayable\SupplierBill;
+use App\Models\AccountsPayable\Payment;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -21,7 +21,7 @@ class PaymentController extends Controller
         }
 
         $payments = $query->orderBy('created_at', 'desc')->paginate(15);
-        return view('payments.index', compact('payments'));
+        return view('accounts-payable.payments.index', compact('payments'));
     }
 
     public function store(Request $request)

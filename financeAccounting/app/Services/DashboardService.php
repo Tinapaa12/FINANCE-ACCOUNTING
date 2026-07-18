@@ -1,10 +1,10 @@
-<?php // DashboardService — encapsulates business logic for the dashboard. Computes KPI data, recent journal entries, account summaries, chart data, and alerts.
+<?php
 namespace App\Services;
 
 use App\Models\AccountPayable\SupplierBill;
-use App\Models\ChartOfAccount;
-use App\Models\JournalEntry;
-use App\Models\JournalEntryLine;
+use App\Models\GeneralLedger\ChartOfAccount;
+use App\Models\GeneralLedger\JournalEntry;
+use App\Models\GeneralLedger\JournalEntryLine;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -13,13 +13,13 @@ class DashboardService
     public function getKpiData(): array
     {
         $revenue = $this->getTotalByAccountType('Revenue', 'credit');
-        $paidToSuppliers = (float) SupplierBill::where('status', 'Paid')->sum('amount');
-        $netProfit = $revenue - $paidToSuppliers;
+        $expenses = $this->getTotalByAccountType('Expense', 'debit');
+        $netProfit = $revenue - $expenses;
         $cashBalance = $this->getCashBalance();
 
         return [
             'total_revenue' => $revenue,
-            'total_expenses' => $paidToSuppliers,
+            'total_expenses' => $expenses,
             'net_profit' => $netProfit,
             'cash_balance' => $cashBalance,
         ];
@@ -27,13 +27,13 @@ class DashboardService
 
     public function getRecentJournalEntries(int $limit = 5): Collection
     {
-        return JournalEntry::with(['lines.account'])
+        return JournalEntry::with(['lines.account', 'salesTransaction'])
             ->latest()
             ->take($limit)
             ->get()
             ->map(fn(JournalEntry $entry) => [
                 'date' => $entry->transaction_date->format('F d, Y'),
-                'reference' => $entry->reference_no,
+                'reference' => $entry->salesTransaction?->order_no ?? $entry->reference_no,
                 'description' => $entry->description,
                 'status' => $entry->status,
             ]);
@@ -54,14 +54,10 @@ class DashboardService
 
     public function getChartData(): array
     {
-        $year = now()->year;
         $months = collect(range(1, 12))->map(fn(int $m) => [
             'month' => date('M', mktime(0, 0, 0, $m, 1)),
             'revenue' => $this->getMonthlyTotal($m, 'Revenue', 'credit'),
-            'expenses' => (float) SupplierBill::where('status', 'Paid')
-                ->whereYear('paid_at', $year)
-                ->whereMonth('paid_at', $m)
-                ->sum('amount'),
+            'expenses' => $this->getMonthlyTotal($m, 'Expense', 'debit'),
         ]);
 
         return [
@@ -160,10 +156,11 @@ class DashboardService
                     ->whereMonth('transaction_date', $m))
                 ->sum('credit');
 
-            $cashOut = (float) SupplierBill::where('status', 'Paid')
-                ->whereYear('paid_at', $year)
-                ->whereMonth('paid_at', $m)
-                ->sum('amount');
+            $cashOut = (float) JournalEntryLine::whereHas('account', fn($q) => $q->where('type', 'Expense'))
+                ->whereHas('journalEntry', fn($q) => $q->where('status', 'Posted')
+                    ->whereYear('transaction_date', $year)
+                    ->whereMonth('transaction_date', $m))
+                ->sum('debit');
 
             $months[] = [
                 'month' => date('M', mktime(0, 0, 0, $m, 1)),

@@ -1,5 +1,4 @@
-<?php
-
+<?php // Migration: creates users, password_reset_tokens, and sessions tables for Laravel authentication.
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;

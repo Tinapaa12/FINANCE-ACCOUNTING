@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\SupplierBill;
-use App\Models\Attachment;
-use App\Models\PurchaseOrder;
-use App\Models\GoodsReceivedNote;
-use App\Models\Payment;
+use App\Models\AccountsPayable\SupplierBill;
+use App\Models\AccountsPayable\Attachment;
+use App\Models\AccountsPayable\PurchaseOrder;
+use App\Models\AccountsPayable\GoodsReceivedNote;
+use App\Models\AccountsPayable\Payment;
 
 class SupplierBillController extends Controller
 {
@@ -94,7 +94,7 @@ class SupplierBillController extends Controller
             })->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
         $allPOs = PurchaseOrder::whereIn('status', ['Approved', 'Received'])->orderBy('po_no')->get();
 
-        return view('supplier-bills.index', compact(
+        return view('accounts-payable.supplier-bills.index', compact(
             'supplierBills',
             'upcomingBills',
             'overdueBills',
