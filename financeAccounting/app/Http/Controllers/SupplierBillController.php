@@ -93,8 +93,9 @@ class SupplierBillController extends Controller
                 });
             })->orderBy('created_at', 'desc')->paginate(6)->withQueryString();
         $allPOs = PurchaseOrder::whereIn('status', ['Approved', 'Received'])->orderBy('po_no')->get();
+        $allGRNs = GoodsReceivedNote::orderBy('grn_no')->get();
 
-        return view('accounts-payable.supplier-bills.index', compact(
+        return view('AccountPayable.supplier-bills.index', compact(
             'supplierBills',
             'upcomingBills',
             'overdueBills',
@@ -119,6 +120,7 @@ class SupplierBillController extends Controller
             'purchaseOrders',
             'grns',
             'allPOs',
+            'allGRNs',
         ));
     }
 

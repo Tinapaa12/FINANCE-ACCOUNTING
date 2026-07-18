@@ -21,7 +21,7 @@ class PaymentController extends Controller
         }
 
         $payments = $query->orderBy('created_at', 'desc')->paginate(15);
-        return view('accounts-payable.payments.index', compact('payments'));
+        return view('AccountPayable.payments.index', compact('payments'));
     }
 
     public function store(Request $request)
