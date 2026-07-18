@@ -1,6 +1,7 @@
 <?php // SalesTransactionController — CRUD for the dummy Sales module. Creates sales transactions and auto-posts Paid transactions to Finance via FinancePostingService.
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Dummy;
 
+use App\Http\Controllers\Controller;
 use App\Models\Sales\SalesTransaction;
 use App\Services\FinancePostingService;
 use Illuminate\Http\Request;

@@ -1,6 +1,7 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AccountsReceivable;
 
+use App\Http\Controllers\Controller;
 use App\Models\Sales\SalesTransaction;
 use App\Models\Customer;
 use App\Models\Invoice;

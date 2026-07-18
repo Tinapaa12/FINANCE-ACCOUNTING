@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\FinancialReporting\TaxComplianceController;
-use App\Http\Controllers\FinancialReporting\ManageDataController;
+use App\Http\Controllers\Dummy\ManageDataController;
 
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/income', [FinancialReportController::class, 'income'])->name('income');

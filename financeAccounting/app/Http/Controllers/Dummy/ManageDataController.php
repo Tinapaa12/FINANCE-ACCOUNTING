@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers\FinancialReporting;
+namespace App\Http\Controllers\Dummy;
 
 use App\Http\Controllers\Controller;
 use App\Models\FinancialReporting\BalanceSheet;

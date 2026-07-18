@@ -4,12 +4,12 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GeneralLedger\ChartOfAccountsController;
 use App\Http\Controllers\GeneralLedger\JournalEntryController;
-use App\Http\Controllers\SupplierBillController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PurchaseOrderController;
-use App\Http\Controllers\GoodsReceivedNoteController;
-use App\Http\Controllers\ARController;
-use App\Http\Controllers\SalesTransactionController;
+use App\Http\Controllers\AccountsPayable\SupplierBillController;
+use App\Http\Controllers\AccountsPayable\PaymentController;
+use App\Http\Controllers\AccountsPayable\PurchaseOrderController;
+use App\Http\Controllers\AccountsPayable\GoodsReceivedNoteController;
+use App\Http\Controllers\AccountsReceivable\ARController;
+use App\Http\Controllers\Dummy\SalesTransactionController;
 use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\DashboardController;
 

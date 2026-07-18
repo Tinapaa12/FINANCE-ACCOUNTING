@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'app.auth' => \App\Http\Middleware\AuthMiddleware::class,
         ]);
+
+        $middleware->api(prepend: [
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

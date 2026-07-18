@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AccountsPayable;
 
+use App\Http\Controllers\Controller;
 use App\Models\AccountsPayable\SupplierBill;
 use App\Models\AccountsPayable\Payment;
 use Illuminate\Http\Request;

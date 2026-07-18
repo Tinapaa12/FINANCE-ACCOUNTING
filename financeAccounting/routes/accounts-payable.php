@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SupplierBillController;
-use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\PurchaseOrderController;
-use App\Http\Controllers\GoodsReceivedNoteController;
+use App\Http\Controllers\AccountsPayable\SupplierBillController;
+use App\Http\Controllers\AccountsPayable\PaymentController;
+use App\Http\Controllers\AccountsPayable\PurchaseOrderController;
+use App\Http\Controllers\AccountsPayable\GoodsReceivedNoteController;
 
 Route::prefix('supplier-bills')->name('supplier-bills.')->group(function () {
     Route::get('/', [SupplierBillController::class, 'index'])->name('index');

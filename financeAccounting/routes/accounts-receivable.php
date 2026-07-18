@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ARController;
-use App\Http\Controllers\SalesTransactionController;
+use App\Http\Controllers\AccountsReceivable\ARController;
+use App\Http\Controllers\Dummy\SalesTransactionController;
 
 Route::prefix('ar')->name('ar.')->group(function () {
     Route::get('/overview', [ARController::class, 'overview'])->name('overview');

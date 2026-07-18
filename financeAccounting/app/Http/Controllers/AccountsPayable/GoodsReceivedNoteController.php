@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\AccountsPayable;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\AccountsPayable\GoodsReceivedNote;
 use App\Models\AccountsPayable\PurchaseOrder;
