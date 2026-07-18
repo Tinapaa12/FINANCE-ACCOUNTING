@@ -73,7 +73,6 @@
                     <label class="text-xs text-gray-500 block mb-1">Tax Type</label>
                     <select name="tax_type" required class="border rounded px-3 py-1.5 text-sm">
                         <option value="VAT">VAT</option>
-                        <option value="EWT">EWT</option>
                     </select>
                 </div>
                 <div><label class="text-xs text-gray-500 block mb-1">Taxable (₱)</label><input type="number" step="0.01" name="taxable_amount" required class="border rounded px-3 py-1.5 text-sm"></div>

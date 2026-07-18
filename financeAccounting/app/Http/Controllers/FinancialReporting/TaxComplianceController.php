@@ -7,7 +7,6 @@ use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
 use App\Models\FinancialReporting\TaxRecord;
 use App\Models\Sales\SalesTransaction;
-use App\Models\AccountPayable\SupplierBill;
 use Carbon\Carbon;
 
 class TaxComplianceController extends Controller
@@ -38,12 +37,10 @@ class TaxComplianceController extends Controller
 
         $taxRecords = [];
 
-        // 1. GL tax accounts (VAT, EWT, etc.)
+        // 1. GL tax accounts (VAT, etc.)
         $taxAccountIds = ChartOfAccount::where(function ($q) {
             $q->where('account_name', 'like', '%VAT%')
-              ->orWhere('account_name', 'like', '%Tax%')
-              ->orWhere('account_name', 'like', '%EWT%')
-              ->orWhere('account_name', 'like', '%Withholding%');
+              ->orWhere('account_name', 'like', '%Tax%');
         })->pluck('account_id');
 
         if ($taxAccountIds->isNotEmpty()) {
@@ -72,9 +69,7 @@ class TaxComplianceController extends Controller
                 $rate = $taxableAmount > 0 ? round($taxAmount / $taxableAmount * 100, 2) : 0;
 
                 $taxType = 'VAT';
-                if (stripos($account->account_name, 'EWT') !== false) $taxType = 'EWT';
-                elseif (stripos($account->account_name, 'Withholding') !== false) $taxType = 'Withholding Tax';
-                elseif (stripos($account->account_name, 'Income Tax') !== false) $taxType = 'Income Tax';
+                if (stripos($account->account_name, 'Income Tax') !== false) $taxType = 'Income Tax';
 
                 $taxRecords[] = [
                     'reference_type' => 'Journal Entry',
@@ -88,7 +83,7 @@ class TaxComplianceController extends Controller
             }
         }
 
-        // 2. AR tax data from SalesTransactions (EWT-bearing invoices)
+        // 2. AR tax data from SalesTransactions
         $sales = SalesTransaction::whereBetween('created_at', [$start, $end])->get();
         foreach ($sales as $s) {
             $taxRecords[] = [
@@ -102,24 +97,7 @@ class TaxComplianceController extends Controller
             ];
         }
 
-        // 3. AP tax data from SupplierBills (EWT-bearing bills)
-        $bills = SupplierBill::whereBetween('created_at', [$start, $end])
-            ->whereNotNull('ewt_rate')
-            ->where('ewt_rate', '>', 0)
-            ->get();
-        foreach ($bills as $b) {
-            $taxRecords[] = [
-                'reference_type' => 'Supplier Bill',
-                'reference_id'   => $b->id,
-                'tax_type'       => 'EWT',
-                'taxable_amount' => (float) $b->amount,
-                'tax_rate'       => (float) $b->ewt_rate,
-                'tax_amount'     => round((float) $b->amount * (float) $b->ewt_rate / 100, 2),
-                'filing_status'  => $b->status === 'Paid' ? 'paid' : 'pending',
-            ];
-        }
-
-        // 4. Merge manual TaxRecord overrides (filing status tracking)
+        // 3. Merge manual TaxRecord overrides (filing status tracking)
         $manualRecords = TaxRecord::where('tax_period', $selectedPeriod)->get();
         foreach ($manualRecords as $mr) {
             $matched = false;
