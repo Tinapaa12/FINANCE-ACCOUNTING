@@ -1,4 +1,4 @@
-<div class="col-span-3 space-y-4">
+<div class="lg:col-span-3 space-y-4">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <h3 class="text-sm font-bold text-gray-900 mb-3">Accounts Summary</h3>
         <div class="space-y-2 text-sm">
@@ -8,7 +8,7 @@
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Journal Entries</span>
-                <span class="font-semibold text-gray-900">{{ \App\Models\JournalEntry::count() }}</span>
+                <span class="font-semibold text-gray-900">{{ \App\Models\GeneralLedger\JournalEntry::count() }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-gray-600">Active Accounts</span>

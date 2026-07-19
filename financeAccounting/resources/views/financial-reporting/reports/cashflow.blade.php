@@ -3,10 +3,10 @@
 @section('title', 'Cash Flow Statement')
 
 @section('content')
-    @if(!$hasData)
+    @if(empty($cashInLines) && empty($cashOutLines))
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
             <p class="text-yellow-800 font-medium">No data yet.</p>
-            <p class="text-yellow-600 text-sm mt-1">Add journal entries and financial reports from the <a href="{{ route('reports.manage') }}" class="underline">Manage Data</a> page.</p>
+            <p class="text-yellow-600 text-sm mt-1">Add journal entries with Revenue and Expense accounts first.</p>
         </div>
     @else
     <div class="flex flex-col lg:flex-row gap-6">
@@ -17,11 +17,9 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-semibold text-lg">Cash Flow Statement</h2>
                     <div class="flex items-center gap-3">
-                        <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?report_id='+this.value">
-                            @foreach($reports as $r)
-                                <option value="{{ $r->report_id }}" @selected($r->report_id === $selectedReportId)>
-                                    {{ $r->report_period_start->format('F Y') }}
-                                </option>
+                        <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                            @foreach($periods as $p)
+                                <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                             @endforeach
                         </select>
                         <span class="text-sm text-gray-500">{{ $periodLabel }}</span>

@@ -1,10 +1,10 @@
 <?php
 namespace App\Services;
 
-use App\Models\ChartOfAccount;
-use App\Models\JournalEntry;
-use App\Models\JournalEntryLine;
-use App\Models\SalesTransaction;
+use App\Models\GeneralLedger\ChartOfAccount;
+use App\Models\GeneralLedger\JournalEntry;
+use App\Models\GeneralLedger\JournalEntryLine;
+use App\Models\Sales\SalesTransaction;
 use Illuminate\Support\Facades\DB;
 
 class FinancePostingService

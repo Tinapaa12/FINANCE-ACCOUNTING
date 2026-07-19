@@ -1,9 +1,9 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Sales\SalesTransaction;
 use App\Models\Customer;
 use App\Models\Invoice;
-use App\Models\SalesTransaction;
 use Illuminate\Http\Request;
 
 class ARController extends Controller

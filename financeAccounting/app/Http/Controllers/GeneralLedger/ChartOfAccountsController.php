@@ -2,7 +2,7 @@
 namespace App\Http\Controllers\GeneralLedger;
 
 use App\Http\Controllers\Controller;
-use App\Models\ChartOfAccount;
+use App\Models\GeneralLedger\ChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -39,7 +39,17 @@ class ChartOfAccountsController extends Controller
             ), 0) as current_balance'))
             ->paginate(10);
 
-        return view('general-ledger.chart-of-accounts.index', compact('accounts'));
+        if (request()->wantsJson()) {
+            return response()->json($accounts);
+        }
+
+        $trialBalance = ChartOfAccount::select('chart_of_accounts.*')
+            ->addSelect(DB::raw('COALESCE((SELECT SUM(jel.debit) FROM journal_entry_lines jel WHERE jel.account_id = chart_of_accounts.account_id), 0) as total_debits'))
+            ->addSelect(DB::raw('COALESCE((SELECT SUM(jel.credit) FROM journal_entry_lines jel WHERE jel.account_id = chart_of_accounts.account_id), 0) as total_credits'))
+            ->orderBy('account_code')
+            ->get();
+
+        return view('general-ledger.chart-of-accounts.index', compact('accounts', 'trialBalance'));
     }
 
     public function store(Request $request)

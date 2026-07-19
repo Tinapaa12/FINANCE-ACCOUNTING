@@ -5,7 +5,7 @@
 @section('pdf-title', 'Balance Sheet')
 
 @section('pdf-content')
-    <p class="text-sm text-gray-500 mb-6">As of {{ now()->format('F j, Y') }}</p>
+    <p class="text-sm text-gray-500 mb-6">Period: {{ $selectedPeriod ?? 'All periods' }}</p>
 
     <p class="font-semibold mb-2">Assets</p>
     <table class="w-full text-sm mb-6">

@@ -8,16 +8,22 @@
     <div class="bg-white rounded-lg border p-5">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-semibold text-lg">Budget vs Actual</h2>
-            <div class="flex items-center gap-3">
+            <div>
+                <span class="text-sm text-gray-500 mr-3">{{ $selectedPeriod ?? 'All periods' }}</span>
                 <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
                     @foreach($periods as $p)
-                        <option value="{{ $p }}" @selected($p === $period)>{{ $p }}</option>
+                        <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                     @endforeach
                 </select>
-                <span class="text-sm text-gray-500">{{ $reportDate ?? '' }}</span>
             </div>
         </div>
 
+        @if(empty($budgetVsActual))
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                <p class="text-yellow-800 font-medium">No budget targets yet.</p>
+                <p class="text-yellow-600 text-sm mt-1">Add budget targets via Manage Data → Budget vs Actual tab. Actual amounts are auto-computed from posted journal entries.</p>
+            </div>
+        @else
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
@@ -58,5 +64,6 @@
                 </tbody>
             </table>
         </div>
+        @endif
     </div>
 @endsection

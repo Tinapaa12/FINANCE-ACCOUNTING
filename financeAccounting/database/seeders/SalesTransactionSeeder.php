@@ -1,7 +1,7 @@
 <?php
 namespace Database\Seeders;
 
-use App\Models\SalesTransaction;
+use App\Models\Sales\SalesTransaction;
 use Illuminate\Database\Seeder;
 
 class SalesTransactionSeeder extends Seeder
