@@ -170,7 +170,7 @@
                         $pdfRoutes = [
                             'reports.income'         => 'reports.income.pdf',
                             'reports.assets'         => 'reports.assets.pdf',
-                            'reports.liabilities'    => 'reports.liabilities.pdf',
+                            'reports.budget'    => 'reports.budget.pdf',
                             'reports.cashflow'       => 'reports.cashflow.pdf',
                             'tax.compliance'         => 'tax.compliance.pdf',
                             'chart-of-accounts.index' => 'chart-of-accounts.pdf',
@@ -225,9 +225,9 @@
                                    {{ request()->routeIs('reports.assets') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
                             Balance Sheet
                         </a>
-                        <a href="{{ route('reports.liabilities') }}"
+                        <a href="{{ route('reports.budget') }}"
                            class="px-4 py-1.5 rounded-md text-sm font-medium transition-colors
-                                   {{ request()->routeIs('reports.liabilities') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
+                                    {{ request()->routeIs('reports.budget') ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50' }}">
                             Budget vs Actual
                         </a>
                         <a href="{{ route('reports.cashflow') }}"

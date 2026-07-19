@@ -45,6 +45,6 @@ Route::middleware('app.auth')->group(function () {
 
     Route::get('reports/income', [FinancialReportController::class, 'income'])->name('api.reports.income');
     Route::get('reports/assets', [FinancialReportController::class, 'assets'])->name('api.reports.assets');
-    Route::get('reports/liabilities', [FinancialReportController::class, 'liabilities'])->name('api.reports.liabilities');
+    Route::get('reports/budget', [FinancialReportController::class, 'budget'])->name('api.reports.budget');
     Route::get('reports/cashflow', [FinancialReportController::class, 'cashflow'])->name('api.reports.cashflow');
 });

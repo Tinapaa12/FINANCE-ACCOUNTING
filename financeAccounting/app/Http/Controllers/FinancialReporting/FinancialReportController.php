@@ -35,12 +35,22 @@ class FinancialReportController extends Controller
 
     public function liabilities()
     {
-        return view('financial-reporting.reports.liabilities', $this->liabilitiesData());
+        return redirect()->route('reports.budget');
     }
 
     public function liabilitiesPdf()
     {
-        return view('financial-reporting.pdf.liabilities', $this->liabilitiesData());
+        return redirect()->route('reports.budget.pdf');
+    }
+
+    public function budget()
+    {
+        return view('financial-reporting.reports.budget', $this->budgetData());
+    }
+
+    public function budgetPdf()
+    {
+        return view('financial-reporting.pdf.budget', $this->budgetData());
     }
 
     public function cashflow()
@@ -217,7 +227,7 @@ class FinancialReportController extends Controller
         ];
     }
 
-    private function liabilitiesData(): array
+    private function budgetData(): array
     {
         $periods = $this->getPeriods();
         $selectedPeriod = request('period');
@@ -242,29 +252,43 @@ class FinancialReportController extends Controller
             ];
         }
 
+        $accountNames = $budgetRows->pluck('account_name');
+        $coaAccounts = \App\Models\GeneralLedger\ChartOfAccount::whereIn('account_name', $accountNames)
+            ->get()
+            ->keyBy('account_name');
+
         // Get actuals from journal entries for the same accounts
         $actuals = \App\Models\GeneralLedger\JournalEntryLine::select('chart_of_accounts.account_name',
-                \DB::raw('SUM(journal_entry_lines.debit) as debit_total'),
-                \DB::raw('SUM(journal_entry_lines.credit) as credit_total'))
+                'chart_of_accounts.normal_balance',
+                \DB::raw('COALESCE(SUM(journal_entry_lines.debit), 0) as debit_total'),
+                \DB::raw('COALESCE(SUM(journal_entry_lines.credit), 0) as credit_total'))
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.account_id')
             ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
             ->where('journal_entries.status', 'Posted')
+            ->whereIn('chart_of_accounts.account_name', $accountNames)
             ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
-            ->groupBy('chart_of_accounts.account_name')
+            ->groupBy('chart_of_accounts.account_name', 'chart_of_accounts.normal_balance')
             ->get()
             ->keyBy('account_name');
 
         return [
             'periods'        => $periods,
             'selectedPeriod' => $selectedPeriod,
-            'budgetVsActual' => $budgetRows->map(function ($row) use ($actuals) {
+            'budgetVsActual' => $budgetRows->map(function ($row) use ($actuals, $coaAccounts) {
                 $accountName = $row->account_name;
                 $budgetAmount = (float) $row->budget_amount;
+                $coa = $coaAccounts->get($accountName);
 
-                // Determine actual: for Revenue accounts use credit total, for Expense use debit total
-                $actualAccount = $actuals->get($accountName);
-                if ($actualAccount) {
-                    $actualAmount = (float) $actualAccount->debit_total + (float) $actualAccount->credit_total;
+                $actualEntry = $actuals->get($accountName);
+                if ($actualEntry) {
+                    $debits = (float) $actualEntry->debit_total;
+                    $credits = (float) $actualEntry->credit_total;
+                    if ($coa && $coa->normal_balance === 'Credit') {
+                        $actualAmount = $credits - $debits;
+                    } else {
+                        $actualAmount = $debits - $credits;
+                    }
+                    $actualAmount = max($actualAmount, 0);
                 } else {
                     $actualAmount = (float) $row->actual_amount;
                 }

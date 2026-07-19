@@ -22,17 +22,27 @@
     @if($tab === 'budget')
         <div class="bg-white rounded-lg border p-5">
             <h3 class="font-semibold mb-3">Add Budget Target</h3>
-            <p class="text-xs text-gray-500 mb-3">Actual amounts are auto-computed from posted journal entries in the General Ledger.</p>
+            <p class="text-xs text-gray-500 mb-3">Select a Chart of Accounts account and set a budget amount. Actuals are auto-computed from posted journal entries.</p>
             <form method="POST" action="{{ route('reports.manage.store-budget') }}" class="flex gap-3 items-end flex-wrap">
                 @csrf
-                <div><label class="text-xs text-gray-500 block mb-1">Account</label><input type="text" name="account_name" required class="border rounded px-3 py-1.5 text-sm" placeholder="e.g. Sales revenue"></div>
+                <div>
+                    <label class="text-xs text-gray-500 block mb-1">Account</label>
+                    <select name="account_id" required class="border rounded px-3 py-1.5 text-sm min-w-[200px]">
+                        <option value="">Select account</option>
+                        @foreach($accounts as $a)
+                            <option value="{{ $a->account_id }}">{{ $a->account_code }} - {{ $a->account_name }} ({{ $a->type }})</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div><label class="text-xs text-gray-500 block mb-1">Budget (₱)</label><input type="number" step="0.01" name="budget_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">Period</label>
                     <select name="tax_period" required class="border rounded px-3 py-1.5 text-sm">
-                        @foreach($reportPeriods as $p)
+                        @forelse($reportPeriods as $p)
                             <option value="{{ $p }}">{{ $p }}</option>
-                        @endforeach
+                        @empty
+                            <option value="{{ now()->format('F Y') }}">{{ now()->format('F Y') }}</option>
+                        @endforelse
                     </select>
                 </div>
                 <button class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700">Add</button>

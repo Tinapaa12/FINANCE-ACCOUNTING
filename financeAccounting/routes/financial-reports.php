@@ -8,12 +8,12 @@ use App\Http\Controllers\FinancialReporting\ManageDataController;
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/income', [FinancialReportController::class, 'income'])->name('income');
     Route::get('/assets', [FinancialReportController::class, 'assets'])->name('assets');
-    Route::get('/liabilities', [FinancialReportController::class, 'liabilities'])->name('liabilities');
+    Route::get('/budget', [FinancialReportController::class, 'budget'])->name('budget');
     Route::get('/cashflow', [FinancialReportController::class, 'cashflow'])->name('cashflow');
 
     Route::get('/income/pdf', [FinancialReportController::class, 'incomePdf'])->name('income.pdf');
     Route::get('/assets/pdf', [FinancialReportController::class, 'assetsPdf'])->name('assets.pdf');
-    Route::get('/liabilities/pdf', [FinancialReportController::class, 'liabilitiesPdf'])->name('liabilities.pdf');
+    Route::get('/budget/pdf', [FinancialReportController::class, 'budgetPdf'])->name('budget.pdf');
     Route::get('/cashflow/pdf', [FinancialReportController::class, 'cashflowPdf'])->name('cashflow.pdf');
 
     Route::get('/manage', [ManageDataController::class, 'index'])->name('manage');
