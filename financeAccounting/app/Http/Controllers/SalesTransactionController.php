@@ -18,7 +18,7 @@ class SalesTransactionController extends Controller
             'customer_name'  => 'required|string|max:255',
             'total_amount'   => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer,Installment',
-            'status'         => 'required|in:Draft,Sent,Overdue,Cleared,Paid',
+            'status'         => 'required|in:Pending,Paid',
         ]);
 
         $year = now()->format('Y');
