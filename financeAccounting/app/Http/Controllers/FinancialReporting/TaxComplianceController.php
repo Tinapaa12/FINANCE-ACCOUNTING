@@ -6,6 +6,8 @@ use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
 use App\Models\FinancialReporting\TaxRecord;
+use App\Models\Invoice;
+use App\Models\AccountPayable\PurchaseOrder;
 use App\Models\Sales\SalesTransaction;
 use Carbon\Carbon;
 
@@ -24,12 +26,19 @@ class TaxComplianceController extends Controller
 
     private function taxData(): array
     {
-        $periods = JournalEntry::where('status', 'Posted')
+        $jePeriods = JournalEntry::where('status', 'Posted')
             ->get()
             ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
-            ->keys()
-            ->sortDesc()
-            ->values();
+            ->keys();
+        $poPeriods = PurchaseOrder::whereNotNull('order_date')
+            ->get()
+            ->groupBy(fn ($e) => $e->order_date->format('F Y'))
+            ->keys();
+        $invPeriods = Invoice::whereNotNull('invoice_date')
+            ->get()
+            ->groupBy(fn ($e) => $e->invoice_date->format('F Y'))
+            ->keys();
+        $periods = $jePeriods->merge($poPeriods)->merge($invPeriods)->unique()->sortDesc()->values();
 
         $selectedPeriod = request('period', $periods->first() ?? now()->format('F Y'));
         $start = Carbon::parse('first day of ' . $selectedPeriod);
@@ -97,7 +106,37 @@ class TaxComplianceController extends Controller
             ];
         }
 
-        // 3. Merge manual TaxRecord overrides (filing status tracking)
+        // 3. AP tax data from Purchase Orders
+        $pos = PurchaseOrder::whereBetween('order_date', [$start, $end])
+            ->whereIn('status', ['Approved', 'Sent', 'Confirmed', 'Delivered'])
+            ->get();
+        foreach ($pos as $po) {
+            $taxRecords[] = [
+                'reference_type' => 'Purchase Order',
+                'reference_id'   => $po->id,
+                'tax_type'       => 'VAT',
+                'taxable_amount' => (float) $po->amount,
+                'tax_rate'       => 12,
+                'tax_amount'     => round((float) $po->amount * 0.12, 2),
+                'filing_status'  => in_array($po->status, ['Delivered', 'Confirmed']) ? 'filed' : 'pending',
+            ];
+        }
+
+        // 4. AR tax data from Customer Invoices
+        $invoices = Invoice::whereBetween('invoice_date', [$start, $end])->get();
+        foreach ($invoices as $inv) {
+            $taxRecords[] = [
+                'reference_type' => 'Customer Invoice',
+                'reference_id'   => $inv->id,
+                'tax_type'       => 'VAT',
+                'taxable_amount' => (float) ($inv->subtotal ?: $inv->total),
+                'tax_rate'       => $inv->subtotal > 0 ? round((float) $inv->vat_amount / (float) $inv->subtotal * 100, 2) : 12,
+                'tax_amount'     => (float) ($inv->vat_amount ?: round((float) $inv->total * 0.12 / 1.12, 2)),
+                'filing_status'  => $inv->status === 'Paid' ? 'filed' : 'pending',
+            ];
+        }
+
+        // 5. Merge manual TaxRecord overrides (filing status tracking)
         $manualRecords = TaxRecord::where('tax_period', $selectedPeriod)->get();
         foreach ($manualRecords as $mr) {
             $matched = false;

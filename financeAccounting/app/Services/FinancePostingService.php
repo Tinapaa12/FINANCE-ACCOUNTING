@@ -78,9 +78,13 @@ class FinancePostingService
         $account = ChartOfAccount::where('type', 'Asset')->first();
 
         if (!$account) {
-            throw new \Exception(
-                'No Asset account found. Please create at least one Asset account.'
-            );
+            $account = ChartOfAccount::create([
+                'account_code' => '1010',
+                'account_name' => 'Cash on Hand',
+                'type' => 'Asset',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
         }
 
         return $account;
@@ -93,9 +97,13 @@ class FinancePostingService
             ->first();
 
         if (!$account) {
-            throw new \Exception(
-                'No Revenue account found. Please create at least one Revenue account with Credit normal balance.'
-            );
+            $account = ChartOfAccount::create([
+                'account_code' => '4000',
+                'account_name' => 'Sales Revenue',
+                'type' => 'Revenue',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
         }
 
         return $account;

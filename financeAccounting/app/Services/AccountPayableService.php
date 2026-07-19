@@ -105,8 +105,8 @@ class AccountPayableService
     {
         $nextId = SupplierBill::count() + 1;
 
-        return SupplierBill::create([
-            'bill_no' => 'BILL-' . str_pad($nextId, 2, '0', STR_PAD_LEFT),
+        $bill = SupplierBill::create([
+            'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
             'po_no' => $data['po_no'],
             'grn_no' => $data['grn_no'],
             'supplier' => $data['supplier'],
@@ -114,6 +114,8 @@ class AccountPayableService
             'due_date' => $data['due_date'],
             'status' => $data['status'] ?? 'Pending',
         ]);
+
+        return $bill;
     }
 
     public function completeGrn(int $id): GoodsReceivedNote
@@ -131,7 +133,7 @@ class AccountPayableService
                 $po = PurchaseOrder::find($grn->purchase_order_id);
                 $nextId = SupplierBill::count() + 1;
                 $bill = SupplierBill::create([
-                    'bill_no' => 'BILL-' . str_pad($nextId, 2, '0', STR_PAD_LEFT),
+                    'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
                     'po_no' => $po->po_no,
                     'grn_no' => $grn->grn_no,
                     'supplier' => $grn->supplier ?: $po->supplier,
@@ -274,26 +276,93 @@ class AccountPayableService
         );
     }
 
-    private function createPaymentJournalEntry(SupplierBill $bill): void
+    private function createExpenseJournalEntry(SupplierBill $bill): void
     {
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
         $apAccount = ChartOfAccount::where('account_code', '2100')->first();
-        $cashAccount = ChartOfAccount::where('account_code', '1010')->first();
 
-        if (!$apAccount || !$cashAccount) {
+        if (!$expenseAccount || !$apAccount) {
             return;
         }
 
         $entry = JournalEntry::create([
+            'transaction_date' => $bill->created_at ? $bill->created_at->format('Y-m-d') : now()->format('Y-m-d'),
+            'reference_no' => generate_expense_ref(),
+            'description' => "Expense recognition - Bill #{$bill->bill_no} - {$bill->supplier}",
+            'status' => 'Posted',
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $expenseAccount->account_id,
+            'description' => "Inventory / Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => $bill->amount,
+            'credit' => 0,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $apAccount->account_id,
+            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => 0,
+            'credit' => $bill->amount,
+        ]);
+    }
+
+    private function createPaymentJournalEntry(SupplierBill $bill): void
+    {
+        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '2100',
+                'account_name' => 'Accounts Payable',
+                'type' => 'Liability',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '5000',
+                'account_name' => 'Purchases / Cost of Goods Sold',
+                'type' => 'Expense',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
+        $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '1010',
+                'account_name' => 'Cash on Hand',
+                'type' => 'Asset',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
+
+        $entry = JournalEntry::create([
             'transaction_date' => now(),
-            'reference_no' => $bill->po_no ? "{$bill->po_no}-P{$bill->id}" : "PAY-{$bill->bill_no}",
+            'reference_no' => $bill->bill_no,
             'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
             'status' => 'Posted',
         ]);
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $expenseAccount->account_id,
+            'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => $bill->amount,
+            'credit' => 0,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $apAccount->account_id,
-            'description' => "Payment for {$bill->supplier} - PO {$bill->po_no}",
+            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => 0,
+            'credit' => $bill->amount,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $apAccount->account_id,
+            'description' => "Payment - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => $bill->amount,
             'credit' => 0,
         ]);
@@ -301,7 +370,7 @@ class AccountPayableService
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $cashAccount->account_id,
-            'description' => "Payment for {$bill->supplier} - PO {$bill->po_no}",
+            'description' => "Cash payment - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => 0,
             'credit' => $bill->amount,
         ]);

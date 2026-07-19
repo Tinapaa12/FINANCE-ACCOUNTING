@@ -2,9 +2,13 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountPayable\Payment;
+use App\Models\AccountPayable\SupplierBill;
 use App\Models\FinancialReporting\BudgetVsActual;
 use App\Models\FinancialReporting\TaxRecord;
+use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
+use App\Models\Sales\SalesTransaction;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -12,29 +16,38 @@ class ManageDataController extends Controller
 {
     public function index()
     {
+        $jePeriods = JournalEntry::where('status', 'Posted')->get()
+            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))->keys();
+        $billPeriods = SupplierBill::whereNotNull('paid_at')->get()
+            ->groupBy(fn ($e) => $e->paid_at->format('F Y'))->keys();
+        $paymentPeriods = Payment::get()
+            ->groupBy(fn ($e) => $e->payment_date->format('F Y'))->keys();
+        $salesPeriods = SalesTransaction::get()
+            ->groupBy(fn ($e) => $e->created_at->format('F Y'))->keys();
+        $reportPeriods = $jePeriods->merge($billPeriods)->merge($paymentPeriods)->merge($salesPeriods)
+            ->unique()->sortDesc()->values();
+
         return view('financial-reporting.manage.index', [
-            'reportPeriods' => JournalEntry::where('status', 'Posted')
-                ->get()
-                ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
-                ->keys()
-                ->sortDesc()
-                ->values(),
+            'reportPeriods' => $reportPeriods,
+            'accounts' => ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(),
         ]);
     }
 
     public function storeBudget(Request $request)
     {
         $data = $request->validate([
-            'account_name'  => 'required|string|max:255',
+            'account_id'    => 'required|exists:chart_of_accounts,account_id',
             'budget_amount' => 'required|numeric|min:0',
             'tax_period'    => 'required|string|max:255',
         ]);
 
+        $account = ChartOfAccount::findOrFail($data['account_id']);
         $start = Carbon::createFromFormat('F Y', $data['tax_period'])->startOfMonth();
         $end   = $start->copy()->endOfMonth();
 
         BudgetVsActual::create([
-            'account_name'        => $data['account_name'],
+            'account_id'          => $account->account_id,
+            'account_name'        => $account->account_name,
             'budget_amount'       => $data['budget_amount'],
             'actual_amount'       => 0,
             'report_period_start' => $start,
