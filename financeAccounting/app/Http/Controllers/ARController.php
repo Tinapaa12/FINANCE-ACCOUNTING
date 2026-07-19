@@ -11,11 +11,11 @@ class ARController extends Controller
     public function overview()
     {
         $invoices = Invoice::with('customer')->whereIn('type', ['invoice', 'credit_note'])->get();
-        $payments = SalesTransaction::where('invoice_type', 'Payment')->get();
+        $payments = SalesTransaction::where('status', 'Paid')->get();
 
         $totalOutstanding = $invoices->sum('total');
         $overdueAmount = $invoices->filter(fn($i) => $this->daysOverdue($i) > 0)->sum('total');
-        $collectedThisMonth = SalesTransaction::whereIn('status', ['Cleared', 'Paid'])
+        $collectedThisMonth = SalesTransaction::where('status', 'Paid')
             ->whereMonth('created_at', now()->month)
             ->sum('total_amount');
 
@@ -34,7 +34,7 @@ class ARController extends Controller
             ];
         });
 
-        $recentPaymentActivities = SalesTransaction::where('invoice_type', 'Payment')
+        $recentPaymentActivities = SalesTransaction::where('status', 'Paid')
             ->latest()->take(5)->get()->map(function ($t) {
                 return [
                     'id'       => $t->sales_transaction_id,
@@ -121,7 +121,7 @@ class ARController extends Controller
         });
         $monthlyTotal  = $monthlyTransactions->sum('total_amount');
         $monthlyCount  = $monthlyTransactions->count();
-        $clearedCount  = $transactions->whereIn('status', ['Paid', 'Cleared'])->count();
+        $clearedCount  = $transactions->where('status', 'Paid')->count();
         $pendingAmount = $transactions->where('status', 'Sent')->sum('total_amount');
         $pendingCustomer = $transactions->where('status', 'Sent')->first()?->customer_name;
         $topMethod = $methodTotals->sortByDesc('amount')->first();

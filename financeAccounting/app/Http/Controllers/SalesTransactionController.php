@@ -45,8 +45,8 @@ class SalesTransactionController extends Controller
 
     public function markAsPaid(Request $request, SalesTransaction $salesTransaction)
     {
-        if (in_array($salesTransaction->status, ['Paid', 'Cleared'])) {
-            return redirect()->back()->with('error', 'Transaction is already Paid or Cleared.');
+        if ($salesTransaction->status === 'Paid') {
+            return redirect()->back()->with('error', 'Transaction is already Paid.');
         }
 
         $salesTransaction->update(['status' => 'Paid']);

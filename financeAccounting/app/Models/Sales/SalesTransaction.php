@@ -17,24 +17,11 @@ class SalesTransaction extends Model
         'status',
         'is_posted_to_finance',
         'journal_entry_id',
-        'invoice_date',
-        'due_date',
-        'invoice_type',
-        'currency',
-        'subtotal',
-        'vat_amount',
-        'line_items',
-        'description',
     ];
 
     protected $casts = [
         'total_amount' => 'decimal:2',
         'is_posted_to_finance' => 'boolean',
-        'invoice_date' => 'date',
-        'due_date' => 'date',
-        'subtotal' => 'decimal:2',
-        'vat_amount' => 'decimal:2',
-        'line_items' => 'array',
     ];
 
     public function journalEntry(): BelongsTo

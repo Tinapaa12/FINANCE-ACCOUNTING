@@ -319,14 +319,7 @@ class AccountPayableService
                 'normal_balance' => 'Credit',
                 'status' => 'Active',
             ]);
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
-            ?? ChartOfAccount::create([
-                'account_code' => '5000',
-                'account_name' => 'Purchases / Cost of Goods Sold',
-                'type' => 'Expense',
-                'normal_balance' => 'Debit',
-                'status' => 'Active',
-            ]);
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
         $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
             ?? ChartOfAccount::create([
                 'account_code' => '1010',
@@ -343,13 +336,15 @@ class AccountPayableService
             'status' => 'Posted',
         ]);
 
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $expenseAccount->account_id,
-            'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => $bill->amount,
-            'credit' => 0,
-        ]);
+        if ($expenseAccount) {
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->journal_entry_id,
+                'account_id' => $expenseAccount->account_id,
+                'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+                'debit' => $bill->amount,
+                'credit' => 0,
+            ]);
+        }
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
