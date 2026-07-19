@@ -21,8 +21,7 @@ class PaymentController extends Controller
             $query->whereHas('supplierBill', function ($q) use ($search) {
                 $q->where('supplier', 'like', "%{$search}%")
                   ->orWhere('bill_no', 'like', "%{$search}%");
-            })->orWhere('payment_method', 'like', "%{$search}%")
-              ->orWhere('reference', 'like', "%{$search}%");
+            })->orWhere('payment_method', 'like', "%{$search}%");
         }
 
         $payments = $query->orderBy('created_at', 'desc')->paginate(15);
@@ -36,7 +35,6 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'nullable|string',
             'payment_date' => 'required|date',
-            'reference' => 'nullable|string',
         ]);
 
         $bill = SupplierBill::findOrFail($request->supplier_bill_id);
@@ -46,12 +44,14 @@ class PaymentController extends Controller
             return back()->withErrors(['amount' => 'Payment exceeds the bill amount of ₱' . number_format($bill->amount, 2)]);
         }
 
+        $ref = generate_payment_ref();
+
         Payment::create([
             'supplier_bill_id' => $bill->id,
             'amount' => $request->amount,
             'payment_method' => $request->payment_method ?: $bill->payment_method,
             'payment_date' => $request->payment_date,
-            'reference' => $request->reference,
+            'reference' => $ref,
         ]);
 
         $bill->total_paid = $newTotal;
@@ -60,18 +60,26 @@ class PaymentController extends Controller
             $bill->status = 'Paid';
             $bill->paid_at = $request->payment_date;
             $bill->matching_status = 'Matched';
-            $this->createPaymentJournalEntry($bill, $request->reference, $request->payment_date);
+            $this->createPaymentJournalEntry($bill, $ref, $request->payment_date);
         }
 
         $bill->save();
 
-        audit_log($bill, 'payment', "Payment of ₱{$request->amount} recorded for bill #{$bill->bill_no}", null, ['amount' => $request->amount, 'method' => $request->payment_method, 'reference' => $request->reference]);
+        audit_log($bill, 'payment', "Payment of ₱{$request->amount} recorded for bill #{$bill->bill_no}");
 
         return redirect()->route('supplier-bills.index');
     }
 
     private function createPaymentJournalEntry(SupplierBill $bill, ?string $reference = null, ?string $paymentDate = null): void
     {
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '5000',
+                'account_name' => 'Purchases / Cost of Goods Sold',
+                'type' => 'Expense',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
         $apAccount = ChartOfAccount::where('account_code', '2100')->first()
             ?? ChartOfAccount::create([
                 'account_code' => '2100',
@@ -89,19 +97,33 @@ class PaymentController extends Controller
                 'status' => 'Active',
             ]);
 
-        $ref = $bill->po_no ?: 'PAY-' . $bill->bill_no . '-' . time();
-
         $entry = JournalEntry::create([
             'transaction_date' => $paymentDate ?? now(),
-            'reference_no' => $ref,
+            'reference_no' => $bill->bill_no,
             'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
             'status' => 'Posted',
         ]);
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $expenseAccount->account_id,
+            'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => $bill->amount,
+            'credit' => 0,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $apAccount->account_id,
             'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => 0,
+            'credit' => $bill->amount,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $apAccount->account_id,
+            'description' => "Payment - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => $bill->amount,
             'credit' => 0,
         ]);
