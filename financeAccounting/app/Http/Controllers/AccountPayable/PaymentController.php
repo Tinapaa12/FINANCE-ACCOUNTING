@@ -72,12 +72,22 @@ class PaymentController extends Controller
 
     private function createPaymentJournalEntry(SupplierBill $bill, ?string $reference = null, ?string $paymentDate = null): void
     {
-        $apAccount = ChartOfAccount::where('account_code', '2100')->first();
-        $cashAccount = ChartOfAccount::where('account_code', '1010')->first();
-
-        if (!$apAccount || !$cashAccount) {
-            return;
-        }
+        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '2100',
+                'account_name' => 'Accounts Payable',
+                'type' => 'Liability',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
+        $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '1010',
+                'account_name' => 'Cash on Hand',
+                'type' => 'Asset',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
 
         $ref = $bill->po_no ?: 'PAY-' . $bill->bill_no . '-' . time();
 

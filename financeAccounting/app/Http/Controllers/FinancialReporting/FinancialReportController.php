@@ -2,8 +2,11 @@
 namespace App\Http\Controllers\FinancialReporting;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccountPayable\Payment;
+use App\Models\AccountPayable\SupplierBill;
 use App\Models\FinancialReporting\BudgetVsActual;
 use App\Models\GeneralLedger\JournalEntry;
+use App\Models\Sales\SalesTransaction;
 use Carbon\Carbon;
 
 class FinancialReportController extends Controller
@@ -52,13 +55,16 @@ class FinancialReportController extends Controller
 
     private function getPeriods(): array
     {
-        return JournalEntry::where('status', 'Posted')
-            ->get()
-            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))
-            ->keys()
-            ->sortDesc()
-            ->values()
-            ->toArray();
+        $jePeriods = JournalEntry::where('status', 'Posted')->get()
+            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))->keys();
+        $billPeriods = SupplierBill::whereNotNull('paid_at')->get()
+            ->groupBy(fn ($e) => $e->paid_at->format('F Y'))->keys();
+        $paymentPeriods = Payment::get()
+            ->groupBy(fn ($e) => $e->payment_date->format('F Y'))->keys();
+        $salesPeriods = SalesTransaction::get()
+            ->groupBy(fn ($e) => $e->created_at->format('F Y'))->keys();
+        return $jePeriods->merge($billPeriods)->merge($paymentPeriods)->merge($salesPeriods)
+            ->unique()->sortDesc()->values()->toArray();
     }
 
     private function parsePeriod(?string $period): array
@@ -290,11 +296,10 @@ class FinancialReportController extends Controller
 
         [$start, $end] = $this->parsePeriod($selectedPeriod);
 
-        // Cash accounts
         $cashAccountIds = \App\Models\GeneralLedger\ChartOfAccount::where('account_name', 'like', 'Cash%')
             ->pluck('account_id');
 
-        // Cash In = debit lines to Cash accounts where the credit side is NOT Cash (internal transfer)
+        // Cash In = debit lines to Cash accounts where the other side is NOT Cash (internal transfer)
         $cashInLines = collect();
         if ($cashAccountIds->isNotEmpty()) {
             $cashInLines = \App\Models\GeneralLedger\JournalEntryLine::selectRaw('coa.account_name, SUM(jel.debit) as total')
@@ -340,11 +345,35 @@ class FinancialReportController extends Controller
                 ->map(fn ($r) => ['label' => $r->account_name . ' (paid)', 'amount' => (float) $r->total]);
         }
 
+        // Fallback: if no Cash accounts exist but AP/AR data exists, show from there
+        if ($cashAccountIds->isEmpty()) {
+            $paidBills = SupplierBill::where('status', 'Paid')
+                ->when($start && $end, fn ($q) => $q->whereBetween('paid_at', [$start, $end]))
+                ->get();
+            foreach ($paidBills as $bill) {
+                $cashOutLines->push(['label' => 'Supplier Payment' . ($bill->po_no ? " ({$bill->po_no})" : ''), 'amount' => (float) $bill->amount]);
+            }
+
+            $paidSales = SalesTransaction::where('is_posted_to_finance', true)
+                ->when($start && $end, fn ($q) => $q->whereBetween('created_at', [$start, $end]))
+                ->get();
+            foreach ($paidSales as $s) {
+                $cashInLines->push(['label' => 'Sales (' . ($s->payment_method ?? 'Unknown') . ')', 'amount' => (float) $s->total_amount]);
+            }
+        }
+
+        // Collapse duplicates
+        $cashInLines = $cashInLines->groupBy('label')->map(fn ($g) => [
+            'label' => $g->first()['label'], 'amount' => $g->sum('amount'),
+        ])->values();
+        $cashOutLines = $cashOutLines->groupBy('label')->map(fn ($g) => [
+            'label' => $g->first()['label'], 'amount' => $g->sum('amount'),
+        ])->values();
+
         $totalCashIn  = $cashInLines->sum('amount');
         $totalCashOut = $cashOutLines->sum('amount');
         $netCashFlow  = $totalCashIn - $totalCashOut;
 
-        // Beginning cash balance from transactions before the period
         $beginningCash = 0;
         if ($start && $cashAccountIds->isNotEmpty()) {
             $beginningCash = (float) \App\Models\GeneralLedger\JournalEntryLine::whereIn('account_id', $cashAccountIds)
