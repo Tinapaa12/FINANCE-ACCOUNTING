@@ -136,31 +136,19 @@ class TaxComplianceController extends Controller
             ];
         }
 
-        // 5. Merge manual TaxRecord overrides (filing status tracking)
-        $manualRecords = TaxRecord::where('tax_period', $selectedPeriod)->get();
-        foreach ($manualRecords as $mr) {
-            $matched = false;
-            foreach ($taxRecords as &$tr) {
-                if ($tr['reference_type'] === $mr->reference_type && (string)$tr['reference_id'] === (string)$mr->reference_id) {
-                    $tr['filing_status'] = $mr->filing_status;
-                    $tr['taxable_amount'] = (float) $mr->taxable_amount;
-                    $tr['tax_rate'] = (float) $mr->tax_rate;
-                    $tr['tax_amount'] = (float) $mr->tax_amount;
-                    $matched = true;
-                    break;
-                }
-            }
-            if (!$matched) {
-                $taxRecords[] = [
-                    'reference_type' => $mr->reference_type,
-                    'reference_id'   => $mr->reference_id,
-                    'tax_type'       => $mr->tax_type,
-                    'taxable_amount' => (float) $mr->taxable_amount,
-                    'tax_rate'       => (float) $mr->tax_rate,
-                    'tax_amount'     => (float) $mr->tax_amount,
-                    'filing_status'  => $mr->filing_status,
-                ];
-            }
+        // 5. Sync computed data to tax_records table
+        TaxRecord::where('tax_period', $selectedPeriod)->delete();
+        foreach ($taxRecords as $tr) {
+            TaxRecord::create([
+                'reference_type' => $tr['reference_type'],
+                'reference_id'   => $tr['reference_id'],
+                'tax_type'       => $tr['tax_type'],
+                'taxable_amount' => $tr['taxable_amount'],
+                'tax_rate'       => $tr['tax_rate'],
+                'tax_amount'     => $tr['tax_amount'],
+                'tax_period'     => $selectedPeriod,
+                'filing_status'  => $tr['filing_status'],
+            ]);
         }
 
         return [
