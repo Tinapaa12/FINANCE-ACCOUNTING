@@ -79,7 +79,7 @@ class PaymentController extends Controller
             return;
         }
 
-        $ref = $reference ? 'PO-2026-' . $reference : 'PAY-' . $bill->bill_no . '-' . time();
+        $ref = $bill->po_no ?: 'PAY-' . $bill->bill_no . '-' . time();
 
         $entry = JournalEntry::create([
             'transaction_date' => $paymentDate ?? now(),

@@ -81,9 +81,9 @@ class MatchingController extends Controller
             ->with('success', "3-Way Match completed: {$status}.");
     }
 
-    public function resolve($id)
+    public function resolve($bill)
     {
-        $bill = SupplierBill::findOrFail($id);
+        $bill = SupplierBill::findOrFail($bill);
         $bill->update([
             'matching_status' => 'Matched',
             'matching_notes' => 'Manually resolved as Matched.',

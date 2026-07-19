@@ -36,8 +36,10 @@ class PurchaseOrderController extends Controller
             ->with('success', "Purchase Order {$po->po_no} created as Draft.");
     }
 
-    public function update(Request $request, PurchaseOrder $purchaseOrder)
+    public function update(Request $request, $id)
     {
+        $purchaseOrder = PurchaseOrder::findOrFail($id);
+
         if ($purchaseOrder->status !== 'Draft') {
             return back()->with('error', 'Only draft orders can be edited.');
         }
