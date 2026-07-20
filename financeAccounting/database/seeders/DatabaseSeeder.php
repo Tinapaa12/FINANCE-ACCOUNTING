@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
             ChartOfAccountsSeeder::class,
             JournalEntrySeeder::class,
             BudgetVsActualSeeder::class,
+            AgingReportSeeder::class,
         ]);
     }
 }
