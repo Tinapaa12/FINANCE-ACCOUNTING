@@ -138,13 +138,11 @@
                         <div class="grid grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Customer <span class="text-red-500">*</span></label>
-                                <select name="customer_name" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
+                                <select name="customer_name" x-model="selectedCustomer" @change="onCustomerChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
                                     <option value="">Select customer</option>
-                                    <option>Santos Enterprises</option>
-                                    <option>ABC Trading</option>
-                                    <option>Cruz & Sons</option>
-                                    <option>Reyes Corporation</option>
-                                    <option>Lim Trading</option>
+                                    @foreach($customers as $name)
+                                    <option value="{{ $name }}">{{ $name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
@@ -238,6 +236,8 @@
             return {
                 showInvoiceModal: false,
                 barsLoaded: false,
+                selectedCustomer: '',
+                salesData: {!! json_encode($salesData) !!},
                 form: {
                     invoice_date: '{{ date("Y-m-d") }}',
                     due_date: '{{ date("Y-m-d", strtotime("+30 days")) }}',
@@ -280,6 +280,21 @@
                             }
                         }
                     });
+                },
+                onCustomerChange() {
+                    const data = this.salesData[this.selectedCustomer];
+                    if (!data) {
+                        this.invoiceItems = [{ desc: '', qty: 1, price: 0, vat: 12 }];
+                        this.calculateInvoiceTotals();
+                        return;
+                    }
+                    this.invoiceItems = [{
+                        desc: 'Sales - ' + data.latest_order,
+                        qty: 1,
+                        price: data.total_amount,
+                        vat: 12,
+                    }];
+                    this.calculateInvoiceTotals();
                 },
                 calculateInvoiceTotals() {
                     let sub = 0; this.invoiceItems.forEach(item => { sub += item.qty * item.price; });
