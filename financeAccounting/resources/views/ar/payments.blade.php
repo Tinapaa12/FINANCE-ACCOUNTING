@@ -69,10 +69,7 @@
                                     <td class="px-6 py-3.5">
                                         @php
                                         $statusColors = [
-                                            'Draft' => 'bg-[#eff6ff] text-[#1d4ed8] ring-blue-200',
-                                            'Sent' => 'bg-[#fef9c3] text-[#a16207] ring-yellow-200',
-                                            'Overdue' => 'bg-[#fff7ed] text-[#c2410c] ring-orange-200',
-                                            'Cleared' => 'bg-[#f0fdf4] text-[#15803d] ring-green-200',
+                                            'Pending' => 'bg-[#fef9c3] text-[#a16207] ring-yellow-200',
                                             'Paid' => 'bg-[#f0fdf4] text-[#15803d] ring-green-200',
                                         ];
                                         @endphp
@@ -81,7 +78,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-3.5">
-                                        @if(!in_array($txn->status, ['Paid', 'Cleared']))
+                                        @if($txn->status === 'Pending')
                                             <button @click="markAsPaid({{ $txn->sales_transaction_id }})" class="text-xs font-medium text-blue-600 hover:text-blue-800">Mark as Paid</button>
                                         @else
                                             <span class="inline-flex items-center gap-1 text-xs font-medium text-green-600">

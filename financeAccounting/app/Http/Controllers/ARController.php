@@ -80,11 +80,25 @@ class ARController extends Controller
             ->avg(fn($i) => (int) $i->invoice_date->diffInDays($i->updated_at));
 
         $avgDaysToCollect = $avgDaysToCollect ? round($avgDaysToCollect) : 0;
+        $customers = SalesTransaction::select('customer_name')
+            ->distinct()
+            ->orderBy('customer_name')
+            ->pluck('customer_name');
+        $salesData = SalesTransaction::select('customer_name', 'order_no', 'total_amount', 'payment_method')
+            ->latest()
+            ->get()
+            ->groupBy('customer_name')
+            ->map(fn($items) => [
+                'latest_order' => $items->first()->order_no,
+                'total_amount' => (float) $items->first()->total_amount,
+                'payment_method' => $items->first()->payment_method,
+            ]);
 
         return view('ar.overview', compact(
             'totalOutstanding', 'overdueAmount', 'collectedThisMonth',
             'recentActivities', 'agingBuckets', 'sidebarInvoices',
-            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect'
+            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect',
+            'customers', 'salesData'
         ));
     }
 
@@ -122,8 +136,8 @@ class ARController extends Controller
         $monthlyTotal  = $monthlyTransactions->sum('total_amount');
         $monthlyCount  = $monthlyTransactions->count();
         $clearedCount  = $transactions->where('status', 'Paid')->count();
-        $pendingAmount = $transactions->where('status', 'Sent')->sum('total_amount');
-        $pendingCustomer = $transactions->where('status', 'Sent')->first()?->customer_name;
+        $pendingAmount = $transactions->where('status', 'Pending')->sum('total_amount');
+        $pendingCustomer = $transactions->where('status', 'Pending')->first()?->customer_name;
         $topMethod = $methodTotals->sortByDesc('amount')->first();
 
         return view('ar.payments', compact(
