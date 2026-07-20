@@ -6,9 +6,6 @@ use App\Http\Controllers\Controller;
 
 use App\Models\AccountPayable\SupplierBill;
 use App\Models\AccountPayable\Payment;
-use App\Models\GeneralLedger\ChartOfAccount;
-use App\Models\GeneralLedger\JournalEntry;
-use App\Models\GeneralLedger\JournalEntryLine;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -60,7 +57,6 @@ class PaymentController extends Controller
             $bill->status = 'Paid';
             $bill->paid_at = $request->payment_date;
             $bill->matching_status = 'Matched';
-            $this->createPaymentJournalEntry($bill, $ref, $request->payment_date);
         }
 
         $bill->save();
@@ -70,70 +66,4 @@ class PaymentController extends Controller
         return redirect()->route('supplier-bills.index');
     }
 
-    private function createPaymentJournalEntry(SupplierBill $bill, ?string $reference = null, ?string $paymentDate = null): void
-    {
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
-            ?? ChartOfAccount::create([
-                'account_code' => '5000',
-                'account_name' => 'Purchases / Cost of Goods Sold',
-                'type' => 'Expense',
-                'normal_balance' => 'Debit',
-                'status' => 'Active',
-            ]);
-        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
-            ?? ChartOfAccount::create([
-                'account_code' => '2100',
-                'account_name' => 'Accounts Payable',
-                'type' => 'Liability',
-                'normal_balance' => 'Credit',
-                'status' => 'Active',
-            ]);
-        $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
-            ?? ChartOfAccount::create([
-                'account_code' => '1010',
-                'account_name' => 'Cash on Hand',
-                'type' => 'Asset',
-                'normal_balance' => 'Debit',
-                'status' => 'Active',
-            ]);
-
-        $entry = JournalEntry::create([
-            'transaction_date' => $paymentDate ?? now(),
-            'reference_no' => $bill->bill_no,
-            'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
-            'status' => 'Posted',
-        ]);
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $expenseAccount->account_id,
-            'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => $bill->amount,
-            'credit' => 0,
-        ]);
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $apAccount->account_id,
-            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => 0,
-            'credit' => $bill->amount,
-        ]);
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $apAccount->account_id,
-            'description' => "Payment - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => $bill->amount,
-            'credit' => 0,
-        ]);
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $cashAccount->account_id,
-            'description' => "Cash payment - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => 0,
-            'credit' => $bill->amount,
-        ]);
-    }
 }
