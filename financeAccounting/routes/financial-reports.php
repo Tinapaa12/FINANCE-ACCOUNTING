@@ -18,6 +18,7 @@ Route::prefix('reports')->name('reports.')->group(function () {
 
     Route::get('/manage', [ManageDataController::class, 'index'])->name('manage');
     Route::post('/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('manage.store-budget');
+    Route::put('/manage/budget/{budgetVsActual}/actual', [ManageDataController::class, 'updateBudgetActual'])->name('manage.update-budget-actual');
     Route::delete('/manage/budget/{budgetVsActual}', [ManageDataController::class, 'destroyBudget'])->name('manage.destroy-budget');
     Route::post('/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('manage.store-tax');
     Route::delete('/manage/tax/{taxRecord}', [ManageDataController::class, 'destroyTaxRecord'])->name('manage.destroy-tax');

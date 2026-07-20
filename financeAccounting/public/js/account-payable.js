@@ -214,7 +214,6 @@ function showPaymentReceipt(id, btn) {
     document.getElementById('receiptAmount').textContent = '\u20B1' + Number(row.getAttribute('data-amount')).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('receiptDate').textContent = row.getAttribute('data-payment-date');
     document.getElementById('receiptMethod').textContent = row.getAttribute('data-method');
-    document.getElementById('receiptReference').textContent = row.getAttribute('data-reference');
     _openModal('receiptModal');
 }
 
