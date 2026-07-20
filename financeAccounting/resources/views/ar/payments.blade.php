@@ -12,7 +12,7 @@
 
             <div class="flex justify-between items-center relative">
                 <a href="{{ route('ar.overview') }}" class="text-[14px] text-gray-500 hover:text-[#2563eb] font-medium flex items-center gap-2"><i class="fas fa-arrow-left"></i> Back to A/R Overview</a>
-                <button @click="showPaymentModal = true" class="bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white text-[14px] font-medium py-2.5 px-5 rounded-md transition shadow-md shadow-indigo-200 flex items-center gap-2"><i class="fas fa-plus"></i> Record Payment</button>
+                
             </div>
 
             <!-- 4 Summary Cards -->
@@ -127,38 +127,7 @@
             </div>
         </div>
 
-<!-- RECORD PAYMENT MODAL -->
-    <div x-show="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" x-cloak @click.away="showPaymentModal = false">
-        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-6" @click.stop>
-            <div class="flex items-center gap-3 border-b pb-4 mb-4">
-                <i class="fas fa-hand-holding-usd text-xl text-white bg-gradient-to-br from-[#2563eb] to-[#4338ca] p-2 rounded-lg"></i>
-                <h2 class="text-lg font-bold text-gray-800">Record Payment</h2>
-                <button @click="showPaymentModal = false" class="ml-auto text-gray-400 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
-            </div>
-            <div class="space-y-4 text-[14px]">
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Customer <span class="text-red-500">*</span></label><select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]"><option>-- Select Customer --</option><option>ABC Trading Co.</option><option>Cruz & Sons</option><option>Lim Trading</option><option>Reyes Corp</option><option>Santos Enterprise</option></select></div>
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Apply to Invoice <span class="text-red-500">*</span></label><select class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]"><option>-- Select Invoice --</option><option>INV-0001 - P45,000 (Overdue)</option><option>INV-0022 - P38,500 (Sent)</option><option>INV-0024 - P78,000 (Draft)</option><option>INV-0025 - P19,500 (Sent)</option></select></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Amount Received <span class="text-red-500">*</span></label><input type="number" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" placeholder="0.00"></div>
-                    <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Payment Date <span class="text-red-500">*</span></label><input type="date" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" value="2026-07-07"></div>
-                </div>
-                <div>
-                    <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Payment Method <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-3">
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Bank" checked> <i class="fas fa-university text-[14px]"></i> Bank</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="GCash"> <i class="fas fa-mobile-screen text-[14px]"></i> GCash</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Check"> <i class="fas fa-money-check text-[14px]"></i> Check</label>
-                        <label class="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-50 bg-[#f9fafb]"><input type="radio" name="method" value="Cash"> <i class="fas fa-money-bill-wave text-[14px]"></i> Cash</label>
-                    </div>
-                </div>
-                <div><label class="block text-[13px] font-medium text-gray-700 mb-1.5">Notes <span class="text-gray-400 font-normal">(Optional)</span></label><textarea class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563eb] outline-none text-[14px] bg-[#f9fafb]" rows="2" placeholder="e.g. Partial Payment for June Delivery"></textarea></div>
-            </div>
-            <div class="mt-6 flex justify-end space-x-3 border-t pt-4">
-                <button @click="showPaymentModal = false" class="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-600 text-[14px] hover:bg-gray-50 transition">Cancel</button>
-                <button @click="showPaymentModal = false; alert('Payment Recorded Successfully!')" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-lg text-[14px] font-medium transition shadow-sm">Record</button>
-            </div>
-        </div>
-    </div>
+
 
 </div>
 @endsection
@@ -167,8 +136,6 @@
 <script>
     function paymentApp() {
             return {
-                showPaymentModal: false,
-
                 async markAsPaid(id) {
                     if (!confirm('Mark this transaction as Paid?')) return;
                     try {
