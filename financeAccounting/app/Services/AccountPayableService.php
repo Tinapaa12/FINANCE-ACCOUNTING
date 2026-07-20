@@ -173,6 +173,7 @@ class AccountPayableService
             throw new \RuntimeException('Only matched invoices can be paid. Complete 3-way matching first.');
         }
         $bill->update(['status' => 'Paid', 'paid_at' => now()]);
+        $this->createPaymentJournalEntry($bill);
         \audit_log($bill, 'paid', "Supplier bill #{$bill->bill_no} marked as paid");
         return $bill;
     }
@@ -204,6 +205,7 @@ class AccountPayableService
         if ($newTotal >= $bill->amount) {
             $bill->status = 'Paid';
             $bill->paid_at = now();
+            $this->createPaymentJournalEntry($bill);
         }
 
         $bill->save();
@@ -304,6 +306,49 @@ class AccountPayableService
             'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $apAccount->account_id,
             'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => 0,
+            'credit' => $bill->amount,
+        ]);
+    }
+
+    private function createPaymentJournalEntry(SupplierBill $bill): void
+    {
+        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '2100',
+                'account_name' => 'Accounts Payable',
+                'type' => 'Liability',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
+        $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '1010',
+                'account_name' => 'Cash on Hand',
+                'type' => 'Asset',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
+
+        $entry = JournalEntry::create([
+            'transaction_date' => now(),
+            'reference_no' => $bill->bill_no,
+            'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
+            'status' => 'Posted',
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $apAccount->account_id,
+            'description' => "Payment - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => $bill->amount,
+            'credit' => 0,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $cashAccount->account_id,
+            'description' => "Cash payment - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => 0,
             'credit' => $bill->amount,
         ]);
