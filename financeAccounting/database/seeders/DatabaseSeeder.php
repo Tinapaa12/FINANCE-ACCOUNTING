@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
             JournalEntrySeeder::class,
             BudgetVsActualSeeder::class,
             AgingReportSeeder::class,
+            ProcurementToAPSeeder::class,
+            SalesToARSeeder::class,
+            InventoryToGLSeeder::class,
         ]);
     }
 }
