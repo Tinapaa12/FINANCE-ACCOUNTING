@@ -376,6 +376,7 @@ private function createPaymentJournalEntry(SupplierBill $bill): void
     ]);
 }
 
+<<<<<<< HEAD
 private function createExpenseJournalEntry(SupplierBill $bill): void
 {
     $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
@@ -410,3 +411,6 @@ private function createExpenseJournalEntry(SupplierBill $bill): void
 }
 
 }
+=======
+}
+>>>>>>> 00bc78649b2af357927870e4ce89e8b6a88c00a2
