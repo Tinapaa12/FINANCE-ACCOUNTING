@@ -4,6 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GeneralLedger\ChartOfAccountsController;
 use App\Http\Controllers\GeneralLedger\JournalEntryController;
 
+
+// awdawdAWEADAS THIS IS A COMMENT
+// HI HELLO AERFAedad
+// ASDAWDADADADW
+
 Route::prefix('chart-of-accounts')->name('chart-of-accounts.')->group(function () {
     Route::get('/pdf', [ChartOfAccountsController::class, 'pdf'])->name('pdf');
     Route::get('/', [ChartOfAccountsController::class, 'index'])->name('index');
