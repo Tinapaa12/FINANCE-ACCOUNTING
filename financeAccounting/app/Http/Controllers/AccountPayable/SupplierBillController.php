@@ -32,7 +32,6 @@ class SupplierBillController extends Controller
                   ->orWhere('bill_no', 'like', "%{$search}%")
                   ->orWhere('po_no', 'like', "%{$search}%")
                   ->orWhere('grn_no', 'like', "%{$search}%")
-                  ->orWhere('stock_request_no', 'like', "%{$search}%")
                   ->orWhere('status', 'like', "%{$search}%");
             });
         }

@@ -61,7 +61,6 @@
                     <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'bill_no', 'direction' => $sort === 'bill_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Bill No. @if($sort === 'bill_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'po_no', 'direction' => $sort === 'po_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">PO No. @if($sort === 'po_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'grn_no', 'direction' => $sort === 'grn_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">GRN No. @if($sort === 'grn_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
-                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Inventory</th>
                     <th class="w-[15%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'supplier', 'direction' => $sort === 'supplier' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Supplier @if($sort === 'supplier') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[9%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'amount', 'direction' => $sort === 'amount' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Amount @if($sort === 'amount') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Balance</th>
@@ -82,7 +81,6 @@
     data-bill-no="{{ $bill->bill_no }}"
     data-po-no="{{ $bill->po_no }}"
     data-grn-no="{{ $bill->grn_no }}"
-    data-stock-request-no="{{ $bill->stock_request_no }}"
     data-supplier="{{ $bill->supplier }}"
     data-amount="{{ $bill->amount }}"
     data-due-date="{{ $bill->due_date }}"
@@ -96,7 +94,6 @@
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->bill_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->po_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->grn_no }}</td>
-    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->stock_request_no ?? '—' }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->supplier }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($bill->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
@@ -141,7 +138,7 @@
 </tr>
 @empty
 <tr>
-    <td colspan="11" class="text-center px-4 py-8 text-gray-500">No invoices found.</td>
+    <td colspan="10" class="text-center px-4 py-8 text-gray-500">No invoices found.</td>
 </tr>
 @endforelse
             </tbody>
@@ -301,7 +298,6 @@
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Bill No.</span> <span id="viewBillNo" class="text-gray-900"></span></div>
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">PO No.</span> <span id="viewPoNo" class="text-gray-900"></span></div>
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Receipt/GRN No.</span> <span id="viewGrnNo" class="text-gray-900"></span></div>
-            <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Stock Request No.</span> <span id="viewStockRequestNo" class="text-gray-900"></span></div>
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Supplier</span> <span id="viewSupplier" class="text-gray-900"></span></div>
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Amount</span> <span id="viewAmount" class="text-gray-900"></span></div>
             <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-medium text-gray-600">Due</span> <span id="viewDue" class="text-gray-900"></span></div>
