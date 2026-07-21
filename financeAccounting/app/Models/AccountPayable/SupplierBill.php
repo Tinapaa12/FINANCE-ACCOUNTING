@@ -10,7 +10,7 @@ class SupplierBill extends Model
     protected $table = 'supplier_bills';
 
     protected $fillable = [
-        'bill_no', 'po_no', 'grn_no', 'supplier', 'amount', 'total_paid',
+        'bill_no', 'po_no', 'grn_no', 'stock_request_no', 'supplier', 'amount', 'total_paid',
         'due_date', 'status', 'matching_status', 'matching_notes',
         'payment_method', 'paid_at',
         'approved_at', 'approved_by', 'ewt_rate', 'payment_terms',

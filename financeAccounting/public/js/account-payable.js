@@ -19,7 +19,7 @@ function closeReceiptModal() { _closeModal('receiptModal'); }
 function closeViewModal() { _closeModal('viewModal'); }
 
 // ===== SUPPLIER BILLS =====
-function openViewModal(id, supplier, amount, due, status, paymentMethod, billNo, poNo, grnNo, attachments, payments, ewtRate, terms) {
+function openViewModal(id, supplier, amount, due, status, paymentMethod, billNo, poNo, grnNo, attachments, payments, ewtRate, terms, stockRequestNo) {
     document.getElementById('viewSupplier').textContent = supplier;
     document.getElementById('viewAmount').textContent = '\u20B1' + Number(amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('viewDue').textContent = due;
@@ -30,6 +30,7 @@ function openViewModal(id, supplier, amount, due, status, paymentMethod, billNo,
     document.getElementById('viewBillNo').textContent = billNo || '-';
     document.getElementById('viewPoNo').textContent = poNo || '-';
     document.getElementById('viewGrnNo').textContent = grnNo || '-';
+    document.getElementById('viewStockRequestNo').textContent = stockRequestNo || '-';
     document.getElementById('uploadForm').action = '/supplier-bills/' + id + '/attachments';
     document.getElementById('uploadBillId').value = id;
 
@@ -158,6 +159,7 @@ function viewBill(btn) {
     document.getElementById('viewBillNo').textContent = row.getAttribute('data-bill-no') || '-';
     document.getElementById('viewPoNo').textContent = row.getAttribute('data-po-no') || '-';
     document.getElementById('viewGrnNo').textContent = row.getAttribute('data-grn-no') || '-';
+    document.getElementById('viewStockRequestNo').textContent = row.getAttribute('data-stock-request-no') || '-';
     document.getElementById('viewSupplier').textContent = row.getAttribute('data-supplier') || '';
     document.getElementById('viewAmount').textContent = '\u20B1' + Number(row.getAttribute('data-amount')).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('viewDue').textContent = row.getAttribute('data-due-date') || '';
