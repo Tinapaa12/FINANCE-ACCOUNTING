@@ -73,7 +73,6 @@ class PaymentController extends Controller
 
     private function createPaymentJournalEntry(SupplierBill $bill, float $amount, ?string $reference = null, ?string $paymentDate = null): void
     {
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
         $apAccount = ChartOfAccount::where('account_code', '2100')->first()
             ?? ChartOfAccount::create([
                 'account_code' => '2100',
@@ -93,29 +92,10 @@ class PaymentController extends Controller
 
         $entry = JournalEntry::create([
             'transaction_date' => $paymentDate ?? now(),
-            'reference_no' => $bill->bill_no,
+            'reference_no' => $reference ?? $bill->bill_no,
             'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
             'status' => 'Posted',
         ]);
-
-        if ($expenseAccount) {
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->journal_entry_id,
-                'account_id' => $expenseAccount->account_id,
-                'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
-                'debit' => $bill->amount,
-                'credit' => 0,
-            ]);
-        }
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $apAccount->account_id,
-            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => 0,
-            'credit' => $bill->amount,
-        ]);
-
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,

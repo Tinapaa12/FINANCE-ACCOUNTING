@@ -26,6 +26,9 @@
 
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
                class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
+            @if(request()->routeIs('reports.manage*') || request()->routeIs('sales-transactions.*') || request()->routeIs('procurement.po.*') || request()->routeIs('procurement.gr.*') || request()->routeIs('procurement.matching.*'))
+                @include('layouts.manage-sidebar')
+            @else
             <div class="p-6 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -122,6 +125,7 @@
                 </x-sidebar-section>
 
             </nav>
+            @endif
         </aside>
 
         <div class="flex-1 flex flex-col min-w-0">

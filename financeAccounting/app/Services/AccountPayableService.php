@@ -173,7 +173,7 @@ class AccountPayableService
             throw new \RuntimeException('Only matched invoices can be paid. Complete 3-way matching first.');
         }
         $bill->update(['status' => 'Paid', 'paid_at' => now()]);
-        $this->createPaymentJournalEntry($bill);
+        $this->createPaymentJournalEntry($bill, $bill->amount);
         \audit_log($bill, 'paid', "Supplier bill #{$bill->bill_no} marked as paid");
         return $bill;
     }
@@ -205,7 +205,7 @@ class AccountPayableService
         if ($newTotal >= $bill->amount) {
             $bill->status = 'Paid';
             $bill->paid_at = now();
-            $this->createPaymentJournalEntry($bill);
+            $this->createPaymentJournalEntry($bill, $data['amount']);
         }
 
         $bill->save();
@@ -280,12 +280,22 @@ class AccountPayableService
 
     private function createExpenseJournalEntry(SupplierBill $bill): void
     {
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
-        $apAccount = ChartOfAccount::where('account_code', '2100')->first();
-
-        if (!$expenseAccount || !$apAccount) {
-            return;
-        }
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '5000',
+                'account_name' => 'Purchases / COGS',
+                'type' => 'Expense',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
+        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '2100',
+                'account_name' => 'Accounts Payable',
+                'type' => 'Liability',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
 
         $entry = JournalEntry::create([
             'transaction_date' => $bill->created_at ? $bill->created_at->format('Y-m-d') : now()->format('Y-m-d'),
@@ -311,7 +321,7 @@ class AccountPayableService
         ]);
     }
 
-    private function createPaymentJournalEntry(SupplierBill $bill): void
+    private function createPaymentJournalEntry(SupplierBill $bill, float $amount, ?string $reference = null): void
     {
         $apAccount = ChartOfAccount::where('account_code', '2100')->first()
             ?? ChartOfAccount::create([
@@ -321,7 +331,6 @@ class AccountPayableService
                 'normal_balance' => 'Credit',
                 'status' => 'Active',
             ]);
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first();
         $cashAccount = ChartOfAccount::where('account_code', '1010')->first()
             ?? ChartOfAccount::create([
                 'account_code' => '1010',
@@ -333,35 +342,16 @@ class AccountPayableService
 
         $entry = JournalEntry::create([
             'transaction_date' => now(),
-            'reference_no' => $bill->bill_no,
+            'reference_no' => $reference ?? generate_payment_ref(),
             'description' => "Payment for supplier bill #{$bill->bill_no} - {$bill->supplier}",
             'status' => 'Posted',
         ]);
-
-        if ($expenseAccount) {
-            JournalEntryLine::create([
-                'journal_entry_id' => $entry->journal_entry_id,
-                'account_id' => $expenseAccount->account_id,
-                'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
-                'debit' => $bill->amount,
-                'credit' => 0,
-            ]);
-        }
-
-        JournalEntryLine::create([
-            'journal_entry_id' => $entry->journal_entry_id,
-            'account_id' => $apAccount->account_id,
-            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => 0,
-            'credit' => $bill->amount,
-        ]);
-
 
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $apAccount->account_id,
             'description' => "Payment - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => $bill->amount,
+            'debit' => $amount,
             'credit' => 0,
         ]);
 
@@ -370,7 +360,7 @@ class AccountPayableService
             'account_id' => $cashAccount->account_id,
             'description' => "Cash payment - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => 0,
-            'credit' => $bill->amount,
+            'credit' => $amount,
         ]);
     }
 

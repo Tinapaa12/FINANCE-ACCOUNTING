@@ -65,16 +65,22 @@ class FinancialReportController extends Controller
 
     private function getPeriods(): array
     {
-        $jePeriods = JournalEntry::where('status', 'Posted')->get()
-            ->groupBy(fn ($e) => $e->transaction_date->format('F Y'))->keys();
-        $billPeriods = SupplierBill::whereNotNull('paid_at')->get()
-            ->groupBy(fn ($e) => $e->paid_at->format('F Y'))->keys();
-        $paymentPeriods = Payment::get()
-            ->groupBy(fn ($e) => $e->payment_date->format('F Y'))->keys();
-        $salesPeriods = SalesTransaction::get()
-            ->groupBy(fn ($e) => $e->created_at->format('F Y'))->keys();
-        return $jePeriods->merge($billPeriods)->merge($paymentPeriods)->merge($salesPeriods)
-            ->unique()->sortDesc()->values()->toArray();
+        $dates = collect();
+
+        JournalEntry::where('status', 'Posted')->pluck('transaction_date')->each(fn ($d) => $dates->push($d));
+        SupplierBill::whereNotNull('paid_at')->pluck('paid_at')->each(fn ($d) => $dates->push($d));
+        Payment::pluck('payment_date')->each(fn ($d) => $dates->push($d));
+        SalesTransaction::pluck('created_at')->each(fn ($d) => $dates->push($d));
+        BudgetVsActual::pluck('report_period_start')->each(fn ($d) => $dates->push($d));
+
+        return $dates
+            ->map(fn ($d) => $d instanceof \Carbon\Carbon ? $d : \Carbon\Carbon::parse($d))
+            ->map(fn ($d) => $d->format('F Y'))
+            ->unique()
+            ->sortBy(fn ($p) => \Carbon\Carbon::parse('first day of ' . $p))
+            ->reverse()
+            ->values()
+            ->toArray();
     }
 
     private function parsePeriod(?string $period): array
@@ -223,7 +229,7 @@ class FinancialReportController extends Controller
             'equity'          => $equity,
             'periods'         => $periods,
             'selectedPeriod'  => $selectedPeriod,
-            'hasData'         => true,
+            'hasData'         => \App\Models\GeneralLedger\ChartOfAccount::whereIn('type', ['Asset', 'Liability', 'Equity'])->exists(),
         ];
     }
 

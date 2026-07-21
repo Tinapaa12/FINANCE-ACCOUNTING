@@ -38,7 +38,6 @@ class ManageDataController extends Controller
         $data = $request->validate([
             'account_id'    => 'required|exists:chart_of_accounts,account_id',
             'budget_amount' => 'required|numeric|min:0',
-            'actual_amount' => 'nullable|numeric|min:0',
             'tax_period'    => 'required|string|max:255',
         ]);
 
@@ -50,7 +49,7 @@ class ManageDataController extends Controller
             'account_id'          => $account->account_id,
             'account_name'        => $account->account_name,
             'budget_amount'       => $data['budget_amount'],
-            'actual_amount'       => $data['actual_amount'] ?? 0,
+            'actual_amount'       => 0,
             'report_period_start' => $start,
             'report_period_end'   => $end,
         ]);

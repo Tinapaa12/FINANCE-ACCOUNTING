@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-80">
+        <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <h2 class="font-semibold text-lg mb-4">Liabilities & Equity</h2>
 

@@ -22,7 +22,7 @@
     @if($tab === 'budget')
         <div class="bg-white rounded-lg border p-5">
             <h3 class="font-semibold mb-3">Add Budget Target</h3>
-            <p class="text-xs text-gray-500 mb-3">Select a Chart of Accounts account and set budget and actual amounts.</p>
+            <p class="text-xs text-gray-500 mb-3">Select a Chart of Accounts account and set a budget target amount.</p>
             <form method="POST" action="{{ route('reports.manage.store-budget') }}" class="flex gap-3 items-end flex-wrap">
                 @csrf
                 <div>
@@ -35,7 +35,6 @@
                     </select>
                 </div>
                 <div><label class="text-xs text-gray-500 block mb-1">Budget (₱)</label><input type="number" step="0.01" name="budget_amount" required class="border rounded px-3 py-1.5 text-sm"></div>
-                <div><label class="text-xs text-gray-500 block mb-1">Actual (₱)</label><input type="number" step="0.01" name="actual_amount" class="border rounded px-3 py-1.5 text-sm"></div>
                 <div>
                     <label class="text-xs text-gray-500 block mb-1">Period</label>
                     <select name="tax_period" required class="border rounded px-3 py-1.5 text-sm">
@@ -53,20 +52,13 @@
         @if(($budgetRows = \App\Models\FinancialReporting\BudgetVsActual::orderByDesc('report_period_start')->get())->isNotEmpty())
             <div class="bg-white rounded-lg border overflow-hidden">
                 <table class="w-full text-sm">
-                    <thead><tr class="bg-gray-50 text-left border-b"><th class="px-4 py-2 font-semibold">Account</th><th class="px-4 py-2 font-semibold text-right">Budget</th><th class="px-4 py-2 font-semibold text-right">Actual</th><th class="px-4 py-2 font-semibold text-right">Variance</th><th class="px-4 py-2 font-semibold">Status</th><th class="px-4 py-2 font-semibold text-right">Period</th><th class="px-4 py-2"></th></tr></thead>
+                    <thead><tr class="bg-gray-50 text-left border-b"><th class="px-4 py-2 font-semibold">Account</th><th class="px-4 py-2 font-semibold text-right">Budget</th><th class="px-4 py-2 font-semibold text-right">Variance</th><th class="px-4 py-2 font-semibold">Status</th><th class="px-4 py-2 font-semibold text-right">Period</th><th class="px-4 py-2"></th></tr></thead>
                     <tbody>
                         @foreach($budgetRows as $b)
                             @php $variance = $b->actual_amount - $b->budget_amount; @endphp
                             <tr class="border-t">
                                 <td class="px-4 py-2">{{ $b->account_name }}</td>
                                 <td class="px-4 py-2 text-right">{{ number_format($b->budget_amount, 2) }}</td>
-                                <td class="px-4 py-2 text-right">
-                                    <form method="POST" action="{{ route('reports.manage.update-budget-actual', $b) }}" class="inline-flex items-center gap-1">
-                                        @csrf @method('PUT')
-                                        <input type="number" step="0.01" name="actual_amount" value="{{ $b->actual_amount }}" class="w-24 border rounded px-2 py-1 text-right text-sm">
-                                        <button class="text-blue-600 hover:text-blue-800 text-xs font-medium">Save</button>
-                                    </form>
-                                </td>
                                 <td class="px-4 py-2 text-right {{ $variance > 0 ? 'text-red-500' : 'text-green-600' }}">{{ number_format($variance, 2) }}</td>
                                 <td class="px-4 py-2">
                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-medium {{ $variance > 0 ? 'bg-red-100 text-red-800' : ($variance < 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800') }}">
