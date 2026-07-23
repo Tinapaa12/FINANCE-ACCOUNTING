@@ -15,6 +15,12 @@ use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::name('api.')->prefix('management')->group(function () {
+    Route::post('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'store']);
+    Route::get('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'index']);
+    Route::delete('budget/{id}', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'destroy'])->name('budget.destroy');
+});
+
 Route::middleware('app.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
