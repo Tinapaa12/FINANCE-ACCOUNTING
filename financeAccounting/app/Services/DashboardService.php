@@ -1,9 +1,12 @@
 <?php // DashboardService — encapsulates business logic for the dashboard. Computes KPI data, recent journal entries, account summaries, chart data, and alerts.
 namespace App\Services;
 
+use App\Models\AccountPayable\SupplierBill;
 use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
+use App\Models\Invoice;
+use App\Models\Sales\SalesTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -112,6 +115,49 @@ class DashboardService
         return ChartOfAccount::select('type', DB::raw('count(*) as count'))
             ->groupBy('type')
             ->pluck('count', 'type');
+    }
+
+    public function getApSummary(): array
+    {
+        $totalBills = SupplierBill::count();
+        $outstanding = SupplierBill::where('status', '!=', 'Paid')->get()->sum(fn($b) => $b->amount - $b->total_paid);
+        $pendingCount = SupplierBill::where('status', 'Pending')->count();
+        $approvedCount = SupplierBill::where('status', 'Approved')->count();
+        $overdue = SupplierBill::where('status', '!=', 'Paid')
+            ->where('due_date', '<', now())
+            ->get();
+        $overdueCount = $overdue->count();
+        $overdueAmount = $overdue->sum(fn($b) => $b->amount - $b->total_paid);
+
+        return [
+            'total_bills' => $totalBills,
+            'outstanding' => $outstanding,
+            'pending_bills' => $pendingCount,
+            'approved_bills' => $approvedCount,
+            'overdue_bills' => $overdueCount,
+            'overdue_amount' => $overdueAmount,
+        ];
+    }
+
+    public function getArSummary(): array
+    {
+        $totalTransactions = SalesTransaction::count();
+        $pendingTransactions = SalesTransaction::where('status', 'Pending')->count();
+        $outstanding = SalesTransaction::where('status', 'Pending')->sum('total_amount');
+
+        $overdueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
+            ->where('due_date', '<', now())
+            ->get();
+        $overdueCount = $overdueInvoices->count();
+        $overdueAmount = $overdueInvoices->sum('total');
+
+        return [
+            'total_transactions' => $totalTransactions,
+            'pending_transactions' => $pendingTransactions,
+            'outstanding' => $outstanding,
+            'overdue_invoices' => $overdueCount,
+            'overdue_amount' => $overdueAmount,
+        ];
     }
 
     private function getTotalByAccountType(string $type, string $column): float

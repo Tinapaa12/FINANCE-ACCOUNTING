@@ -17,6 +17,8 @@ class DashboardController extends Controller
         $chartData = $this->dashboardService->getChartData();
         $alerts = $this->dashboardService->getFinancialAlerts();
         $accountTypeCounts = $this->dashboardService->getAccountTypeCounts();
+        $apSummary = $this->dashboardService->getApSummary();
+        $arSummary = $this->dashboardService->getArSummary();
 
         return view('dashboard.index', compact(
             'kpi',
@@ -24,7 +26,9 @@ class DashboardController extends Controller
             'accountsSummary',
             'chartData',
             'alerts',
-            'accountTypeCounts'
+            'accountTypeCounts',
+            'apSummary',
+            'arSummary',
         ));
     }
 }
