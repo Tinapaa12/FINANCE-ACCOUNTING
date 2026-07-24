@@ -21,6 +21,9 @@ Route::name('api.')->prefix('management')->group(function () {
     Route::delete('budget/{id}', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'destroy'])->name('budget.destroy');
 });
 
+Route::post('seed-demo', [\App\Http\Controllers\Api\DemoDataController::class, 'seed']);
+Route::post('migrate-fresh', [\App\Http\Controllers\Api\DemoDataController::class, 'migrateFresh']);
+
 Route::middleware('app.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
