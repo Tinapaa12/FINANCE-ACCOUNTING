@@ -23,7 +23,7 @@ class FinancePostingService
             $lastJe = JournalEntry::where('reference_no', 'like', "JE-{$year}-%")
                 ->orderBy('journal_entry_id', 'desc')
                 ->first();
-            $nextNum = $lastJe ? (int) substr($lastJe->reference_no, -3) + 1 : 1;
+            $nextNum = $lastJe ? (int) substr(explode('-', $lastJe->reference_no)[2] ?? '0') + 1 : 1;
             $referenceNo = 'JE-' . $year . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
             $entry = JournalEntry::create([
