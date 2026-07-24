@@ -13,4 +13,13 @@ Route::middleware('app.auth')->group(function () {
     require __DIR__ . '/accounts-receivable.php';
     require __DIR__ . '/procurement.php';
     require __DIR__ . '/financial-reports.php';
+
+    Route::get('/api-playground', function () {
+        return view('api-playground', [
+            'accounts' => \App\Models\GeneralLedger\ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(),
+            'periods'  => \App\Models\FinancialReporting\BudgetVsActual::select('report_period_start')
+                ->get()->map(fn ($b) => \Carbon\Carbon::parse($b->report_period_start)->format('F Y'))
+                ->unique()->sort()->values(),
+        ]);
+    })->name('api-playground');
 });
