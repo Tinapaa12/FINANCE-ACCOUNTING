@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Sales\SalesTransaction;
 use App\Services\FinancePostingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SalesTransactionController extends Controller
 {
@@ -25,18 +26,20 @@ class SalesTransactionController extends Controller
         $last = SalesTransaction::where('order_no', 'like', "ORD-{$year}-%")
             ->orderBy('sales_transaction_id', 'desc')
             ->first();
-        $nextNum = $last ? (int) substr($last->order_no, -3) + 1 : 1;
+        $nextNum = $last ? (int) substr(explode('-', $last->order_no)[2] ?? '0') + 1 : 1;
         $validated['order_no'] = 'ORD-' . $year . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
-        $transaction = SalesTransaction::create($validated);
-
-        if ($transaction->status === 'Paid') {
-            try {
-                FinancePostingService::postSale($transaction);
-            } catch (\Exception $e) {
-                return redirect()->route('sales-transactions.create')
-                    ->with('error', 'Transaction created but posting to Finance failed: ' . $e->getMessage());
-            }
+        try {
+            $transaction = DB::transaction(function () use ($validated) {
+                $transaction = SalesTransaction::create($validated);
+                if ($transaction->status === 'Paid') {
+                    FinancePostingService::postSale($transaction);
+                }
+                return $transaction;
+            });
+        } catch (\Exception $e) {
+            return redirect()->route('sales-transactions.create')
+                ->with('error', 'Transaction creation failed: ' . $e->getMessage());
         }
 
         return redirect()->route('sales-transactions.create')
@@ -49,10 +52,11 @@ class SalesTransactionController extends Controller
             return redirect()->back()->with('error', 'Transaction is already Paid.');
         }
 
-        $salesTransaction->update(['status' => 'Paid']);
-
         try {
-            FinancePostingService::postSale($salesTransaction);
+            DB::transaction(function () use ($salesTransaction) {
+                $salesTransaction->update(['status' => 'Paid']);
+                FinancePostingService::postSale($salesTransaction);
+            });
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Posting to Finance failed: ' . $e->getMessage());
         }

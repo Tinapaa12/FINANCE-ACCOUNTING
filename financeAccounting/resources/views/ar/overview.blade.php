@@ -198,11 +198,11 @@
                                 <input type="hidden" name="vat_amount" x-model="invoiceVat">
                                 <input type="hidden" name="total_amount" x-model="invoiceTotal">
                                 <input type="hidden" name="line_items" x-model="invoiceItemsJson">
-                                <input type="hidden" name="status" value="Draft">
+                                <input type="hidden" name="status" x-model="form.status">
 
                                 <div class="mt-4 flex space-x-4">
-                                    <button type="submit" class="px-6 py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-[#eff6ff] rounded-md text-[14px] font-medium transition">Save as Draft</button>
-                                    <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-md text-[14px] font-medium transition shadow-sm">Post and Send</button>
+                                    <button type="submit" @click="form.status = 'Draft'" class="px-6 py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-[#eff6ff] rounded-md text-[14px] font-medium transition">Save as Draft</button>
+                                    <button type="submit" @click="form.status = 'Sent'" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-md text-[14px] font-medium transition shadow-sm">Post and Send</button>
                                 </div>
                             </div>
                         </div>
@@ -241,6 +241,7 @@
                 form: {
                     invoice_date: '{{ date("Y-m-d") }}',
                     due_date: '{{ date("Y-m-d", strtotime("+30 days")) }}',
+                    status: 'Draft',
                 },
                 invoiceItems: [{ desc: '', qty: 1, price: 0, vat: 12 }],
                 invoiceSubtotal: 0, invoiceVat: 0, invoiceTotal: 0,
