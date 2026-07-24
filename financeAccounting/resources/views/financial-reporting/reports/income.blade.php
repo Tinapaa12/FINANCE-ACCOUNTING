@@ -4,12 +4,6 @@
 @section('title', 'Income Statements')
 
 @section('content')
-    @if(empty($revenue) && empty($expenses))
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <p class="text-yellow-800 font-medium">No data yet.</p>
-            <p class="text-yellow-600 text-sm mt-1">Add journal entries with Revenue and Expense accounts first.</p>
-        </div>
-    @else
     <div class="w-full">
         <div class="bg-white rounded-lg border p-5">
             <div class="flex items-center justify-between mb-4">
@@ -25,6 +19,13 @@
                     @endforeach
                 </select>
             </div>
+
+            @if(empty($revenue) && empty($expenses))
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                    <p class="text-yellow-800 font-medium">No data yet.</p>
+                    <p class="text-yellow-600 text-sm mt-1">Add journal entries with Revenue and Expense accounts first.</p>
+                </div>
+            @else
 
             {{-- Revenue --}}
             <div class="bg-green-50 rounded-lg p-4 mb-4">
@@ -59,7 +60,7 @@
                     <span>₱{{ number_format($totalExpenses) }}</span>
                 </div>
             </div>
+        @endif
         </div>
     </div>
-    @endif
 @endsection

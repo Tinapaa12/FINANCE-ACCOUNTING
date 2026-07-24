@@ -3,12 +3,6 @@
 @section('title', 'Cash Flow Statement')
 
 @section('content')
-    @if(empty($cashInLines) && empty($cashOutLines))
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-            <p class="text-yellow-800 font-medium">No data yet.</p>
-            <p class="text-yellow-600 text-sm mt-1">Add journal entries with Revenue and Expense accounts first.</p>
-        </div>
-    @else
     <div class="flex flex-col lg:flex-row gap-6">
 
         {{-- LEFT: Cash In / Cash Out breakdown --}}
@@ -25,6 +19,13 @@
                         <span class="text-sm text-gray-500">{{ $periodLabel }}</span>
                     </div>
                 </div>
+
+                @if(empty($cashInLines) && empty($cashOutLines))
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                        <p class="text-yellow-800 font-medium">No data yet.</p>
+                        <p class="text-yellow-600 text-sm mt-1">Add journal entries with Revenue and Expense accounts first.</p>
+                    </div>
+                @else
 
                 {{-- Cash In --}}
                 <div class="bg-green-50 rounded-lg p-4 mb-4">
@@ -69,6 +70,7 @@
                         <span>₱{{ number_format($totalCashOut) }}</span>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
@@ -108,5 +110,4 @@
         </div>
 
     </div>
-    @endif
 @endsection
