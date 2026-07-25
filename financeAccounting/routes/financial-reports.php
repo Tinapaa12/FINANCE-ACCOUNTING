@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\FinancialReporting\TaxComplianceController;
-use App\Http\Controllers\FinancialReporting\ManageDataController;
 
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/income', [FinancialReportController::class, 'income'])->name('income');
@@ -15,13 +14,6 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/assets/pdf', [FinancialReportController::class, 'assetsPdf'])->name('assets.pdf');
     Route::get('/budget/pdf', [FinancialReportController::class, 'budgetPdf'])->name('budget.pdf');
     Route::get('/cashflow/pdf', [FinancialReportController::class, 'cashflowPdf'])->name('cashflow.pdf');
-
-    Route::get('/manage', [ManageDataController::class, 'index'])->name('manage');
-    Route::post('/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('manage.store-budget');
-    Route::put('/manage/budget/{budgetVsActual}/actual', [ManageDataController::class, 'updateBudgetActual'])->name('manage.update-budget-actual');
-    Route::delete('/manage/budget/{budgetVsActual}', [ManageDataController::class, 'destroyBudget'])->name('manage.destroy-budget');
-    Route::post('/manage/store-tax', [ManageDataController::class, 'storeTaxRecord'])->name('manage.store-tax');
-    Route::delete('/manage/tax/{taxRecord}', [ManageDataController::class, 'destroyTaxRecord'])->name('manage.destroy-tax');
 });
 
 Route::prefix('tax-compliance')->name('tax.')->group(function () {
