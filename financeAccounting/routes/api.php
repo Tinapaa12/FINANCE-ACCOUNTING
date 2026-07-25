@@ -35,6 +35,14 @@ Route::middleware('app.auth')->group(function () {
     Route::name('api.')->apiResource('purchase-orders', PurchaseOrderController::class);
     Route::name('api.')->apiResource('goods-receipts', GoodsReceiptController::class);
 
+    Route::prefix('ap/procurement')->name('api.ap.procurement.')->group(function () {
+        Route::get('pending-bills', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'pendingBills'])->name('pending-bills');
+        Route::get('purchase-orders', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'purchaseOrders'])->name('purchase-orders');
+        Route::get('purchase-orders/{poNo}', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'purchaseOrder'])->name('purchase-order');
+        Route::get('goods-receipts', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'goodsReceipts'])->name('goods-receipts');
+        Route::get('goods-receipts/{grnNo}', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'goodsReceipt'])->name('goods-receipt');
+    });
+
     Route::get('ar/overview', [ARController::class, 'overview'])->name('api.ar.overview');
     Route::get('ar/payments-received', [ARController::class, 'payments'])->name('api.ar.payments');
     Route::get('ar/aging-report', [ARController::class, 'aging'])->name('api.ar.aging');

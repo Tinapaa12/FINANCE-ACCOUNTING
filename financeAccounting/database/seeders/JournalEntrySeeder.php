@@ -186,7 +186,7 @@ class JournalEntrySeeder extends Seeder
             'order_no' => 'SO-2026-002',
             'customer_name' => 'Maria Santos',
             'total_amount' => 35000,
-            'payment_method' => 'Installment',
+            'payment_method' => 'Credit Card',
             'status' => 'Pending',
             'is_posted_to_finance' => false,
         ]);
@@ -195,7 +195,7 @@ class JournalEntrySeeder extends Seeder
             'order_no' => 'SO-2026-003',
             'customer_name' => 'Pedro Reyes',
             'total_amount' => 75000,
-            'payment_method' => 'Cash',
+            'payment_method' => 'Bank Transfer',
             'status' => 'Paid',
             'is_posted_to_finance' => true,
         ]);

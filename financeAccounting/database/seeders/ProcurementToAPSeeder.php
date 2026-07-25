@@ -33,7 +33,7 @@ class ProcurementToAPSeeder extends Seeder
         // === Transaction 1: Computer Parts from PC Express (fully paid) ===
 
         $po1 = PurchaseOrder::create([
-            'po_no'             => 'PO-2026-012',
+            'po_no'             => 'PO-2026-003',
             'supplier'          => 'PC Express Inc.',
             'item_name'         => 'Desktop Computer Units',
             'qty'               => 10,
@@ -49,7 +49,7 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         GoodsReceivedNote::create([
-            'grn_no'            => 'GRN-2026-007',
+            'grn_no'            => 'GRN-2026-002',
             'purchase_order_id' => $po1->id,
             'po_no_ref'         => $po1->po_no,
             'item_name'         => 'Desktop Computer Units',
@@ -62,9 +62,9 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         $bill1 = SupplierBill::create([
-            'bill_no'         => 'BILL-2026-008',
+            'bill_no'         => 'BILL-2026-003',
             'po_no'           => $po1->po_no,
-            'grn_no'          => 'GRN-2026-007',
+            'grn_no'          => 'GRN-2026-002',
             'supplier'        => 'PC Express Inc.',
             'amount'          => 450000,
             'total_paid'      => 450000,
@@ -84,7 +84,7 @@ class ProcurementToAPSeeder extends Seeder
             'amount'           => 450000,
             'payment_method'   => 'Bank Transfer',
             'payment_date'     => '2026-07-05',
-            'reference'        => 'PAY-2026-005',
+            'reference'        => 'PAY-2026-002',
             'notes'            => 'Full payment PC Express - BDO transfer',
         ]);
 
@@ -110,7 +110,7 @@ class ProcurementToAPSeeder extends Seeder
         // === Transaction 2: Office Furniture from Crown Furniture (pending) ===
 
         $po2 = PurchaseOrder::create([
-            'po_no'             => 'PO-2026-013',
+            'po_no'             => 'PO-2026-004',
             'supplier'          => 'Crown Furniture Corp.',
             'item_name'         => 'Executive Office Chairs',
             'qty'               => 15,
@@ -126,7 +126,7 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         GoodsReceivedNote::create([
-            'grn_no'            => 'GRN-2026-008',
+            'grn_no'            => 'GRN-2026-003',
             'purchase_order_id' => $po2->id,
             'po_no_ref'         => $po2->po_no,
             'item_name'         => 'Executive Office Chairs',
@@ -139,9 +139,9 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         $bill2 = SupplierBill::create([
-            'bill_no'         => 'BILL-2026-009',
+            'bill_no'         => 'BILL-2026-004',
             'po_no'           => $po2->po_no,
-            'grn_no'          => 'GRN-2026-008',
+            'grn_no'          => 'GRN-2026-003',
             'supplier'        => 'Crown Furniture Corp.',
             'amount'          => 127500,
             'total_paid'      => 0,
@@ -166,7 +166,7 @@ class ProcurementToAPSeeder extends Seeder
         // === Transaction 3: Raw Materials from Manila Paper Supply (partially paid) ===
 
         $po3 = PurchaseOrder::create([
-            'po_no'             => 'PO-2026-014',
+            'po_no'             => 'PO-2026-005',
             'supplier'          => 'Manila Paper Supply Co.',
             'item_name'         => 'Premium Bond Paper (reams)',
             'qty'               => 200,
@@ -182,7 +182,7 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         GoodsReceivedNote::create([
-            'grn_no'            => 'GRN-2026-009',
+            'grn_no'            => 'GRN-2026-004',
             'purchase_order_id' => $po3->id,
             'po_no_ref'         => $po3->po_no,
             'item_name'         => 'Premium Bond Paper (reams)',
@@ -195,9 +195,9 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         $bill3 = SupplierBill::create([
-            'bill_no'         => 'BILL-2026-010',
+            'bill_no'         => 'BILL-2026-005',
             'po_no'           => $po3->po_no,
-            'grn_no'          => 'GRN-2026-009',
+            'grn_no'          => 'GRN-2026-004',
             'supplier'        => 'Manila Paper Supply Co.',
             'amount'          => 36000,
             'total_paid'      => 20000,
@@ -216,7 +216,7 @@ class ProcurementToAPSeeder extends Seeder
             'amount'           => 20000,
             'payment_method'   => 'Cash',
             'payment_date'     => '2026-07-18',
-            'reference'        => 'PAY-2026-006',
+            'reference'        => 'PAY-2026-003',
             'notes'            => 'Partial payment - remaining balance ₱16,000',
         ]);
 
@@ -241,7 +241,7 @@ class ProcurementToAPSeeder extends Seeder
         // === Transaction 4: Aircon Units from Aircon Experts PH (pending/approved) ===
 
         $po4 = PurchaseOrder::create([
-            'po_no'             => 'PO-2026-015',
+            'po_no'             => 'PO-2026-006',
             'supplier'          => 'Aircon Experts PH Inc.',
             'item_name'         => 'Inverter Air Conditioner 2.5HP',
             'qty'               => 4,
@@ -257,7 +257,7 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         GoodsReceivedNote::create([
-            'grn_no'            => 'GRN-2026-010',
+            'grn_no'            => 'GRN-2026-005',
             'purchase_order_id' => $po4->id,
             'po_no_ref'         => $po4->po_no,
             'item_name'         => 'Inverter Air Conditioner 2.5HP',
@@ -270,9 +270,9 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         $bill4 = SupplierBill::create([
-            'bill_no'         => 'BILL-2026-011',
+            'bill_no'         => 'BILL-2026-006',
             'po_no'           => $po4->po_no,
-            'grn_no'          => 'GRN-2026-010',
+            'grn_no'          => 'GRN-2026-005',
             'supplier'        => 'Aircon Experts PH Inc.',
             'amount'          => 154000,
             'total_paid'      => 0,
@@ -286,7 +286,7 @@ class ProcurementToAPSeeder extends Seeder
         // === Transaction 5: Cleaning Supplies from CleanPro (fully paid, direct expense) ===
 
         $po5 = PurchaseOrder::create([
-            'po_no'             => 'PO-2026-016',
+            'po_no'             => 'PO-2026-007',
             'supplier'          => 'CleanPro Solutions Inc.',
             'item_name'         => 'Janitorial Supplies Bundle',
             'qty'               => 25,
@@ -302,7 +302,7 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         GoodsReceivedNote::create([
-            'grn_no'            => 'GRN-2026-011',
+            'grn_no'            => 'GRN-2026-006',
             'purchase_order_id' => $po5->id,
             'po_no_ref'         => $po5->po_no,
             'item_name'         => 'Janitorial Supplies Bundle',
@@ -315,9 +315,9 @@ class ProcurementToAPSeeder extends Seeder
         ]);
 
         $bill5 = SupplierBill::create([
-            'bill_no'         => 'BILL-2026-012',
+            'bill_no'         => 'BILL-2026-007',
             'po_no'           => $po5->po_no,
-            'grn_no'          => 'GRN-2026-011',
+            'grn_no'          => 'GRN-2026-006',
             'supplier'        => 'CleanPro Solutions Inc.',
             'amount'          => 18750,
             'total_paid'      => 18750,
@@ -336,7 +336,7 @@ class ProcurementToAPSeeder extends Seeder
             'amount'           => 18750,
             'payment_method'   => 'Cash',
             'payment_date'     => '2026-07-17',
-            'reference'        => 'PAY-2026-007',
+            'reference'        => 'PAY-2026-004',
             'notes'            => 'Full payment - CleanPro supplies',
         ]);
 
