@@ -2,9 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sales\SalesTransaction;
-use App\Models\Customer;
 use App\Models\Invoice;
-use Illuminate\Http\Request;
+
 
 class ARController extends Controller
 {
@@ -57,18 +56,6 @@ class ARController extends Controller
 
         $agingBuckets = $this->computeAgingBuckets($invoices);
 
-        $sidebarInvoices = Invoice::with('customer')
-            ->whereIn('status', ['draft', 'sent', 'overdue'])
-            ->orderBy('id', 'desc')
-            ->take(4)
-            ->get()
-            ->map(fn($i) => [
-                'order_no' => $i->invoice_number,
-                'customer' => $i->customer?->name ?? 'Unknown',
-                'amount'   => (float) $i->total,
-                'status'   => ucfirst($i->status),
-            ]);
-
         $invoiceCount = $invoices->count();
         $overdueCount = $invoices->whereIn('status', ['sent', 'overdue'])->filter(fn($i) => $this->daysOverdue($i) > 0)->count();
         $paymentCount = $payments->count();
@@ -81,25 +68,11 @@ class ARController extends Controller
             ->avg(fn($i) => (int) $i->invoice_date->diffInDays($i->updated_at));
 
         $avgDaysToCollect = $avgDaysToCollect ? round($avgDaysToCollect) : 0;
-        $customers = Customer::select('name')
-            ->distinct()
-            ->orderBy('name')
-            ->pluck('name');
-        $salesData = SalesTransaction::select('customer_name', 'order_no', 'total_amount', 'payment_method')
-            ->latest()
-            ->get()
-            ->groupBy('customer_name')
-            ->map(fn($items) => [
-                'latest_order' => $items->first()->order_no,
-                'total_amount' => (float) $items->first()->total_amount,
-                'payment_method' => $items->first()->payment_method,
-            ]);
 
         return view('ar.overview', compact(
             'totalOutstanding', 'overdueAmount', 'collectedThisMonth',
-            'recentActivities', 'agingBuckets', 'sidebarInvoices',
-            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect',
-            'customers', 'salesData'
+            'recentActivities', 'agingBuckets',
+            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect'
         ));
     }
 
@@ -199,49 +172,6 @@ class ARController extends Controller
             'pctCurrent', 'pct1_30', 'pct31_60', 'pct61_90', 'pct90',
             'customers', 'grandCurrent', 'grandD1_30', 'grandD31_60', 'grandD61_90', 'grandD90', 'grandTotal'
         ));
-    }
-
-    public function storeInvoice(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_name'  => 'required|string|max:255',
-            'invoice_type'   => 'required|string|in:Invoice,Credit Note',
-            'invoice_date'   => 'required|date',
-            'due_date'       => 'required|date|after_or_equal:invoice_date',
-            'currency'       => 'required|string|size:3',
-            'subtotal'       => 'required|numeric|min:0',
-            'vat_amount'     => 'required|numeric|min:0',
-            'total_amount'   => 'required|numeric|min:0',
-            'line_items'     => 'required|json',
-            'status'         => 'required|in:Draft,Sent',
-        ]);
-
-        $customer = Customer::firstOrCreate(
-            ['name' => $validated['customer_name']]
-        );
-
-        $year = now()->format('Y');
-        $last = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
-            ->orderBy('id', 'desc')
-            ->first();
-        $nextNum = $last ? (int) substr(explode('-', $last->invoice_number)[2] ?? '0') + 1 : 1;
-        $invoiceNumber = 'INV-' . $year . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-
-        Invoice::create([
-            'customer_id'    => $customer->id,
-            'invoice_number' => $invoiceNumber,
-            'type'           => $validated['invoice_type'] === 'Credit Note' ? 'credit_note' : 'invoice',
-            'invoice_date'   => $validated['invoice_date'],
-            'due_date'       => $validated['due_date'],
-            'currency'       => $validated['currency'],
-            'subtotal'       => $validated['subtotal'],
-            'vat_amount'     => $validated['vat_amount'],
-            'total'          => $validated['total_amount'],
-            'status'         => strtolower($validated['status']),
-            'notes'          => $validated['line_items'],
-        ]);
-
-        return redirect()->route('ar.overview')->with('success', 'Invoice ' . $invoiceNumber . ' created successfully.');
     }
 
     private function daysOverdue($invoice)

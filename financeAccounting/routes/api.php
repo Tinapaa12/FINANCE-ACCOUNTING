@@ -47,8 +47,6 @@ Route::middleware('app.auth')->group(function () {
     Route::get('ar/overview', [ARController::class, 'overview'])->name('api.ar.overview');
     Route::get('ar/payments-received', [ARController::class, 'payments'])->name('api.ar.payments');
     Route::get('ar/aging-report', [ARController::class, 'aging'])->name('api.ar.aging');
-    Route::post('ar/invoices', [ARController::class, 'storeInvoice'])->name('api.ar.invoices.store');
-
     Route::post('sales-transactions', [SalesTransactionController::class, 'store'])->name('api.sales-transactions.store');
     Route::post('sales-transactions/{salesTransaction}/mark-as-paid', [SalesTransactionController::class, 'markAsPaid'])->name('api.sales-transactions.mark-as-paid');
 
