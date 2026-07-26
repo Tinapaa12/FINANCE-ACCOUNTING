@@ -123,6 +123,4 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'management_api_key' => env('MANAGEMENT_API_KEY', 'mgmt-secret-key'),
-
 ];

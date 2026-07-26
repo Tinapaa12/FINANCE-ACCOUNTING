@@ -2,9 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Api\ManagementBudgetController;
-use App\Http\Controllers\Api\DemoDataController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Finance\TransactionCostController;
 
 require __DIR__ . '/auth.php';
 
@@ -17,45 +15,37 @@ Route::middleware('app.auth')->group(function () {
     require __DIR__ . '/procurement.php';
     require __DIR__ . '/financial-reports.php';
 
-    Route::get('/api-playground', function () {
-        return view('api-playground', [
-            'accounts' => \App\Models\GeneralLedger\ChartOfAccount::where('status', 'Active')->orderBy('account_code')->get(),
-            'periods'  => \App\Models\FinancialReporting\BudgetVsActual::select('report_period_start')
-                ->get()->map(fn ($b) => \Carbon\Carbon::parse($b->report_period_start)->format('F Y'))
-                ->unique()->sort()->values(),
-        ]);
-    })->name('api-playground');
-
-    Route::post('/api-playground', function (Request $request) {
-        $apiReq = Request::create('/api/management/budget', 'POST', $request->only(['account_code', 'budget_amount', 'period']));
-        $apiReq->headers->set('X-API-Key', config('app.management_api_key'));
-        $res = (new ManagementBudgetController)->store($apiReq);
-        $data = $res->getData();
-        if ($res->getStatusCode() === 201) {
-            return redirect()->route('api-playground')->with('success', 'Budget entry created via API!');
-        }
-        return redirect()->route('api-playground')->with('error', $data->message ?? 'API error');
-    })->name('api-playground.submit');
-
-    Route::post('/api-playground/seed', function () {
-        $apiReq = Request::create('/api/seed-demo', 'POST');
-        $apiReq->headers->set('X-API-Key', config('app.management_api_key'));
-        $res = (new DemoDataController)->seed($apiReq);
-        $data = $res->getData();
-        if ($res->getStatusCode() === 200) {
-            return redirect()->route('api-playground')->with('success', 'Demo data seeded! ' . json_encode($data->stats ?? []));
-        }
-        return redirect()->route('api-playground')->with('error', $data->message ?? 'Seed API error');
-    })->name('api-playground.seed');
-
-    Route::post('/api-playground/migrate-fresh', function () {
-        $apiReq = Request::create('/api/migrate-fresh', 'POST');
-        $apiReq->headers->set('X-API-Key', config('app.management_api_key'));
-        $res = (new DemoDataController)->migrateFresh($apiReq);
-        $data = $res->getData();
-        if ($res->getStatusCode() === 200) {
-            return redirect()->route('api-playground')->with('success', 'migrate:fresh --seed done! Tables rebuilt and seeded.');
-        }
-        return redirect()->route('api-playground')->with('error', $data->message ?? 'Migration error');
-    })->name('api-playground.migrate-fresh');
+    Route::get('/supply-chain/create', [TransactionCostController::class, 'create'])->name('supply-chain.create');
+    Route::get('/sales-transactions/json', function () {
+        $transactions = App\Models\Sales\SalesTransaction::orderBy('created_at', 'desc')->get()->map(function ($t) {
+            return [
+                'id' => $t->sales_transaction_id,
+                'order_no' => $t->order_no,
+                'customer_name' => $t->customer_name,
+                'total_amount' => $t->total_amount,
+                'payment_method' => $t->payment_method,
+                'status' => $t->status,
+                'created_at' => $t->created_at,
+                'updated_at' => $t->updated_at,
+            ];
+        });
+        return response()->json(['success' => true, 'data' => $transactions]);
+    })->name('sales-transactions.json');
+    Route::get('/supply-chain/bills', function () {
+        $bills = App\Models\AccountPayable\SupplierBill::orderBy('created_at', 'desc')->get()->map(function ($bill) {
+            return [
+                'id' => $bill->id,
+                'bill_no' => $bill->bill_no,
+                'supplier' => $bill->supplier,
+                'amount' => $bill->amount,
+                'due_date' => $bill->due_date,
+                'status' => $bill->status,
+                'matching_status' => $bill->matching_status,
+                'created_at' => $bill->created_at,
+                'updated_at' => $bill->updated_at,
+                'paid_at' => $bill->paid_at,
+            ];
+        });
+        return response()->json(['success' => true, 'data' => $bills]);
+    })->name('supply-chain.bills');
 });

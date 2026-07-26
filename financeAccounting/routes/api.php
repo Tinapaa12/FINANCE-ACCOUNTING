@@ -2,64 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\GeneralLedger\ChartOfAccountsController;
-use App\Http\Controllers\GeneralLedger\JournalEntryController;
-use App\Http\Controllers\AccountPayable\SupplierBillController;
-use App\Http\Controllers\AccountPayable\PaymentController;
-use App\Http\Controllers\Procurement\PurchaseOrderController;
-use App\Http\Controllers\Procurement\GoodsReceiptController;
-use App\Http\Controllers\ARController;
-use App\Http\Controllers\SalesTransactionController;
-use App\Http\Controllers\FinancialReporting\FinancialReportController;
 use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::name('api.')->prefix('management')->group(function () {
-    Route::post('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'store']);
-    Route::get('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'index']);
-    Route::delete('budget/{id}', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'destroy'])->name('budget.destroy');
-});
-
-Route::post('seed-demo', [\App\Http\Controllers\Api\DemoDataController::class, 'seed']);
-Route::post('migrate-fresh', [\App\Http\Controllers\Api\DemoDataController::class, 'migrateFresh']);
-
 Route::middleware('app.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    Route::name('api.')->apiResource('chart-of-accounts', ChartOfAccountsController::class)->parameters(['chart-of-accounts' => 'chartOfAccount']);
-    Route::name('api.')->apiResource('journal-entries', JournalEntryController::class)->parameters(['journal-entries' => 'journalEntry']);
-
-    Route::get('supplier-bills', [SupplierBillController::class, 'index'])->name('api.supplier-bills');
-    Route::post('supplier-bills', [SupplierBillController::class, 'store'])->name('api.supplier-bills.store');
-    Route::put('supplier-bills/{supplierBill}', [SupplierBillController::class, 'update'])->name('api.supplier-bills.update');
-    Route::delete('supplier-bills/{supplierBill}', [SupplierBillController::class, 'destroy'])->name('api.supplier-bills.destroy');
-    Route::patch('supplier-bills/{supplierBill}/pay', [SupplierBillController::class, 'pay'])->name('api.supplier-bills.pay');
-    Route::patch('supplier-bills/{supplierBill}/approve', [SupplierBillController::class, 'approve'])->name('api.supplier-bills.approve');
-    Route::post('supplier-bills/batch-pay', [SupplierBillController::class, 'batchPay'])->name('api.supplier-bills.batch-pay');
-
-    Route::get('payments', [PaymentController::class, 'index'])->name('api.payments');
-    Route::post('payments', [PaymentController::class, 'store'])->name('api.payments.store');
-
-    Route::name('api.')->apiResource('purchase-orders', PurchaseOrderController::class);
-    Route::name('api.')->apiResource('goods-receipts', GoodsReceiptController::class);
-
-    Route::prefix('ap/procurement')->name('api.ap.procurement.')->group(function () {
-        Route::get('pending-bills', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'pendingBills'])->name('pending-bills');
-        Route::get('purchase-orders', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'purchaseOrders'])->name('purchase-orders');
-        Route::get('purchase-orders/{poNo}', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'purchaseOrder'])->name('purchase-order');
-        Route::get('goods-receipts', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'goodsReceipts'])->name('goods-receipts');
-        Route::get('goods-receipts/{grnNo}', [\App\Http\Controllers\Api\ProcurementForAPController::class, 'goodsReceipt'])->name('goods-receipt');
-    });
-
-    Route::get('ar/overview', [ARController::class, 'overview'])->name('api.ar.overview');
-    Route::get('ar/payments-received', [ARController::class, 'payments'])->name('api.ar.payments');
-    Route::get('ar/aging-report', [ARController::class, 'aging'])->name('api.ar.aging');
-    Route::post('sales-transactions', [SalesTransactionController::class, 'store'])->name('api.sales-transactions.store');
-    Route::post('sales-transactions/{salesTransaction}/mark-as-paid', [SalesTransactionController::class, 'markAsPaid'])->name('api.sales-transactions.mark-as-paid');
-
-    Route::get('reports/income', [FinancialReportController::class, 'income'])->name('api.reports.income');
-    Route::get('reports/assets', [FinancialReportController::class, 'assets'])->name('api.reports.assets');
-    Route::get('reports/budget', [FinancialReportController::class, 'budget'])->name('api.reports.budget');
-    Route::get('reports/cashflow', [FinancialReportController::class, 'cashflow'])->name('api.reports.cashflow');
+    require __DIR__ . '/api-general-ledger.php';
+    require __DIR__ . '/api-accounts-payable.php';
+    require __DIR__ . '/api-procurement.php';
+    require __DIR__ . '/api-accounts-receivable.php';
+    require __DIR__ . '/api-financial-reports.php';
 });

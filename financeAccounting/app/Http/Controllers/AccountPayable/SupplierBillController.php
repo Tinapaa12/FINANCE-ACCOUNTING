@@ -146,10 +146,19 @@ class SupplierBillController extends Controller
             'payment_method' => $request->payment_method,
             'ewt_rate' => $request->ewt_rate,
             'payment_terms' => $request->payment_terms,
+            'matching_status' => 'Matched',
         ]);
 
-        $this->createExpenseJournalEntry($bill);
         audit_log($bill, 'created', "Supplier bill #{$bill->bill_no} created for {$bill->supplier}");
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Supplier bill #{$bill->bill_no} created successfully.",
+                'data' => $bill,
+            ], 201);
+        }
+
         return redirect()->route('supplier-bills.index');
     }
 
@@ -176,7 +185,8 @@ class SupplierBillController extends Controller
 
         $bills = SupplierBill::whereIn('id', $ids)->where('status', 'Approved')->get();
         foreach ($bills as $bill) {
-            $bill->update(['status' => 'Paid', 'paid_at' => now(), 'matching_status' => 'Matched']);
+            $bill->update(['status' => 'Paid', 'paid_at' => now()]);
+            $this->createExpenseJournalEntry($bill);
             $this->createPaymentJournalEntry($bill);
             audit_log($bill, 'paid', "Supplier bill #{$bill->bill_no} paid via batch payment");
         }
@@ -190,7 +200,8 @@ class SupplierBillController extends Controller
 
 public function pay(Request $request, SupplierBill $supplierBill)
 {
-    $supplierBill->update(['status' => 'Paid', 'paid_at' => now(), 'matching_status' => 'Matched']);
+    $supplierBill->update(['status' => 'Paid', 'paid_at' => now()]);
+    $this->createExpenseJournalEntry($supplierBill);
     $this->createPaymentJournalEntry($supplierBill);
     audit_log($supplierBill, 'paid', "Supplier bill #{$supplierBill->bill_no} marked as paid");
 
