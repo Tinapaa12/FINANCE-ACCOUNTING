@@ -113,6 +113,7 @@ class AccountPayableService
             'amount' => $data['amount'],
             'due_date' => $data['due_date'],
             'status' => $data['status'] ?? 'Pending',
+            'expense_account_id' => $data['expense_account_id'] ?? null,
         ]);
 
         $this->createExpenseJournalEntry($bill);
@@ -200,6 +201,7 @@ class AccountPayableService
             'reference' => $data['reference'] ?? null,
         ]);
 
+        $wasNotPaid = $bill->status !== 'Paid';
         $bill->total_paid = $newTotal;
 
         if ($newTotal >= $bill->amount) {
@@ -209,6 +211,10 @@ class AccountPayableService
         }
 
         $bill->save();
+
+        if ($wasNotPaid && $bill->status === 'Paid') {
+            $this->createExpenseJournalEntry($bill);
+        }
 
         \audit_log($bill, 'payment', "Payment of ₱{$data['amount']} recorded for bill #{$bill->bill_no}");
 
@@ -280,7 +286,11 @@ class AccountPayableService
 
     private function createExpenseJournalEntry(SupplierBill $bill): void
     {
-        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+        $expenseAccount = $bill->expense_account_id
+            ? ChartOfAccount::find($bill->expense_account_id)
+            : null;
+
+        $expenseAccount ??= ChartOfAccount::where('account_code', '5000')->first()
             ?? ChartOfAccount::create([
                 'account_code' => '5000',
                 'account_name' => 'Purchases / COGS',
@@ -307,7 +317,7 @@ class AccountPayableService
         JournalEntryLine::create([
             'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $expenseAccount->account_id,
-            'description' => "Inventory / Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'description' => "{$expenseAccount->account_name} - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => $bill->amount,
             'credit' => 0,
         ]);

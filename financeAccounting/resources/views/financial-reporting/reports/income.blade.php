@@ -13,11 +13,19 @@
                         Period: {{ $selectedPeriod ?? 'All periods' }}
                     </p>
                 </div>
-                <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
-                    @foreach($periods as $p)
-                        <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
-                    @endforeach
-                </select>
+                <div class="flex items-center gap-2">
+                    <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
+                        @foreach($periods as $p)
+                            <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
+                        @endforeach
+                    </select>
+                    <form method="POST" action="{{ route('reports.regenerate') }}" class="inline">
+                        @csrf
+                        <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+                        <input type="hidden" name="report_type" value="income_statement">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100">Regenerate</button>
+                    </form>
+                </div>
             </div>
 
             @if(empty($revenue) && empty($expenses))

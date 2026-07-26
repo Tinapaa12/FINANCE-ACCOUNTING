@@ -131,6 +131,7 @@ class SupplierBillController extends Controller
             'payment_method' => 'nullable|string',
             'ewt_rate' => 'nullable|numeric|min:0|max:100',
             'payment_terms' => 'nullable|string',
+            'expense_account_id' => 'nullable|exists:chart_of_accounts,account_id',
         ]);
 
         $nextId = SupplierBill::count() + 1;
@@ -146,8 +147,17 @@ class SupplierBillController extends Controller
             'payment_method' => $request->payment_method,
             'ewt_rate' => $request->ewt_rate,
             'payment_terms' => $request->payment_terms,
+            'expense_account_id' => $request->expense_account_id,
             'matching_status' => 'Matched',
         ]);
+
+        if (in_array($bill->status, ['Approved', 'Paid'])) {
+            $this->createExpenseJournalEntry($bill);
+        }
+
+        if ($bill->status === 'Paid') {
+            $this->createPaymentJournalEntry($bill);
+        }
 
         audit_log($bill, 'created', "Supplier bill #{$bill->bill_no} created for {$bill->supplier}");
 
@@ -165,11 +175,15 @@ class SupplierBillController extends Controller
     public function approve($id)
     {
         $bill = SupplierBill::findOrFail($id);
+        $wasPending = $bill->status === 'Pending';
         $bill->update([
             'status' => 'Approved',
             'approved_at' => now(),
             'approved_by' => auth()->user()->name ?? 'Manager',
         ]);
+        if ($wasPending) {
+            $this->createExpenseJournalEntry($bill);
+        }
         audit_log($bill, 'approved', "Supplier bill #{$bill->bill_no} approved");
         return redirect()->route('supplier-bills.index');
     }
@@ -295,6 +309,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
             'payment_method' => 'nullable|string',
             'ewt_rate' => 'nullable|numeric|min:0|max:100',
             'payment_terms' => 'nullable|string',
+            'expense_account_id' => 'nullable|exists:chart_of_accounts,account_id',
         ]);
 
         $old = $supplierBill->getOriginal();
@@ -306,6 +321,7 @@ public function pay(Request $request, SupplierBill $supplierBill)
             'payment_method' => $request->payment_method,
             'ewt_rate' => $request->ewt_rate,
             'payment_terms' => $request->payment_terms,
+            'expense_account_id' => $request->expense_account_id,
         ]);
 
         audit_log($supplierBill, 'updated', "Supplier bill #{$supplierBill->bill_no} updated", $old, $supplierBill->toArray());
@@ -392,7 +408,7 @@ private function createPaymentJournalEntry(SupplierBill $bill, ?string $referenc
 
 private function createExpenseJournalEntry(SupplierBill $bill): void
 {
-    $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+    $expenseAccount = $bill->expenseAccount ?? ChartOfAccount::where('account_code', '5000')->first()
         ?? ChartOfAccount::create([
             'account_code' => '5000',
             'account_name' => 'Purchases / COGS',
@@ -419,7 +435,7 @@ private function createExpenseJournalEntry(SupplierBill $bill): void
     JournalEntryLine::create([
         'journal_entry_id' => $entry->journal_entry_id,
         'account_id' => $expenseAccount->account_id,
-        'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+        'description' => "{$expenseAccount->account_name} - {$bill->supplier} - Bill #{$bill->bill_no}",
         'debit' => $bill->amount,
         'credit' => 0,
     ]);

@@ -16,6 +16,12 @@
                                 <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>
                             @endforeach
                         </select>
+                        <form method="POST" action="{{ route('reports.regenerate') }}" class="inline">
+                            @csrf
+                            <input type="hidden" name="period" value="{{ $selectedPeriod }}">
+                            <input type="hidden" name="report_type" value="cash_flow">
+                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100">Regenerate</button>
+                        </form>
                         <span class="text-sm text-gray-500">{{ $periodLabel }}</span>
                     </div>
                 </div>

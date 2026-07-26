@@ -2,11 +2,13 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
+use App\Models\GeneralLedger\ChartOfAccount;
 
 class TransactionCostController extends Controller
 {
     public function create()
     {
-        return view('supply-chain.create');
+        $expenseAccounts = ChartOfAccount::where('type', 'Expense')->where('status', 'Active')->orderBy('account_code')->get();
+        return view('supply-chain.create', compact('expenseAccounts'));
     }
 }

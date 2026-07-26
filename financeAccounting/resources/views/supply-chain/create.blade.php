@@ -44,6 +44,15 @@
                 <input id="due_date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
             </div>
             <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Expense Account <span class="text-red-500">*</span></label>
+                <select id="expense_account_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
+                    <option value="">Select expense account...</option>
+                    @foreach($expenseAccounts as $account)
+                        <option value="{{ $account->account_id }}">{{ $account->account_code }} — {{ $account->account_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
                 <select id="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" required>
                     <option value="Pending">Pending</option>
@@ -101,6 +110,7 @@ document.getElementById('billForm').addEventListener('submit', async function (e
                 amount: amount,
                 due_date: document.getElementById('due_date').value,
                 status: document.getElementById('status').value,
+                expense_account_id: document.getElementById('expense_account_id').value,
             }),
         });
 

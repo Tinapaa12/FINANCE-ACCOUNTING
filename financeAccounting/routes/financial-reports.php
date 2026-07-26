@@ -16,6 +16,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/budget/pdf', [FinancialReportController::class, 'budgetPdf'])->name('budget.pdf');
     Route::get('/cashflow/pdf', [FinancialReportController::class, 'cashflowPdf'])->name('cashflow.pdf');
 
+    Route::post('/regenerate', [FinancialReportController::class, 'regenerate'])->name('regenerate');
+
     Route::get('/manage', [ManageDataController::class, 'index'])->name('manage');
     Route::post('/manage/store-budget', [ManageDataController::class, 'storeBudget'])->name('manage.store-budget');
     Route::put('/manage/budget/{budgetVsActual}/actual', [ManageDataController::class, 'updateBudgetActual'])->name('manage.update-budget-actual');
