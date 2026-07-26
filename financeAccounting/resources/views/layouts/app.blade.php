@@ -134,7 +134,7 @@
                 <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden text-gray-500 hover:text-gray-700 flex-shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                 </button>
-                <h2 class="text-lg sm:text-xl font-bold text-gray-900 truncate">@yield('page-title', trim($__env->yieldContent('page-heading')) ?: 'Dashboard')</h2>
+                <h2 class="text-lg sm:text-xl font-bold text-gray-900 truncate">@yield('page-title', trim($__env->yieldContent('page-heading')) ?: 'Financial Reports')</h2>
                 <div class="flex items-center gap-2 sm:gap-3 ml-auto">
                     @php
                         $pdfRoutes = [

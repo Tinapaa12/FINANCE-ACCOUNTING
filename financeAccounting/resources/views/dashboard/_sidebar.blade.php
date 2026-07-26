@@ -29,6 +29,58 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <h3 class="text-sm font-bold text-gray-900 mb-3">AP Summary</h3>
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Total bills</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($apMetrics['totalBillsAmount'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Paid this month</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($apMetrics['paidThisMonthAmount'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Payments today</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($apMetrics['paymentsTodayAmount'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Total bill pending</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($apMetrics['pendingBillsAmount'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Overdue bills</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($apMetrics['overdueAmount'], 2) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <h3 class="text-sm font-bold text-gray-900 mb-3">AR Summary</h3>
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Total invoices</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($arMetrics['totalOutstanding'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Collected this month</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($arMetrics['collectedThisMonth'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Payments received today</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($arMetrics['receivedToday'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Pending invoices</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($arMetrics['pendingInvoices'], 2) }}</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Overdue invoices</span>
+                <span class="font-semibold text-gray-900">₱{{ number_format($arMetrics['overdueInvoices'], 2) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
         <h3 class="text-sm font-bold text-gray-900 mb-3">Financial Alerts</h3>
         <div class="space-y-2">
             @forelse($alerts as $alert)

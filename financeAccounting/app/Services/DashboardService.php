@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
+use App\Models\Invoice;
+use App\Models\Sales\SalesTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -112,6 +114,34 @@ class DashboardService
         return ChartOfAccount::select('type', DB::raw('count(*) as count'))
             ->groupBy('type')
             ->pluck('count', 'type');
+    }
+
+    public function getArMetrics(): array
+    {
+        $invoices = Invoice::whereIn('type', ['invoice', 'credit_note'])->get();
+
+        $totalOutstanding = $invoices->where('type', 'invoice')->sum('total')
+            - $invoices->where('type', 'credit_note')->sum('total');
+
+        $collectedThisMonth = SalesTransaction::where('status', 'Paid')
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total_amount');
+
+        $receivedToday = SalesTransaction::where('status', 'Paid')
+            ->whereDate('created_at', today())
+            ->sum('total_amount');
+
+        $pendingInvoices = Invoice::where('type', 'invoice')
+            ->whereNotIn('status', ['cleared', 'paid'])
+            ->sum('total');
+
+        $overdueInvoices = Invoice::where('type', 'invoice')
+            ->whereNotIn('status', ['cleared', 'paid'])
+            ->whereDate('due_date', '<', now())
+            ->sum('total');
+
+        return compact('totalOutstanding', 'collectedThisMonth', 'receivedToday', 'pendingInvoices', 'overdueInvoices');
     }
 
     private function getTotalByAccountType(string $type, string $column): float
