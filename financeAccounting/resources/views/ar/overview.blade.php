@@ -115,117 +115,11 @@
             <!-- Action Bar -->
             <div class="bg-gradient-to-r from-white to-slate-50 p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex items-center justify-between">
                 <div class="flex space-x-4">
-                    <button @click="showInvoiceModal = true" class="bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white text-[14px] py-2.5 px-5 rounded-md font-medium transition flex items-center justify-center gap-2 shadow-md shadow-indigo-200"><i class="fas fa-plus"></i> New Invoice</button>
                     <a href="{{ route('ar.aging') }}" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-[14px] py-2.5 px-5 rounded-md font-medium transition flex items-center justify-center gap-2"><i class="fas fa-chart-line text-indigo-500"></i> View Aging Report</a>
                 </div>
                 <div class="hidden md:flex items-center gap-2 text-[12px] text-gray-400"><i class="fas fa-circle-info"></i> Data refreshed a few moments ago</div>
             </div>
         </div>
-
-<!-- CREATE INVOICE MODAL -->
-    <div x-show="showInvoiceModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" x-cloak @click.away="showInvoiceModal = false">
-        <div class="bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl p-6" @click.stop>
-            <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <div class="flex items-center gap-2">
-                    <button @click="showInvoiceModal = false" class="text-gray-400 hover:text-gray-700"><i class="fas fa-times text-xl"></i></button>
-                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-check-square text-indigo-600"></i> Create New Invoice</h2>
-                </div>
-            </div>
-            <form method="POST" action="{{ route('ar.invoices.store') }}">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="md:col-span-2 space-y-5">
-                        <div class="grid grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Customer <span class="text-red-500">*</span></label>
-                                <select name="customer_name" x-model="selectedCustomer" @change="onCustomerChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
-                                    <option value="">Select customer</option>
-                                    @foreach($customers as $name)
-                                    <option value="{{ $name }}">{{ $name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Invoice Type <span class="text-red-500">*</span></label>
-                                <select name="invoice_type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
-                                    <option value="Invoice">Invoice (Standard)</option>
-                                    <option value="Credit Note">Credit Note (Refund)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Invoice Date <span class="text-red-500">*</span></label>
-                                <input type="date" name="invoice_date" x-model="form.invoice_date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Due Date <span class="text-red-500">*</span></label>
-                                <input type="date" name="due_date" x-model="form.due_date" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
-                            </div>
-                            <div>
-                                <label class="block text-[13px] font-medium text-gray-700 mb-1.5">Currency <span class="text-red-500">*</span></label>
-                                <select name="currency" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-[14px] focus:ring-2 focus:ring-[#2563eb] outline-none bg-[#f9fafb]" required>
-                                    <option value="PHP">PHP - Philippine Peso</option>
-                                    <option value="USD">USD</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mt-2 border border-gray-200 rounded-lg overflow-hidden bg-white">
-                            <div class="bg-[#f9fafb] px-5 py-3 flex items-center justify-between border-b border-gray-200"><span class="font-bold text-gray-700 text-[15px] flex items-center gap-2"><i class="fas fa-box"></i> Items / Services</span></div>
-                            <div class="p-5 space-y-4 bg-white">
-                                <div class="flex flex-wrap md:flex-nowrap gap-3 items-end font-medium text-[13px] text-gray-500">
-                                    <div class="flex-1 min-w-[120px]">Description</div><div class="w-16 text-center">Qty</div><div class="w-28 text-right">Unit Price</div><div class="w-16 text-center">VAT %</div><div class="w-32 text-right">Total</div>
-                                </div>
-                                <template x-for="(item, index) in invoiceItems" :key="index">
-                                    <div class="flex flex-wrap md:flex-nowrap gap-3 items-end border-b border-gray-100 pb-4">
-                                        <div class="flex-1 min-w-[120px]"><input type="text" x-model="item.desc" class="w-full border-b border-gray-300 py-1.5 text-[14px] focus:border-[#2563eb] outline-none bg-transparent" /></div>
-                                        <div class="w-16"><input type="number" x-model="item.qty" @input="calculateInvoiceTotals()" min="1" class="w-full border-b border-gray-300 py-1.5 text-[14px] text-center focus:border-[#2563eb] outline-none bg-transparent" /></div>
-                                        <div class="w-28"><input type="number" x-model="item.price" @input="calculateInvoiceTotals()" min="0" step="0.01" class="w-full border-b border-gray-300 py-1.5 text-[14px] text-right focus:border-[#2563eb] outline-none bg-transparent" placeholder="0.00" /></div>
-                                        <div class="w-16 text-center text-[14px] text-gray-600" x-text="item.vat + '%'"></div>
-                                        <div class="w-32 text-right font-medium text-gray-900 text-[14px]" x-text="'₱' + ((item.qty * item.price) * (1 + (item.vat/100))).toFixed(2)"></div>
-                                        <button @click="if(invoiceItems.length > 1) invoiceItems.splice(index, 1); calculateInvoiceTotals();" class="text-red-400 hover:text-red-600 text-[14px] p-1"><i class="fas fa-trash-alt"></i></button>
-                                    </div>
-                                </template>
-                                <button @click="invoiceItems.push({desc: '', qty: 1, price: 0, vat: 12}); calculateInvoiceTotals();" class="text-[14px] text-[#2563eb] font-medium hover:underline flex items-center gap-2 mt-2"><i class="fas fa-plus-circle"></i> Add Line Item</button>
-
-                                <div class="mt-6 pt-4 border-t border-gray-200 flex flex-col items-end space-y-2 w-full md:w-1/2 ml-auto text-[14px]">
-                                    <div class="flex justify-between w-full text-gray-600"><span>Subtotal</span><span class="font-medium text-gray-900" x-text="'₱'+invoiceSubtotal.toFixed(2)"></span></div>
-                                    <div class="flex justify-between w-full text-gray-600"><span>VAT</span><span class="font-medium text-gray-900" x-text="'₱'+invoiceVat.toFixed(2)"></span></div>
-                                    <div class="flex justify-between w-full font-bold text-gray-900 pt-3 border-t border-gray-200"><span>Total Due</span><span x-text="'₱'+invoiceTotal.toFixed(2)"></span></div>
-                                </div>
-
-                                <input type="hidden" name="subtotal" x-model="invoiceSubtotal">
-                                <input type="hidden" name="vat_amount" x-model="invoiceVat">
-                                <input type="hidden" name="total_amount" x-model="invoiceTotal">
-                                <input type="hidden" name="line_items" x-model="invoiceItemsJson">
-                                <input type="hidden" name="status" value="Draft">
-
-                                <div class="mt-4 flex space-x-4">
-                                    <button type="submit" class="px-6 py-2.5 bg-white border border-[#2563eb] text-[#2563eb] hover:bg-[#eff6ff] rounded-md text-[14px] font-medium transition">Save as Draft</button>
-                                    <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white rounded-md text-[14px] font-medium transition shadow-sm">Post and Send</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sidebar All Invoices Widget (Inside Modal) -->
-                    <div class="md:col-span-1 bg-[#fafbfc] rounded-xl p-4 border border-gray-100 h-fit">
-                        <h4 class="font-bold text-gray-800 text-[15px] mb-3">Recent Invoices</h4>
-                        <div class="space-y-3 text-[12px]">
-                            @forelse($sidebarInvoices as $inv)
-                            <div class="bg-white rounded-lg p-3 shadow-sm border border-gray-100 flex items-center justify-between">
-                                <div><span class="font-bold text-gray-700">{{ $inv['order_no'] }}</span> <span class="text-gray-500 block mt-0.5">{{ $inv['customer'] }}</span></div>
-                                <div><span class="text-gray-900 font-medium block text-right">₱{{ number_format($inv['amount']) }}</span><span class="text-[#ca8a04] block text-right text-[10px] font-medium">{{ $inv['status'] }}</span></div>
-                            </div>
-                            @empty
-                            <p class="text-gray-400 text-center py-4">No invoices yet</p>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
 </div>
 @endsection
@@ -234,24 +128,7 @@
 <script>
     function overviewApp() {
             return {
-                showInvoiceModal: false,
                 barsLoaded: false,
-                selectedCustomer: '',
-                salesData: {!! json_encode($salesData) !!},
-                form: {
-                    invoice_date: '{{ date("Y-m-d") }}',
-                    due_date: '{{ date("Y-m-d", strtotime("+30 days")) }}',
-                },
-                invoiceItems: [{ desc: '', qty: 1, price: 0, vat: 12 }],
-                invoiceSubtotal: 0, invoiceVat: 0, invoiceTotal: 0,
-                get invoiceItemsJson() {
-                    return JSON.stringify(this.invoiceItems.map(item => ({
-                        desc: item.desc,
-                        qty: item.qty,
-                        price: item.price,
-                        vat: item.vat
-                    })));
-                },
                 init() {
                     setTimeout(() => { this.barsLoaded = true; }, 150);
                     this.$nextTick(() => this.initAgingChart());
@@ -259,6 +136,8 @@
                 initAgingChart() {
                     const ctx = document.getElementById('agingDonut');
                     if (!ctx || typeof Chart === 'undefined') return;
+                    const hasData = {!! json_encode(array_sum(array_column($agingBuckets, 'amount')) > 0) !!};
+                    if (!hasData) return;
                     new Chart(ctx, {
                         type: 'doughnut',
                         data: {
@@ -281,25 +160,6 @@
                         }
                     });
                 },
-                onCustomerChange() {
-                    const data = this.salesData[this.selectedCustomer];
-                    if (!data) {
-                        this.invoiceItems = [{ desc: '', qty: 1, price: 0, vat: 12 }];
-                        this.calculateInvoiceTotals();
-                        return;
-                    }
-                    this.invoiceItems = [{
-                        desc: 'Sales - ' + data.latest_order,
-                        qty: 1,
-                        price: data.total_amount,
-                        vat: 12,
-                    }];
-                    this.calculateInvoiceTotals();
-                },
-                calculateInvoiceTotals() {
-                    let sub = 0; this.invoiceItems.forEach(item => { sub += item.qty * item.price; });
-                    this.invoiceSubtotal = sub; this.invoiceVat = sub * 0.12; this.invoiceTotal = sub + this.invoiceVat;
-                }
             }
         }
 </script>

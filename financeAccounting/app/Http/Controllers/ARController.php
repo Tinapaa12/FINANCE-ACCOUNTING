@@ -2,9 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sales\SalesTransaction;
-use App\Models\Customer;
 use App\Models\Invoice;
-use Illuminate\Http\Request;
+
 
 class ARController extends Controller
 {
@@ -13,10 +12,11 @@ class ARController extends Controller
         $invoices = Invoice::with('customer')->whereIn('type', ['invoice', 'credit_note'])->get();
         $payments = SalesTransaction::where('status', 'Paid')->get();
 
-        $totalOutstanding = $invoices->sum('total');
+        $totalOutstanding = $invoices->where('type', 'invoice')->sum('total') - $invoices->where('type', 'credit_note')->sum('total');
         $overdueAmount = $invoices->filter(fn($i) => $this->daysOverdue($i) > 0)->sum('total');
         $collectedThisMonth = SalesTransaction::where('status', 'Paid')
             ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
             ->sum('total_amount');
 
         $recentInvoiceActivities = Invoice::with('customer')->orderBy('id', 'desc')->take(5)->get()->map(function ($inv) {
@@ -56,20 +56,8 @@ class ARController extends Controller
 
         $agingBuckets = $this->computeAgingBuckets($invoices);
 
-        $sidebarInvoices = Invoice::with('customer')
-            ->whereIn('status', ['draft', 'sent', 'overdue'])
-            ->orderBy('id', 'desc')
-            ->take(4)
-            ->get()
-            ->map(fn($i) => [
-                'order_no' => $i->invoice_number,
-                'customer' => $i->customer?->name ?? 'Unknown',
-                'amount'   => (float) $i->total,
-                'status'   => ucfirst($i->status),
-            ]);
-
         $invoiceCount = $invoices->count();
-        $overdueCount = $invoices->filter(fn($i) => $this->daysOverdue($i) > 0)->count();
+        $overdueCount = $invoices->whereIn('status', ['sent', 'overdue'])->filter(fn($i) => $this->daysOverdue($i) > 0)->count();
         $paymentCount = $payments->count();
 
         $avgDaysToCollect = Invoice::where('status', 'cleared')
@@ -80,25 +68,11 @@ class ARController extends Controller
             ->avg(fn($i) => (int) $i->invoice_date->diffInDays($i->updated_at));
 
         $avgDaysToCollect = $avgDaysToCollect ? round($avgDaysToCollect) : 0;
-        $customers = SalesTransaction::select('customer_name')
-            ->distinct()
-            ->orderBy('customer_name')
-            ->pluck('customer_name');
-        $salesData = SalesTransaction::select('customer_name', 'order_no', 'total_amount', 'payment_method')
-            ->latest()
-            ->get()
-            ->groupBy('customer_name')
-            ->map(fn($items) => [
-                'latest_order' => $items->first()->order_no,
-                'total_amount' => (float) $items->first()->total_amount,
-                'payment_method' => $items->first()->payment_method,
-            ]);
 
         return view('ar.overview', compact(
             'totalOutstanding', 'overdueAmount', 'collectedThisMonth',
-            'recentActivities', 'agingBuckets', 'sidebarInvoices',
-            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect',
-            'customers', 'salesData'
+            'recentActivities', 'agingBuckets',
+            'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect'
         ));
     }
 
@@ -151,20 +125,20 @@ class ARController extends Controller
     {
         $invoices = Invoice::with('customer')->whereIn('status', ['sent', 'overdue'])->get();
 
-        $currentAmount  = $invoices->filter(fn($i) => $i->status === 'sent' && $i->due_date && $i->due_date->isFuture())->sum('total');
+        $currentAmount  = $invoices->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->sum('total');
         $d1_30Amount    = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('total');
         $d31_60Amount   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('total');
         $d61_90Amount   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('total');
         $d90Amount      = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 91)->sum('total');
 
-        $currentCount  = $invoices->filter(fn($i) => $i->status === 'sent' && $i->due_date && $i->due_date->isFuture())->count();
+        $currentCount  = $invoices->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->count();
         $d1_30Count    = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->count();
         $d31_60Count   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->count();
         $d61_90Count   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->count();
         $d90Count      = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 91)->count();
 
-        $customers = $invoices->groupBy(fn($i) => $i->customer->name ?? 'Unknown')->map(function ($items, $customer) {
-            $current = $items->filter(fn($i) => $i->status === 'sent' && $i->due_date && $i->due_date->isFuture())->sum('total');
+        $customers = $invoices->groupBy(fn($i) => $i->customer?->name ?? 'Unknown')->map(function ($items, $customer) {
+            $current = $items->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->sum('total');
             $d1_30   = $items->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('total');
             $d31_60  = $items->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('total');
             $d61_90  = $items->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('total');
@@ -200,49 +174,6 @@ class ARController extends Controller
         ));
     }
 
-    public function storeInvoice(Request $request)
-    {
-        $validated = $request->validate([
-            'customer_name'  => 'required|string|max:255',
-            'invoice_type'   => 'required|string|in:Invoice,Credit Note',
-            'invoice_date'   => 'required|date',
-            'due_date'       => 'required|date|after_or_equal:invoice_date',
-            'currency'       => 'required|string|size:3',
-            'subtotal'       => 'required|numeric|min:0',
-            'vat_amount'     => 'required|numeric|min:0',
-            'total_amount'   => 'required|numeric|min:0',
-            'line_items'     => 'required|json',
-            'status'         => 'required|in:Draft,Sent',
-        ]);
-
-        $customer = Customer::firstOrCreate(
-            ['name' => $validated['customer_name']]
-        );
-
-        $year = now()->format('Y');
-        $last = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
-            ->orderBy('id', 'desc')
-            ->first();
-        $nextNum = $last ? (int) substr($last->invoice_number, -3) + 1 : 1;
-        $invoiceNumber = 'INV-' . $year . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-
-        Invoice::create([
-            'customer_id'    => $customer->id,
-            'invoice_number' => $invoiceNumber,
-            'type'           => $validated['invoice_type'] === 'Credit Note' ? 'credit_note' : 'invoice',
-            'invoice_date'   => $validated['invoice_date'],
-            'due_date'       => $validated['due_date'],
-            'currency'       => $validated['currency'],
-            'subtotal'       => $validated['subtotal'],
-            'vat_amount'     => $validated['vat_amount'],
-            'total'          => $validated['total_amount'],
-            'status'         => strtolower($validated['status']),
-            'notes'          => $validated['line_items'],
-        ]);
-
-        return redirect()->route('ar.overview')->with('success', 'Invoice ' . $invoiceNumber . ' created successfully.');
-    }
-
     private function daysOverdue($invoice)
     {
         if (!$invoice->due_date) return 0;
@@ -268,7 +199,7 @@ class ARController extends Controller
                 elseif ($days >= 61)  $buckets[3]['amount'] += $inv->total;
                 elseif ($days >= 31)  $buckets[2]['amount'] += $inv->total;
                 else                  $buckets[1]['amount'] += $inv->total;
-            } elseif ($inv->due_date && $inv->due_date->isFuture()) {
+            } elseif (!$inv->due_date || $inv->due_date->isFuture()) {
                 $buckets[0]['amount'] += $inv->total;
             }
         }

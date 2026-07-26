@@ -140,17 +140,25 @@
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest',
                                 'Accept': 'application/json',
                             },
                         });
                         if (res.ok) {
                             window.location.reload();
                         } else {
-                            const data = await res.json();
-                            alert(data.message || 'Failed to mark as paid');
+                            let msg = 'Request failed';
+                            try {
+                                const data = await res.json();
+                                msg = data.message || msg;
+                            } catch (_) {
+                                msg = 'Server error (look at console for details)';
+                            }
+                            alert(msg);
                         }
                     } catch (e) {
-                        alert('Network error');
+                        alert('Network error - check console for details');
+                        console.error(e);
                     }
                 },
             }

@@ -15,6 +15,15 @@ use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::name('api.')->prefix('management')->group(function () {
+    Route::post('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'store']);
+    Route::get('budget', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'index']);
+    Route::delete('budget/{id}', [\App\Http\Controllers\Api\ManagementBudgetController::class, 'destroy'])->name('budget.destroy');
+});
+
+Route::post('seed-demo', [\App\Http\Controllers\Api\DemoDataController::class, 'seed']);
+Route::post('migrate-fresh', [\App\Http\Controllers\Api\DemoDataController::class, 'migrateFresh']);
+
 Route::middleware('app.auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
@@ -46,8 +55,6 @@ Route::middleware('app.auth')->group(function () {
     Route::get('ar/overview', [ARController::class, 'overview'])->name('api.ar.overview');
     Route::get('ar/payments-received', [ARController::class, 'payments'])->name('api.ar.payments');
     Route::get('ar/aging-report', [ARController::class, 'aging'])->name('api.ar.aging');
-    Route::post('ar/invoices', [ARController::class, 'storeInvoice'])->name('api.ar.invoices.store');
-
     Route::post('sales-transactions', [SalesTransactionController::class, 'store'])->name('api.sales-transactions.store');
     Route::post('sales-transactions/{salesTransaction}/mark-as-paid', [SalesTransactionController::class, 'markAsPaid'])->name('api.sales-transactions.mark-as-paid');
 
