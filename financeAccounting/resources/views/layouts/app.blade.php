@@ -26,7 +26,7 @@
 
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
                class="fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto">
-            @if(request()->routeIs('reports.manage*') || request()->routeIs('sales-transactions.*') || request()->routeIs('procurement.po.*') || request()->routeIs('procurement.gr.*') || request()->routeIs('procurement.matching.*'))
+            @if(request()->routeIs('reports.manage*') || request()->routeIs('sales-transactions.*') || request()->routeIs('procurement.po.*') || request()->routeIs('procurement.gr.*') || request()->routeIs('procurement.matching.*') || request()->routeIs('supply-chain.*'))
                 @include('layouts.manage-sidebar')
             @else
             <div class="p-6 flex items-center justify-between">

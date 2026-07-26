@@ -40,8 +40,19 @@ class SalesTransactionController extends Controller
                 return $transaction;
             });
         } catch (\Exception $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Transaction creation failed: ' . $e->getMessage()], 500);
+            }
             return redirect()->route('sales-transactions.create')
                 ->with('error', 'Transaction creation failed: ' . $e->getMessage());
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Sales transaction ' . $transaction->order_no . ' created successfully.',
+                'data' => $transaction,
+            ], 201);
         }
 
         return redirect()->route('sales-transactions.create')

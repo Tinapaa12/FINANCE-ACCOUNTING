@@ -9,6 +9,9 @@ class AuthMiddleware
     public function handle(Request $request, Closure $next)
     {
         if (!session('auth_logged_in')) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
             return redirect('/login');
         }
 
