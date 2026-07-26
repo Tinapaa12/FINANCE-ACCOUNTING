@@ -1,0 +1,134 @@
+{
+	"info": {
+		"name": "Account Payable API",
+		"description": "API endpoints for Account Payable module. Session-based auth: login first, then cookies are handled automatically.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"finance_admin\",\n  \"password\": \"12345\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/login",
+							"host": ["{{base_url}}"],
+							"path": ["login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Supplier Bills",
+			"item": [
+				{
+					"name": "List Bills",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": "{{base_url}}/supplier-bills"
+					}
+				},
+				{
+					"name": "Create Bill",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"supplier\": \"Sample Supplier\",\n  \"amount\": 10000,\n  \"due_date\": \"2026-08-25\",\n  \"status\": \"Pending\",\n  \"payment_method\": \"Bank Transfer\"\n}"
+						},
+						"url": "{{base_url}}/supplier-bills"
+					}
+				},
+				{
+					"name": "Update Bill",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"supplier\": \"Updated Supplier\",\n  \"amount\": 15000,\n  \"due_date\": \"2026-09-01\",\n  \"status\": \"Approved\"\n}"
+						},
+						"url": "{{base_url}}/supplier-bills/1"
+					}
+				},
+				{
+					"name": "Approve Bill",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": "{{base_url}}/supplier-bills/1/approve"
+					}
+				},
+				{
+					"name": "Pay Bill",
+					"request": {
+						"method": "PATCH",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": "{{base_url}}/supplier-bills/1/pay"
+					}
+				},
+				{
+					"name": "Delete Bill",
+					"request": {
+						"method": "DELETE",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": "{{base_url}}/supplier-bills/1"
+					}
+				}
+			]
+		},
+		{
+			"name": "Payments",
+			"item": [
+				{
+					"name": "List Payments",
+					"request": {
+						"method": "GET",
+						"header": [{ "key": "Accept", "value": "application/json" }],
+						"url": "{{base_url}}/payments"
+					}
+				},
+				{
+					"name": "Record Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Accept", "value": "application/json" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"supplier_bill_id\": 1,\n  \"amount\": 5000,\n  \"payment_method\": \"Cash\",\n  \"payment_date\": \"2026-07-25\"\n}"
+						},
+						"url": "{{base_url}}/payments"
+					}
+				}
+			]
+		}
+	]
+}

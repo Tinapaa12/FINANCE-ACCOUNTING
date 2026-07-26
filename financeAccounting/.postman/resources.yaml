@@ -1,0 +1,13 @@
+# Use this workspace to collaborate
+workspace:
+  id: ef205e59-9eb7-4a6b-8447-883485b988e8
+
+cloudResources:
+  collections:
+    ../postman/collections/Account Payable API: 98e92521-1f38-4cb3-b3a6-2dc4b929d837
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/
