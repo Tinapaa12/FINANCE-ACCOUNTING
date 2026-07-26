@@ -148,6 +148,8 @@ class SupplierBillController extends Controller
             'matching_status' => 'Matched',
         ]);
 
+        $this->createExpenseJournalEntry($bill);
+
         audit_log($bill, 'created', "Supplier bill #{$bill->bill_no} created for {$bill->supplier}");
 
         if ($request->wantsJson()) {

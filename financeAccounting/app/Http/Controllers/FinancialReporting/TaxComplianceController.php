@@ -106,9 +106,11 @@ class TaxComplianceController extends Controller
             ];
         }
 
-        // 3. AP tax data from Purchase Orders
+        // 3. AP tax data from Purchase Orders (exclude those already converted to bills)
+        $billedPoNos = \App\Models\AccountPayable\SupplierBill::whereNotNull('po_no')->pluck('po_no');
         $pos = PurchaseOrder::whereBetween('order_date', [$start, $end])
             ->whereIn('status', ['Approved', 'Sent', 'Confirmed', 'Delivered'])
+            ->whereNotIn('po_no', $billedPoNos)
             ->get();
         foreach ($pos as $po) {
             $taxRecords[] = [
@@ -122,17 +124,18 @@ class TaxComplianceController extends Controller
             ];
         }
 
-        // 4. AR tax data from Customer Invoices
-        $invoices = Invoice::whereBetween('invoice_date', [$start, $end])->get();
-        foreach ($invoices as $inv) {
+        // 4. AP tax data from Supplier Bills (VAT)
+        $bills = \App\Models\AccountPayable\SupplierBill::whereBetween('created_at', [$start, $end])->get();
+        foreach ($bills as $b) {
+            $vatRate = (float) ($b->ewt_rate ?: 12);
             $taxRecords[] = [
-                'reference_type' => 'Customer Invoice',
-                'reference_id'   => $inv->id,
+                'reference_type' => 'Supplier Bill',
+                'reference_id'   => $b->id,
                 'tax_type'       => 'VAT',
-                'taxable_amount' => (float) ($inv->subtotal ?: $inv->total),
-                'tax_rate'       => $inv->subtotal > 0 ? round((float) $inv->vat_amount / (float) $inv->subtotal * 100, 2) : 12,
-                'tax_amount'     => (float) ($inv->vat_amount ?: round((float) $inv->total * 0.12 / 1.12, 2)),
-                'filing_status'  => $inv->status === 'Paid' ? 'filed' : 'pending',
+                'taxable_amount' => (float) $b->amount,
+                'tax_rate'       => $vatRate,
+                'tax_amount'     => round((float) $b->amount * $vatRate / 100, 2),
+                'filing_status'  => $b->status === 'Paid' ? 'filed' : 'pending',
             ];
         }
 

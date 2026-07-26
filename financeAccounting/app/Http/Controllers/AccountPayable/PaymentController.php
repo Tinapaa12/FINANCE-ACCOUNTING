@@ -56,6 +56,12 @@ class PaymentController extends Controller
 
         $bill->total_paid = $newTotal;
 
+        $expenseExists = JournalEntryLine::whereHas('journalEntry', fn ($q) => $q->where('description', 'like', "%Bill #{$bill->bill_no}%"))
+            ->whereHas('account', fn ($q) => $q->where('account_code', '5000'))
+            ->exists();
+        if (!$expenseExists) {
+            $this->createExpenseJournalEntry($bill, $request->amount);
+        }
         $this->createPaymentJournalEntry($bill, $request->amount, $ref, $request->payment_date);
 
         if ($newTotal >= $bill->amount) {
@@ -69,6 +75,49 @@ class PaymentController extends Controller
         audit_log($bill, 'payment', "Payment of ₱{$request->amount} recorded for bill #{$bill->bill_no}");
 
         return redirect()->route('supplier-bills.index');
+    }
+
+    private function createExpenseJournalEntry(SupplierBill $bill, float $amount): void
+    {
+        $expenseAccount = ChartOfAccount::where('account_code', '5000')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '5000',
+                'account_name' => 'Purchases / COGS',
+                'type' => 'Expense',
+                'normal_balance' => 'Debit',
+                'status' => 'Active',
+            ]);
+        $apAccount = ChartOfAccount::where('account_code', '2100')->first()
+            ?? ChartOfAccount::create([
+                'account_code' => '2100',
+                'account_name' => 'Accounts Payable',
+                'type' => 'Liability',
+                'normal_balance' => 'Credit',
+                'status' => 'Active',
+            ]);
+
+        $entry = JournalEntry::create([
+            'transaction_date' => now()->format('Y-m-d'),
+            'reference_no' => generate_expense_ref(),
+            'description' => "Expense recognition - Bill #{$bill->bill_no} - {$bill->supplier}",
+            'status' => 'Posted',
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $expenseAccount->account_id,
+            'description' => "Purchases - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => $amount,
+            'credit' => 0,
+        ]);
+
+        JournalEntryLine::create([
+            'journal_entry_id' => $entry->journal_entry_id,
+            'account_id' => $apAccount->account_id,
+            'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
+            'debit' => 0,
+            'credit' => $amount,
+        ]);
     }
 
     private function createPaymentJournalEntry(SupplierBill $bill, float $amount, ?string $reference = null, ?string $paymentDate = null): void
