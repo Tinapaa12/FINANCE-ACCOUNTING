@@ -59,9 +59,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'bill_no', 'direction' => $sort === 'bill_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Bill No. @if($sort === 'bill_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
-                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'po_no', 'direction' => $sort === 'po_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">PO No. @if($sort === 'po_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
-                    <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'grn_no', 'direction' => $sort === 'grn_no' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">GRN No. @if($sort === 'grn_no') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
-                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Inventory</th>
+                    <th class="w-[20%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reference</th>
                     <th class="w-[15%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'supplier', 'direction' => $sort === 'supplier' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Supplier @if($sort === 'supplier') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[9%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"><a href="{{ route('supplier-bills.index', ['sort' => 'amount', 'direction' => $sort === 'amount' && $direction === 'asc' ? 'desc' : 'asc', 'search' => $search]) }}" class="text-inherit no-underline hover:text-gray-900">Amount @if($sort === 'amount') {{ $direction === 'asc' ? '▲' : '▼' }} @endif</a></th>
                     <th class="w-[11%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Balance</th>
@@ -94,9 +92,12 @@
     data-matching-status="{{ $bill->matching_status ?? 'Unmatched' }}"
     data-matching-notes="{{ $bill->matching_notes ?? '' }}">
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->bill_no }}</td>
-    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->po_no }}</td>
-    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->grn_no }}</td>
-    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->stock_request_no ?? '—' }}</td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">
+        <div class="flex flex-col gap-0.5">
+            <span class="text-xs text-gray-500">PO: {{ $bill->po_no }}</span>
+            <span class="text-xs text-gray-500">GRN: {{ $bill->grn_no }}</span>
+        </div>
+    </td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->supplier }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($bill->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
