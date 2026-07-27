@@ -89,11 +89,17 @@ class SalesTransactionController extends Controller
         $paymentData = null;
 
         try {
-            DB::transaction(function () use ($salesTransaction, &$paymentData) {
-                $salesTransaction->update(['status' => 'Paid']);
-                FinancePostingService::postSale($salesTransaction);
+DB::transaction(function () use ($salesTransaction, &$paymentData) {
+                  $salesTransaction->update(['status' => 'Paid']);
+                  FinancePostingService::postSale($salesTransaction);
 
-                $customer = Customer::firstOrCreate(['name' => $salesTransaction->customer_name]);
+                  if ($salesTransaction->payment_method === 'Pay Later') {
+                      Invoice::where('customer_id', $salesTransaction->customer_id)
+                          ->whereIn('status', ['sent', 'overdue'])
+                          ->update(['status' => 'cleared']);
+                  }
+
+                  $customer = Customer::firstOrCreate(['name' => $salesTransaction->customer_name]);
                 $year = now()->format('Y');
                 $last = Invoice::where('invoice_number', 'like', "INV-{$year}-%")
                     ->orderBy('id', 'desc')

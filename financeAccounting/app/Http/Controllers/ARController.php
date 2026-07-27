@@ -179,7 +179,9 @@ class ARController extends Controller
             elseif ($d31_60 > 0) $risk = 'Medium';
 
             return compact('customer', 'current', 'd1_30', 'd31_60', 'd61_90', 'd90', 'total', 'risk');
-        })->values();
+        })
+        ->filter(fn($c) => $c['total'] > 0)
+        ->values();
 
         $grandCurrent = $customers->sum('current');
         $grandD1_30   = $customers->sum('d1_30');
