@@ -68,6 +68,18 @@
             icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>'>
             Supply Chain Cost
         </x-sidebar-nav-item>
+        <x-sidebar-nav-item
+            href="{{ route('ar.customer-pay') }}"
+            :active="request()->routeIs('ar.customer-pay')"
+            icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>'>
+            Customer Dummy
+        </x-sidebar-nav-item>
+        <x-sidebar-nav-item
+            href="{{ route('sales-refund.index') }}"
+            :active="request()->routeIs('sales-refund.*')"
+            icon='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>'>
+            Refund Management
+        </x-sidebar-nav-item>
     </x-sidebar-section>
 
     <x-sidebar-section title="Quick Links">

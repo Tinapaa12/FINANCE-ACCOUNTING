@@ -25,7 +25,6 @@ class JournalEntrySeeder extends Seeder
         $ar      = $coa['1100'] ?? null;
         $inv     = $coa['1200'] ?? null;
         $ap      = $coa['2100'] ?? null;
-        $vat     = $coa['2300'] ?? null;
         $revenue = $coa['4100'] ?? null;
         $cogs    = $coa['5000'] ?? null;
         $salaries = $coa['6100'] ?? null;

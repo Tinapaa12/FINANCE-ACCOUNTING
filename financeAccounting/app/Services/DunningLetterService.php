@@ -9,6 +9,8 @@ class DunningLetterService
     {
         $customer = $data['customer_name'] ?? 'Unknown';
         $total = (float)($data['total_amount'] ?? 0);
+        $initialPayment = (float)($data['initial_payment'] ?? 0);
+        $amountDue = max(0, $total - $initialPayment);
         $dueDate = $data['due_date'] ?? null;
         $ref = $data['reference'] ?? 'N/A';
         $phone = $data['phone'] ?? null;
@@ -25,8 +27,11 @@ class DunningLetterService
         $dueDateStr = $dueDate?->format('M d, Y') ?? 'N/A';
 
         $message = "Dear {$customer}, this is a dunning notice for {$ref}. ";
-        $message .= "Pay your remaining balance: ₱" . number_format($total, 2) . ". ";
+        $message .= "Pay your remaining balance: ₱" . number_format($amountDue, 2) . ". ";
         $message .= "Total amount: ₱" . number_format($total, 2) . ". ";
+        if ($initialPayment > 0) {
+            $message .= "Initial payment: ₱" . number_format($initialPayment, 2) . ". ";
+        }
         $message .= "Due date: {$dueDateStr} (" . ($daysOverdue > 0 ? "{$daysOverdue} day(s) overdue" : "due soon") . "). ";
         $message .= "Please pay ASAP to avoid penalties. Thank you.";
 
@@ -35,7 +40,8 @@ class DunningLetterService
             'phone' => $phone,
             'reference' => $ref,
             'total_amount' => $total,
-            'amount_due' => $total,
+            'initial_payment' => $initialPayment,
+            'amount_due' => $amountDue,
             'due_date' => $dueDate?->toDateString(),
             'days_overdue' => $daysOverdue,
             'message' => $message,
@@ -46,8 +52,8 @@ class DunningLetterService
             'phone' => $phone,
             'order_no' => $ref,
             'total_amount' => $total,
-            'initial_payment' => 0,
-            'amount_due' => $total,
+            'initial_payment' => $initialPayment,
+            'amount_due' => $amountDue,
             'due_date' => $dueDate?->toDateString(),
             'days_overdue' => $daysOverdue,
             'message' => $message,

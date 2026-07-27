@@ -92,12 +92,7 @@
     data-matching-status="{{ $bill->matching_status ?? 'Unmatched' }}"
     data-matching-notes="{{ $bill->matching_notes ?? '' }}">
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->bill_no }}</td>
-    <td class="px-4 py-4 border-t border-gray-100 text-sm">
-        <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-gray-500">PO: {{ $bill->po_no }}</span>
-            <span class="text-xs text-gray-500">GRN: {{ $bill->grn_no }}</span>
-        </div>
-    </td>
+    <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->po_no }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $bill->supplier }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($bill->amount, 2) }}</td>
     <td class="px-4 py-4 border-t border-gray-100 text-sm">
@@ -134,9 +129,6 @@
                 <a href="{{ route('procurement.matching.index') }}" class="rounded-md bg-orange-500 text-white px-2 py-1 text-xs font-medium hover:bg-orange-600 no-underline">Needs 3-Way Match</a>
                 @endif
             @endif
-            @if($bill->status === 'Paid')
-            <span class="text-gray-400">—</span>
-            @endif
         </div>
     </td>
 </tr>
@@ -154,6 +146,67 @@
 
     </div>
 </div>
+
+<!-- Refunds Table -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-4">
+    <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold">Refunds</h2>
+    </div>
+
+    <div class="w-full overflow-x-auto">
+        <table class="w-full border-collapse">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Bill No.</th>
+                    <th class="w-[20%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Reference</th>
+                    <th class="w-[17%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Supplier</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
+                    <th class="w-[12%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Balance</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Due</th>
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                    <th class="w-[17%] px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($refunds as $refund)
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $refund->bill_no }}</td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $refund->po_no }}</td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ $refund->supplier }}</td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">₱{{ number_format($refund->amount, 2) }}</td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">
+                    <span class="{{ $refund->balance > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
+                        ₱{{ number_format($refund->balance, 2) }}
+                    </span>
+                </td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">{{ \Carbon\Carbon::parse($refund->due_date)->format('M d, Y') }}</td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">
+                    <span class="inline-flex px-3 py-1 rounded-full text-xs font-semibold
+                        @if(strtolower($refund->status) === 'paid') bg-green-100 text-green-800
+                        @elseif(strtolower($refund->status) === 'approved') bg-yellow-100 text-yellow-800
+                        @else bg-purple-100 text-purple-800 @endif">
+                        {{ $refund->status }}
+                    </span>
+                </td>
+                <td class="px-4 py-4 border-t border-gray-100 text-sm">
+                    <div class="flex gap-1.5 items-center flex-wrap">
+                        @if($refund->status === 'Approved' && $refund->balance > 0)
+                        <button type="button" onclick="openPaymentModal({{ $refund->id }}, {{ $refund->amount }}, {{ $refund->total_paid }}, '{{ $refund->payment_method ?? '' }}')"
+                            class="border-none cursor-pointer rounded-md bg-green-600 text-white px-2 py-1 text-xs font-medium hover:bg-green-700 transition-colors">Pay</button>
+                        @endif
+                    </div>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="8" class="text-center px-4 py-8 text-gray-500">No refunds found.</td>
+            </tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 </div>
 
 <div class="w-80 shrink-0">

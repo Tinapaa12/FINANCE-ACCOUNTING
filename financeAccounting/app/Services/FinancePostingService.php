@@ -62,7 +62,8 @@ class FinancePostingService
     {
         $keywords = match ($paymentMethod) {
             'Cash'          => ['Cash on Hand', 'Cash', 'Petty'],
-            'Credit Card'   => ['Receivable', 'AR', 'Accounts Receivable'],
+            'Credit Card',
+            'Pay Later'     => ['Receivable', 'AR', 'Accounts Receivable'],
             'Bank Transfer' => ['Bank', 'Cash in Bank'],
             default         => throw new \Exception("Unknown payment method: {$paymentMethod}"),
         };

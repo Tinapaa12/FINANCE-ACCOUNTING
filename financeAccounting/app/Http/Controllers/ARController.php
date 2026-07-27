@@ -127,6 +127,11 @@ class ARController extends Controller
     {
         $invoices = Invoice::with('customer')->whereIn('status', ['sent', 'overdue'])->get();
 
+        $payLaterTxns = SalesTransaction::where('payment_method', 'Pay Later')
+            ->where('status', 'Pending')
+            ->whereNotNull('due_date')
+            ->get();
+
         $agingItems = collect();
 
         foreach ($invoices as $inv) {
@@ -136,6 +141,18 @@ class ARController extends Controller
                 'due_date'      => $inv->due_date,
                 'status'        => $inv->status,
                 'source'        => 'invoice',
+            ]);
+        }
+
+        foreach ($payLaterTxns as $txn) {
+            $remaining = $txn->total_amount - ($txn->initial_payment ?? 0);
+            if ($remaining <= 0) continue;
+            $agingItems->push((object) [
+                'customer_name' => $txn->customer_name,
+                'amount'        => $remaining,
+                'due_date'      => $txn->due_date,
+                'status'        => $txn->status,
+                'source'        => 'pay_later',
             ]);
         }
 
@@ -188,60 +205,131 @@ class ARController extends Controller
         ));
     }
 
+    public function customerPay()
+    {
+        return view('ar.customer-pay');
+    }
+
     public function remindCustomer(Request $request)
     {
-        $customer = $request->query('customer') ?? $request->input('customer');
-        if (!$customer) {
-            return response()->json(['success' => false, 'message' => 'Customer name is required.', 'full_url' => $request->fullUrl()], 422);
+        $customer = $request->query('customer')
+            ?? $request->input('customer')
+            ?? $request->json('customer');
+
+        $removeRef = $request->query('remove')
+            ?? $request->input('remove');
+        if ($removeRef) {
+            $reminded = session()->get('reminded_customers', []);
+            $found = null;
+            foreach ($reminded as $key => $item) {
+                if ($item['ref'] === $removeRef) {
+                    $found = $key;
+                    break;
+                }
+            }
+            if ($found !== null) {
+                unset($reminded[$found]);
+                session()->put('reminded_customers', $reminded);
+            }
+            return response()->json(['success' => true, 'removed' => $removeRef]);
         }
 
-        $overdueInvoices = Invoice::whereHas('customer', fn($q) => $q->where('name', $customer))
-            ->whereIn('status', ['sent', 'overdue'])
-            ->get();
+        if ($customer) {
+            $payLaterTxns = SalesTransaction::where('payment_method', 'Pay Later')
+                ->where('customer_name', $customer)
+                ->where('status', 'Pending')
+                ->whereNotNull('due_date')
+                ->get();
 
-        $items = collect();
-        $sentMessages = [];
+            $overdueInvoices = Invoice::whereHas('customer', fn($q) => $q->where('name', $customer))
+                ->whereIn('status', ['sent', 'overdue'])
+                ->get();
 
-        foreach ($overdueInvoices as $inv) {
-            $customerName = $inv->customer?->name ?? $customer;
-            $phone = $inv->customer?->phone ?? $inv->customer?->phone_number ?? null;
+            $items = collect();
+            $sentMessages = [];
 
-            $result = DunningLetterService::send([
-                'customer_name' => $customerName,
-                'total_amount' => (float) $inv->total,
-                'due_date' => $inv->due_date,
-                'reference' => $inv->invoice_number,
-                'phone' => $phone,
-            ]);
-            $sentMessages[] = $result;
+            foreach ($payLaterTxns as $txn) {
+                $remaining = $txn->total_amount - ($txn->initial_payment ?? 0);
+                if ($remaining <= 0) continue;
+
+                $result = DunningLetterService::send([
+                    'customer_name' => $txn->customer_name,
+                    'total_amount' => (float) $txn->total_amount,
+                    'initial_payment' => (float) ($txn->initial_payment ?? 0),
+                    'due_date' => $txn->due_date,
+                    'reference' => $txn->order_no,
+                    'phone' => $txn->phone_number,
+                ]);
+                $sentMessages[] = $result;
 
             $items->push([
-                'type' => 'Invoice',
-                'ref' => $inv->invoice_number,
-                'amount' => (float) $inv->total,
-                'due_date' => $inv->due_date?->format('Y-m-d'),
-                'days_overdue' => $inv->due_date ? max(0, now()->startOfDay()->diffInDays($inv->due_date, false)) : 0,
-                'phone' => $phone,
+                'type' => 'Pay Later',
+                'customer' => $txn->customer_name,
+                'ref' => $txn->order_no,
+                'txn_id' => $txn->sales_transaction_id,
+                'amount' => $remaining,
+                'due_date' => $txn->due_date?->format('Y-m-d'),
+                'days_overdue' => $txn->due_date ? max(0, now()->startOfDay()->diffInDays($txn->due_date, false)) : 0,
+                'phone' => $txn->phone_number,
                 'message_sent' => $result['message'],
             ]);
+            }
+
+            foreach ($overdueInvoices as $inv) {
+                $customerName = $inv->customer?->name ?? $customer;
+                $phone = $inv->customer?->phone ?? $inv->customer?->phone_number ?? null;
+
+                $result = DunningLetterService::send([
+                    'customer_name' => $customerName,
+                    'total_amount' => (float) $inv->total,
+                    'due_date' => $inv->due_date,
+                    'reference' => $inv->invoice_number,
+                    'phone' => $phone,
+                ]);
+                $sentMessages[] = $result;
+
+                $items->push([
+                    'type' => 'Invoice',
+                    'customer' => $customerName,
+                    'ref' => $inv->invoice_number,
+                    'amount' => (float) $inv->total,
+                    'due_date' => $inv->due_date?->format('Y-m-d'),
+                    'days_overdue' => $inv->due_date ? max(0, now()->startOfDay()->diffInDays($inv->due_date, false)) : 0,
+                    'phone' => $phone,
+                    'message_sent' => $result['message'],
+                ]);
+            }
+
+            $reminded = session()->get('reminded_customers', []);
+            foreach ($items as $item) {
+                $key = $item['customer'] . '|' . $item['ref'];
+                $reminded[$key] = $item;
+            }
+            session()->put('reminded_customers', $reminded);
+
+            $dunningData = $sentMessages[0] ?? null;
+            $totalDue = $items->sum('amount');
+            $phoneNumbers = collect($sentMessages)->pluck('phone')->filter()->unique()->values();
+
+            return response()->json([
+                'success' => true,
+                'customer' => $customer,
+                'phone' => $phoneNumbers->first() ?? null,
+                'items' => $items,
+                'total_due' => $totalDue,
+                'item_count' => $items->count(),
+                'messages_sent' => count($sentMessages),
+                'dunning_letter' => $dunningData,
+                'message' => "Dunning letter sent to {$customer}."
+                    . ($phoneNumbers->isNotEmpty() ? " Phones: " . $phoneNumbers->implode(', ') : "")
+                    . " Total due: ₱" . number_format($totalDue, 2) . " across {$items->count()} item(s).",
+            ]);
         }
-
-        $totalDue = $items->sum('amount');
-        $phoneNumbers = collect($sentMessages)->pluck('phone')->filter()->unique()->values();
-
-        $dunningData = $sentMessages[0] ?? null;
 
         return response()->json([
             'success' => true,
-            'customer' => $customer,
-            'phone' => $phoneNumbers->first() ?? null,
-            'phone_numbers' => $phoneNumbers,
-            'items' => $items,
-            'total_due' => $totalDue,
-            'item_count' => $items->count(),
-            'messages_sent' => count($sentMessages),
-            'dunning_letter' => $dunningData,
-            'message' => "Dunning letter sent to {$customer}" . ($phoneNumbers->isNotEmpty() ? " via " . $phoneNumbers->implode(', ') : "") . ". Total due: ₱" . number_format($totalDue, 2) . " across {$items->count()} item(s).",
+            'reminded_customers' => array_values(session()->get('reminded_customers', [])),
+            'total_reminded' => count(session()->get('reminded_customers', [])),
         ]);
     }
 

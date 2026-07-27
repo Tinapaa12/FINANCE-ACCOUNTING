@@ -4,6 +4,10 @@ use App\Models\AccountPayable\Payment;
 use App\Models\AccountPayable\SupplierBill;
 use App\Models\FinancialReporting\BudgetVsActual;
 use App\Models\FinancialReporting\ComputedFinancialReport;
+use App\Models\FinancialReporting\FinanceAccounting;
+use App\Models\FinancialReporting\FinanceAccountingIncome;
+use App\Models\FinancialReporting\FinanceAccountingBalanceSheet;
+use App\Models\FinancialReporting\FinanceAccountingCashFlow;
 use App\Models\GeneralLedger\ChartOfAccount;
 use App\Models\GeneralLedger\JournalEntry;
 use App\Models\GeneralLedger\JournalEntryLine;
@@ -33,11 +37,27 @@ class FinancialReportService
             ->toArray();
     }
 
+    public function computeBeginningCash(?string $period): float
+    {
+        [$start, $end] = $this->parsePeriod($period);
+        if (!$start) return 0;
+
+        $cashAccountIds = ChartOfAccount::where('account_name', 'like', 'Cash%')->pluck('account_id');
+        if ($cashAccountIds->isEmpty()) return 0;
+
+        return (float) JournalEntryLine::whereIn('account_id', $cashAccountIds)
+            ->join('journal_entries', 'journal_entry_lines.journal_entry_id', '=', 'journal_entries.journal_entry_id')
+            ->where('journal_entries.status', 'Posted')
+            ->where('journal_entries.transaction_date', '<', $start)
+            ->selectRaw('COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) as balance')
+            ->value('balance');
+    }
+
     public function parsePeriod(?string $period): array
     {
         if (!$period) return [null, null];
-        $start = Carbon::parse('first day of ' . $period);
-        $end = Carbon::parse('last day of ' . $period);
+        $start = Carbon::parse('first day of ' . $period)->startOfDay();
+        $end = Carbon::parse('last day of ' . $period)->startOfDay();
         return [$start, $end];
     }
 
@@ -53,7 +73,7 @@ class FinancialReportService
                     ->where('journal_entries.status', 'Posted')
                     ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
                     ->first();
-                return ['label' => $a->account_name, 'amount' => (float) $totals->total];
+                return ['label' => $a->account_name, 'amount' => (float) $totals->total, 'account_id' => $a->account_id];
             })->filter(fn ($r) => $r['amount'] > 0)->values()->toArray();
 
         $expenses = ChartOfAccount::where('type', 'Expense')->orderBy('account_name')->get()
@@ -64,7 +84,7 @@ class FinancialReportService
                     ->where('journal_entries.status', 'Posted')
                     ->when($start && $end, fn ($q) => $q->whereBetween('journal_entries.transaction_date', [$start, $end]))
                     ->first();
-                return ['label' => $a->account_name, 'amount' => (float) $totals->total];
+                return ['label' => $a->account_name, 'amount' => (float) $totals->total, 'account_id' => $a->account_id];
             })->filter(fn ($r) => $r['amount'] > 0)->values()->toArray();
 
         $trialBalance = ChartOfAccount::orderBy('account_name')->get()
@@ -87,6 +107,8 @@ class FinancialReportService
         $this->storeReport('income_statement', $start, $end, $revenue, 'Revenue');
         $this->storeReport('income_statement', $start, $end, $expenses, 'Expense');
         $this->storeReport('trial_balance', $start, $end, $trialBalance);
+        $this->storeFinanceAccounting('income_statement', $start, $end, $revenue, 'Revenue');
+        $this->storeFinanceAccounting('income_statement', $start, $end, $expenses, 'Expense');
 
         return compact('revenue', 'expenses', 'trialBalance');
     }
@@ -114,7 +136,7 @@ class FinancialReportService
                 ? (float) $totals->credit_total - (float) $totals->debit_total
                 : (float) $totals->debit_total - (float) $totals->credit_total;
 
-            $item = ['label' => $a->account_name, 'amount' => max($balance, 0)];
+            $item = ['label' => $a->account_name, 'amount' => max($balance, 0), 'account_id' => $a->account_id];
             match ($a->type) {
                 'Asset'     => $assets[] = $item,
                 'Liability' => $liabilities[] = $item,
@@ -147,6 +169,9 @@ class FinancialReportService
         $this->storeReport('balance_sheet', $start, $end, $assets, 'Asset');
         $this->storeReport('balance_sheet', $start, $end, $liabilities, 'Liability');
         $this->storeReport('balance_sheet', $start, $end, $equity, 'Equity');
+        $this->storeFinanceAccounting('balance_sheet', $start, $end, $assets, 'Asset');
+        $this->storeFinanceAccounting('balance_sheet', $start, $end, $liabilities, 'Liability');
+        $this->storeFinanceAccounting('balance_sheet', $start, $end, $equity, 'Equity');
 
         return compact('assets', 'liabilities', 'equity', 'netIncome');
     }
@@ -245,6 +270,7 @@ class FinancialReportService
             ->merge($cashOutLines->map(fn ($i) => ['label' => $i['label'], 'amount' => $i['amount'], 'section' => 'cash_out']));
 
         $this->storeReport('cash_flow', $start, $end, $allCashLines->toArray());
+        $this->storeFinanceAccounting('cash_flow', $start, $end, $allCashLines->toArray());
 
         return compact('cashInLines', 'cashOutLines', 'totalCashIn', 'totalCashOut', 'netCashFlow', 'beginningCash', 'endingCash');
     }
@@ -256,7 +282,10 @@ class FinancialReportService
         $query = ComputedFinancialReport::where('report_type', $reportType);
 
         if ($start && $end) {
-            $query->where('period_start', $start)->where('period_end', $end);
+            $startStr = $start->toDateString();
+            $endStr = $end->toDateString();
+            $query->whereRaw('DATE(period_start) = ?', [$startStr])
+                  ->whereRaw('DATE(period_end) = ?', [$endStr]);
         }
 
         $records = $query->orderBy('sort_order')->orderBy('id')->get();
@@ -272,7 +301,10 @@ class FinancialReportService
 
         $query = ComputedFinancialReport::where('report_type', $reportType);
         if ($start && $end) {
-            $query->where('period_start', $start)->where('period_end', $end);
+            $startStr = $start->toDateString();
+            $endStr = $end->toDateString();
+            $query->whereRaw('DATE(period_start) = ?', [$startStr])
+                  ->whereRaw('DATE(period_end) = ?', [$endStr]);
         }
 
         return $query->exists();
@@ -280,19 +312,26 @@ class FinancialReportService
 
     private function storeReport(string $reportType, $start, $end, array $lines, ?string $section = null): void
     {
-        $now = now();
+        if (empty($lines)) return;
 
-        ComputedFinancialReport::where('report_type', $reportType)
-            ->where('period_start', $start)
-            ->where('period_end', $end)
-            ->delete();
+        $now = now();
+        $startStr = $start instanceof Carbon ? $start->toDateString() : $start;
+        $endStr = $end instanceof Carbon ? $end->toDateString() : $end;
+
+        $deleteQuery = ComputedFinancialReport::where('report_type', $reportType)
+            ->whereRaw('DATE(period_start) = ?', [$startStr])
+            ->whereRaw('DATE(period_end) = ?', [$endStr]);
+        if ($section !== null) {
+            $deleteQuery->where('section', $section);
+        }
+        $deleteQuery->delete();
 
         $rows = [];
         foreach ($lines as $i => $line) {
             $rows[] = [
                 'report_type'  => $reportType,
-                'period_start' => $start,
-                'period_end'   => $end,
+                'period_start' => $startStr,
+                'period_end'   => $endStr,
                 'label'        => $line['label'] ?? $line['account'] ?? '',
                 'section'      => $line['section'] ?? $section,
                 'amount'       => $line['amount'] ?? 0,
@@ -307,6 +346,67 @@ class FinancialReportService
 
         if (!empty($rows)) {
             ComputedFinancialReport::insert($rows);
+        }
+    }
+
+    private function storeFinanceAccounting(string $reportType, $start, $end, array $lines, ?string $section = null): void
+    {
+        if (empty($lines)) return;
+
+        $now = now();
+        $startStr = $start instanceof Carbon ? $start->toDateString() : $start;
+        $endStr = $end instanceof Carbon ? $end->toDateString() : $end;
+
+        $childModel = match ($reportType) {
+            'income_statement' => FinanceAccountingIncome::class,
+            'balance_sheet'    => FinanceAccountingBalanceSheet::class,
+            'cash_flow'        => FinanceAccountingCashFlow::class,
+            default => null,
+        };
+
+        if (!$childModel) return;
+
+        $master = FinanceAccounting::where('report_type', $reportType)
+            ->whereRaw('DATE(period_start) = ?', [$startStr])
+            ->whereRaw('DATE(period_end) = ?', [$endStr])
+            ->first();
+
+        if ($master) {
+            $master->update(['generated_at' => $now]);
+        } else {
+            $master = FinanceAccounting::create([
+                'report_type'  => $reportType,
+                'period_start' => $startStr,
+                'period_end'   => $endStr,
+                'generated_at' => $now,
+                'status'       => 'final',
+            ]);
+        }
+
+        if ($section !== null) {
+            $childModel::where('finance_accounting_id', $master->id)
+                ->where('section', $section)
+                ->delete();
+        } else {
+            $childModel::where('finance_accounting_id', $master->id)->delete();
+        }
+
+        $rows = [];
+        foreach ($lines as $i => $line) {
+            $rows[] = [
+                'finance_accounting_id' => $master->id,
+                'account_id'    => $line['account_id'] ?? null,
+                'label'         => $line['label'] ?? $line['account'] ?? '',
+                'section'       => $line['section'] ?? $section,
+                'amount'        => $line['amount'] ?? 0,
+                'sort_order'    => $i,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ];
+        }
+
+        if (!empty($rows)) {
+            $childModel::insert($rows);
         }
     }
 }

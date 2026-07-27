@@ -130,7 +130,7 @@ class TaxComplianceController extends Controller
             $vatRate = (float) ($b->ewt_rate ?: 12);
             $taxRecords[] = [
                 'reference_type' => 'Supplier Bill',
-                'reference_id'   => $b->id,
+                'reference_id'   => $b->bill_no,
                 'tax_type'       => 'VAT',
                 'taxable_amount' => (float) $b->amount,
                 'tax_rate'       => $vatRate,

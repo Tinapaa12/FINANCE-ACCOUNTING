@@ -54,7 +54,6 @@ class PaymentController extends Controller
             'reference' => $ref,
         ]);
 
-        $wasNotPaid = $bill->status !== 'Paid';
         $bill->total_paid = $newTotal;
 
         $expenseExists = JournalEntryLine::whereHas('journalEntry', fn ($q) => $q->where('description', 'like', "%Bill #{$bill->bill_no}%"))
@@ -72,10 +71,6 @@ class PaymentController extends Controller
         }
 
         $bill->save();
-
-        if ($wasNotPaid && $bill->status === 'Paid') {
-            $this->createExpenseJournalEntry($bill);
-        }
 
         audit_log($bill, 'payment', "Payment of ₱{$request->amount} recorded for bill #{$bill->bill_no}");
 

@@ -21,9 +21,26 @@ class SalesTransactionController extends Controller
             'customer_name'  => 'required|string|max:255',
             'phone_number'   => 'required|string|regex:/^\+63\d{10}$/',
             'total_amount'   => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer',
+            'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer,Pay Later',
             'status'         => 'required|in:Pending,Paid',
+            'initial_payment' => 'nullable|numeric|min:0',
+            'due_date'       => 'nullable|date',
         ]);
+
+        if ($validated['payment_method'] === 'Pay Later') {
+            $validated['initial_payment'] = $validated['initial_payment'] ?? 0;
+            if ($validated['initial_payment'] > $validated['total_amount']) {
+                return $request->wantsJson()
+                    ? response()->json(['success' => false, 'message' => 'Initial payment cannot exceed total amount.'], 422)
+                    : back()->withErrors(['initial_payment' => 'Initial payment cannot exceed total amount.']);
+            }
+            if (!$request->due_date) {
+                return $request->wantsJson()
+                    ? response()->json(['success' => false, 'message' => 'Due date is required for Pay Later.'], 422)
+                    : back()->withErrors(['due_date' => 'Due date is required for Pay Later.']);
+            }
+            $validated['status'] = 'Pending';
+        }
 
         $year = now()->format('Y');
         $last = SalesTransaction::where('order_no', 'like', "ORD-{$year}-%")
@@ -69,8 +86,10 @@ class SalesTransactionController extends Controller
             return redirect()->back()->with('error', 'Transaction is already Paid.');
         }
 
+        $paymentData = null;
+
         try {
-            DB::transaction(function () use ($salesTransaction) {
+            DB::transaction(function () use ($salesTransaction, &$paymentData) {
                 $salesTransaction->update(['status' => 'Paid']);
                 FinancePostingService::postSale($salesTransaction);
 
@@ -95,6 +114,19 @@ class SalesTransactionController extends Controller
                     'notes'          => json_encode([['desc' => 'Sales - ' . $salesTransaction->order_no, 'qty' => 1, 'price' => $salesTransaction->total_amount]]),
                 ]);
 
+                if ($salesTransaction->payment_method === 'Pay Later') {
+                    $remaining = $salesTransaction->total_amount - ($salesTransaction->initial_payment ?? 0);
+                    $paymentData = [
+                        'type' => 'payment_received',
+                        'customer' => $salesTransaction->customer_name,
+                        'phone' => $salesTransaction->phone_number,
+                        'order_no' => $salesTransaction->order_no,
+                        'total_amount' => (float) $salesTransaction->total_amount,
+                        'initial_payment' => (float) ($salesTransaction->initial_payment ?? 0),
+                        'remaining_paid' => max(0, $remaining),
+                        'message' => "Payment received from {$salesTransaction->customer_name} for {$salesTransaction->order_no}. Remaining balance of ₱" . number_format(max(0, $remaining), 2) . " must be paid ASAP.",
+                    ];
+                }
             });
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
@@ -104,10 +136,14 @@ class SalesTransactionController extends Controller
         }
 
         if ($request->wantsJson()) {
-            return response()->json([
+            $response = [
                 'success' => true,
                 'message' => 'Transaction ' . $salesTransaction->order_no . ' marked as Paid.',
-            ]);
+            ];
+            if ($paymentData) {
+                $response['payment_data'] = $paymentData;
+            }
+            return response()->json($response);
         }
 
         return redirect()->back()->with('success', 'Transaction ' . $salesTransaction->order_no . ' marked as Paid and posted to Finance.');

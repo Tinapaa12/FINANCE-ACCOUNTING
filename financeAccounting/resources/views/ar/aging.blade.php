@@ -119,7 +119,7 @@
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 text-center">
-                                        <button @click="showReminderToast(row.customer)" class="bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white text-[12px] font-medium px-4 py-1.5 rounded-full transition shadow-sm" x-bind:data-customer="row.customer">Remind</button>
+                                        <button class="remind-btn bg-gradient-to-r from-[#2563eb] to-[#4338ca] hover:brightness-110 text-white text-[12px] font-medium px-4 py-1.5 rounded-full transition shadow-sm">Remind</button>
                                     </td>
                                 </tr>
                             </template>
@@ -142,25 +142,25 @@
         </div>
 
 <!-- TOAST: Reminder Sent -->
-    <div x-show="showReminderToastFlag" x-transition.duration.300ms class="fixed top-10 right-10 bg-white rounded-xl shadow-2xl border-l-[6px] border-[#2563eb] p-5 w-[400px] z-[60]" x-cloak>
+    <div x-data x-show="$store.reminder.show" x-transition.duration.300ms class="fixed top-10 right-10 bg-white rounded-xl shadow-2xl border-l-[6px] border-[#2563eb] p-5 w-[400px] z-[60]" x-cloak>
         <div class="flex items-start gap-4">
             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-base shadow-md shrink-0 mt-0.5"><i class="fas fa-check"></i></div>
             <div class="min-w-0 flex-1">
-                <h4 class="font-bold text-gray-900 text-[14px]">Dunning Letter Sent</h4>
-                <p class="text-[12px] text-gray-500" x-text="'to ' + lastRemindedCustomer"></p>
-                <template x-if="dunningLetter">
-                    <div class="mt-2 space-y-2">
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 text-[12px] text-gray-700 leading-relaxed" x-text="dunningLetter.message"></div>
-                        <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
-                            <div><span class="text-gray-400">Ref:</span> <span class="font-medium" x-text="dunningLetter.order_no"></span></div>
-                            <div><span class="text-gray-400">Phone:</span> <span class="font-medium" x-text="dunningLetter.phone || 'N/A'"></span></div>
-                            <div><span class="text-gray-400">Amount:</span> <span class="font-medium" x-text="'₱' + Number(dunningLetter.total_amount).toLocaleString()"></span></div>
-                            <div><span class="text-gray-400">Due Date:</span> <span class="font-medium" x-text="dunningLetter.due_date"></span></div>
-                            <div><span class="text-gray-400">Overdue:</span> <span class="font-medium" x-text="dunningLetter.days_overdue + ' day(s)'"></span></div>
+                    <h4 class="font-bold text-gray-900 text-[14px]">Dunning Letter Sent</h4>
+                    <p class="text-[12px] text-gray-500" x-text="'to ' + $store.reminder.customer"></p>
+                    <template x-if="$store.reminder.letter">
+                        <div class="mt-2 space-y-2">
+                            <div class="p-3 bg-gray-50 rounded-lg border border-gray-100 text-[12px] text-gray-700 leading-relaxed" x-text="$store.reminder.letter.message"></div>
+                            <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[12px]">
+                                <div><span class="text-gray-400">Ref:</span> <span class="font-medium" x-text="$store.reminder.letter.order_no"></span></div>
+                                <div><span class="text-gray-400">Phone:</span> <span class="font-medium" x-text="$store.reminder.letter.phone || 'N/A'"></span></div>
+                                <div><span class="text-gray-400">Amount:</span> <span class="font-medium" x-text="'₱' + Number($store.reminder.letter.total_amount).toLocaleString()"></span></div>
+                                <div><span class="text-gray-400">Due Date:</span> <span class="font-medium" x-text="$store.reminder.letter.due_date"></span></div>
+                                <div><span class="text-gray-400">Overdue:</span> <span class="font-medium" x-text="$store.reminder.letter.days_overdue + ' day(s)'"></span></div>
+                            </div>
                         </div>
-                    </div>
-                </template>
-                <p class="text-[11px] text-gray-400 mt-1" x-text="reminderMessage"></p>
+                    </template>
+                    <p class="text-[11px] text-gray-400 mt-1" x-text="$store.reminder.msg"></p>
             </div>
         </div>
     </div>
@@ -170,13 +170,46 @@
 
 @push('scripts')
 <script>
-    console.log('aging script loaded');
+    document.addEventListener('alpine:init', function() {
+        Alpine.store('reminder', {
+            show: false,
+            customer: '',
+            letter: null,
+            msg: '',
+        });
+    });
+</script>
+<script>
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.remind-btn');
+        if (!btn) return;
+        e.preventDefault();
+        var tr = btn.closest('tr');
+        if (!tr) return;
+        var customerName = tr.querySelector('td:first-child p').textContent.trim();
+        if (!customerName) return;
+        fetch('/api/ar/aging-report/remind?customer=' + encodeURIComponent(customerName))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                    return;
+                }
+                var store = Alpine.store('reminder');
+                store.customer = customerName;
+                store.letter = data.dunning_letter || null;
+                store.msg = data.message || '';
+                store.show = true;
+                setTimeout(function() { store.show = false; }, 6000);
+            })
+            .catch(function(e) {
+                alert('Failed: ' + e.message);
+            });
+    });
+</script>
+<script>
     function reportApp() {
             return {
-                showReminderToastFlag: false,
-                lastRemindedCustomer: '',
-                reminderMessage: '',
-                dunningLetter: '',
                 overdueFilter: 'all',
                 barsLoaded: false,
                 agingData: {!! json_encode($customers) !!},
@@ -187,20 +220,8 @@
                     return this.agingData;
                 },
                 init() {
-                    console.log('Alpine component initialized');
-                    console.log('Aging data:', this.agingData);
-                    setTimeout(() => { this.barsLoaded = true; }, 150);
-                },
-                sendReminder(customerName) {
-                    const msg = "Dear " + customerName + ", this is a dunning notice. Please pay your remaining balance as soon as possible to avoid penalties. Thank you.";
-                    this.lastRemindedCustomer = customerName;
-                    this.reminderMessage = "Dunning letter sent to " + customerName;
-                    this.dunningLetter = { customer: customerName, message: msg };
-                    this.showReminderToastFlag = true;
-                    setTimeout(() => { this.showReminderToastFlag = false; }, 6000);
-                },
-                showReminderToast(customer) {
-                    this.sendReminder(customer);
+                    var self = this;
+                    setTimeout(function() { self.barsLoaded = true; }, 150);
                 }
             }
         }

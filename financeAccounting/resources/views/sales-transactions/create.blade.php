@@ -54,7 +54,21 @@
                     <option value="Cash">Cash</option>
                     <option value="Credit Card">Credit Card</option>
                     <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Pay Later">Pay Later</option>
                 </select>
+            </div>
+
+            <div id="payLaterFields" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Initial Payment (₱) <span class="text-red-500">*</span></label>
+                    <input id="initial_payment" type="number" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="0.00">
+                    <p id="initialPaymentError" class="text-xs text-red-500 mt-1 hidden"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Due Date <span class="text-red-500">*</span></label>
+                    <input id="due_date" type="date" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <p id="dueDateError" class="text-xs text-red-500 mt-1 hidden">Due date is required for Pay Later.</p>
+                </div>
             </div>
 
             <div>
@@ -125,8 +139,9 @@ document.getElementById('transactionForm').addEventListener('submit', async func
                 phone_number: phoneNumber,
                 total_amount: amount,
                 payment_method: method,
-                status: document.getElementById('status').value,
-
+                status: method === 'Pay Later' ? 'Pending' : document.getElementById('status').value,
+                initial_payment: method === 'Pay Later' ? (document.getElementById('initial_payment').value || 0) : 0,
+                due_date: method === 'Pay Later' ? document.getElementById('due_date').value : null,
             }),
         });
 
@@ -160,12 +175,26 @@ document.getElementById('phone_number').addEventListener('input', function () {
     this.value = this.value.replace(/\D/g, '');
 });
 
+document.getElementById('payment_method').addEventListener('change', function () {
+    const payLaterFields = document.getElementById('payLaterFields');
+    const statusField = document.getElementById('status');
+    if (this.value === 'Pay Later') {
+        payLaterFields.classList.remove('hidden');
+        statusField.value = 'Pending';
+        statusField.disabled = true;
+    } else {
+        payLaterFields.classList.add('hidden');
+        statusField.disabled = false;
+    }
+});
+
 function resetForm() {
     document.getElementById('transactionForm').reset();
     document.getElementById('successMessage').classList.add('hidden');
     document.getElementById('formCard').classList.remove('hidden');
     document.getElementById('amountError').classList.add('hidden');
     document.getElementById('phoneError').classList.add('hidden');
+    document.getElementById('payLaterFields').classList.add('hidden');
     document.getElementById('status').disabled = false;
 }
 </script>

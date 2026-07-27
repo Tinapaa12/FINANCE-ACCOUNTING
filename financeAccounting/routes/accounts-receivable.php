@@ -8,6 +8,7 @@ Route::prefix('ar')->name('ar.')->group(function () {
     Route::get('/overview', [ARController::class, 'overview'])->name('overview');
     Route::get('/payments-received', [ARController::class, 'payments'])->name('payments');
     Route::get('/aging-report', [ARController::class, 'aging'])->name('aging');
+    Route::get('/customer-pay', [ARController::class, 'customerPay'])->name('customer-pay');
 });
 
 Route::prefix('sales-transactions')->name('sales-transactions.')->group(function () {

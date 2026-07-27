@@ -96,4 +96,5 @@ class ManageDataController extends Controller
         $taxRecord->delete();
         return redirect()->route('reports.manage', ['tab' => 'tax'])->with('success', 'Tax record deleted.');
     }
+
 }

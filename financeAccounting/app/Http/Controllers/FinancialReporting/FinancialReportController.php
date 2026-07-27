@@ -35,7 +35,8 @@ class FinancialReportController extends Controller
             ])->toArray();
 
             $trialBalance = ComputedFinancialReport::where('report_type', 'trial_balance')
-                ->where('period_start', $start)->where('period_end', $end)
+                ->whereRaw('DATE(period_start) = ?', [$start->toDateString()])
+                ->whereRaw('DATE(period_end) = ?', [$end->toDateString()])
                 ->orderBy('sort_order')->get()
                 ->map(fn ($r) => [
                     'account' => $r->label, 'debit' => (float) $r->debit, 'credit' => (float) $r->credit,
@@ -208,7 +209,7 @@ class FinancialReportController extends Controller
             $totalCashIn  = collect($cashInLines)->sum('amount');
             $totalCashOut = collect($cashOutLines)->sum('amount');
             $netCashFlow  = $totalCashIn - $totalCashOut;
-            $beginningCash = 0;
+            $beginningCash = $this->reportService->computeBeginningCash($selectedPeriod);
             $endingCash = $beginningCash + $netCashFlow;
         } else {
             $data = $this->reportService->computeAndStoreCashflowData($selectedPeriod);
@@ -277,7 +278,8 @@ class FinancialReportController extends Controller
                 'label' => $r->label, 'amount' => (float) $r->amount,
             ])->toArray();
             $trialBalance = ComputedFinancialReport::where('report_type', 'trial_balance')
-                ->where('period_start', $start)->where('period_end', $end)
+                ->whereRaw('DATE(period_start) = ?', [$start->toDateString()])
+                ->whereRaw('DATE(period_end) = ?', [$end->toDateString()])
                 ->orderBy('sort_order')->get()
                 ->map(fn ($r) => [
                     'account' => $r->label, 'debit' => (float) $r->debit, 'credit' => (float) $r->credit,

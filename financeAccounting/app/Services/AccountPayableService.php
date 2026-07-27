@@ -104,7 +104,6 @@ class AccountPayableService
     public function createBill(array $data): SupplierBill
     {
         $nextId = SupplierBill::count() + 1;
-
         $bill = SupplierBill::create([
             'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
             'po_no' => $data['po_no'],
@@ -134,10 +133,11 @@ class AccountPayableService
             if (!$grn->supplier_bill_id) {
                 $po = PurchaseOrder::find($grn->purchase_order_id);
                 $nextId = SupplierBill::count() + 1;
+                $tscRef = 'TSC-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
                 $bill = SupplierBill::create([
                     'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
-                    'po_no' => $po->po_no,
-                    'grn_no' => $grn->grn_no,
+                    'po_no' => $tscRef,
+                    'grn_no' => $tscRef,
                     'supplier' => $grn->supplier ?: $po->supplier,
                     'amount' => $po->amount,
                     'due_date' => now()->addDays(30)->format('Y-m-d'),
@@ -201,7 +201,6 @@ class AccountPayableService
             'reference' => $data['reference'] ?? null,
         ]);
 
-        $wasNotPaid = $bill->status !== 'Paid';
         $bill->total_paid = $newTotal;
 
         if ($newTotal >= $bill->amount) {
@@ -211,10 +210,6 @@ class AccountPayableService
         }
 
         $bill->save();
-
-        if ($wasNotPaid && $bill->status === 'Paid') {
-            $this->createExpenseJournalEntry($bill);
-        }
 
         \audit_log($bill, 'payment', "Payment of ₱{$data['amount']} recorded for bill #{$bill->bill_no}");
 

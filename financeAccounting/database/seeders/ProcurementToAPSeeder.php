@@ -20,11 +20,10 @@ class ProcurementToAPSeeder extends Seeder
 
         $inventory = $coa['1200'] ?? null;
         $ap        = $coa['2100'] ?? null;
-        $vatOutput = $coa['2300'] ?? null;
         $cogs      = $coa['5000'] ?? null;
         $cash      = $coa['1010'] ?? null;
 
-        if (!$inventory || !$ap || !$vatOutput || !$cogs || !$cash) {
+        if (!$inventory || !$ap || !$cogs || !$cash) {
             return;
         }
 

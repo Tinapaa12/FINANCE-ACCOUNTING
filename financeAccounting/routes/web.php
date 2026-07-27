@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Finance\TransactionCostController;
-
+use App\Http\Controllers\FinancialReporting\RefundController;
 require __DIR__ . '/auth.php';
 
 Route::middleware('app.auth')->group(function () {
@@ -15,9 +15,12 @@ Route::middleware('app.auth')->group(function () {
     require __DIR__ . '/procurement.php';
     require __DIR__ . '/financial-reports.php';
 
+    Route::get('/sales-refund', [RefundController::class, 'index'])->name('sales-refund.index');
+    Route::post('/sales-refund/store', [RefundController::class, 'store'])->name('sales-refund.store');
+
     Route::get('/supply-chain/create', [TransactionCostController::class, 'create'])->name('supply-chain.create');
     Route::get('/sales-transactions/json', function () {
-        $transactions = App\Models\Sales\SalesTransaction::orderBy('created_at', 'desc')->get()->map(function ($t) {
+        $transactions = App\Models\Sales\SalesTransaction::where('status', 'Paid')->orderBy('created_at', 'desc')->get()->map(function ($t) {
             return [
                 'id' => $t->sales_transaction_id,
                 'order_no' => $t->order_no,
@@ -57,22 +60,22 @@ Route::middleware('app.auth')->group(function () {
         return response()->json(['success' => true, 'data' => $entries], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     })->name('journal-entries.json');
     Route::get('/reports/income/json', function () {
-        $c = new App\Http\Controllers\FinancialReporting\FinancialReportController;
+        $c = app()->make(App\Http\Controllers\FinancialReporting\FinancialReportController::class);
         $m = new ReflectionMethod($c, 'incomeData'); $m->setAccessible(true);
         return response()->json(['success' => true, 'data' => $m->invoke($c)], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     });
     Route::get('/reports/assets/json', function () {
-        $c = new App\Http\Controllers\FinancialReporting\FinancialReportController;
+        $c = app()->make(App\Http\Controllers\FinancialReporting\FinancialReportController::class);
         $m = new ReflectionMethod($c, 'assetsData'); $m->setAccessible(true);
         return response()->json(['success' => true, 'data' => $m->invoke($c)], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     });
     Route::get('/reports/cashflow/json', function () {
-        $c = new App\Http\Controllers\FinancialReporting\FinancialReportController;
+        $c = app()->make(App\Http\Controllers\FinancialReporting\FinancialReportController::class);
         $m = new ReflectionMethod($c, 'cashflowData'); $m->setAccessible(true);
         return response()->json(['success' => true, 'data' => $m->invoke($c)], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     });
     Route::get('/reports/budget/json', function () {
-        $c = new App\Http\Controllers\FinancialReporting\FinancialReportController;
+        $c = app()->make(App\Http\Controllers\FinancialReporting\FinancialReportController::class);
         $m = new ReflectionMethod($c, 'budgetData'); $m->setAccessible(true);
         return response()->json(['success' => true, 'data' => $m->invoke($c)], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     });

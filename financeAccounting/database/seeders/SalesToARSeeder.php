@@ -20,9 +20,8 @@ class SalesToARSeeder extends Seeder
         $cash     = $coa['1010'] ?? null;
         $ar       = $coa['1100'] ?? null;
         $revenue  = $coa['4100'] ?? null;
-        $vatOutput = $coa['2300'] ?? null;
 
-        if (!$cash || !$ar || !$revenue || !$vatOutput) {
+        if (!$cash || !$ar || !$revenue) {
             return;
         }
 
@@ -75,8 +74,7 @@ class SalesToARSeeder extends Seeder
             'status'           => 'Posted',
         ]);
         JournalEntryLine::create(['journal_entry_id' => $je1->journal_entry_id, 'account_id' => $cash, 'description' => 'Cash sales - Santos Enterprises', 'debit' => 185000, 'credit' => 0]);
-        JournalEntryLine::create(['journal_entry_id' => $je1->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 165178.57]);
-        JournalEntryLine::create(['journal_entry_id' => $je1->journal_entry_id, 'account_id' => $vatOutput, 'description' => 'Output VAT 12%', 'debit' => 0, 'credit' => 19821.43]);
+        JournalEntryLine::create(['journal_entry_id' => $je1->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 185000]);
 
         // === 2: Cruz & Sons Hardware — Construction Supplies (Pending - unpaid) ===
 
@@ -139,8 +137,7 @@ class SalesToARSeeder extends Seeder
             'status'           => 'Posted',
         ]);
         JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $cash, 'description' => 'Cash sales - Reyes Medical Supply', 'debit' => 567500, 'credit' => 0]);
-        JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 506696.43]);
-        JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $vatOutput, 'description' => 'Output VAT 12%', 'debit' => 0, 'credit' => 60803.57]);
+        JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 567500]);
 
         // === 4: Lim Grocery Trading — Grocery Wholesale (Pending - Pay Later with down payment) ===
 
@@ -179,8 +176,7 @@ class SalesToARSeeder extends Seeder
         ]);
         JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $cash, 'description' => 'Down payment received', 'debit' => 30000, 'credit' => 0]);
         JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $ar, 'description' => 'AR - Lim Grocery (remaining balance)', 'debit' => 59200, 'credit' => 0]);
-        JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 79642.86]);
-        JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $vatOutput, 'description' => 'Output VAT 12%', 'debit' => 0, 'credit' => 9557.14]);
+        JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 89200]);
 
         // === 5: Garcia Auto Parts — Auto Parts Wholesale (Paid - Card) ===
 
@@ -216,7 +212,6 @@ class SalesToARSeeder extends Seeder
             'status'           => 'Posted',
         ]);
         JournalEntryLine::create(['journal_entry_id' => $je5->journal_entry_id, 'account_id' => $cash, 'description' => 'Card settlement - Garcia Auto Parts', 'debit' => 245000, 'credit' => 0]);
-        JournalEntryLine::create(['journal_entry_id' => $je5->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 218750.00]);
-        JournalEntryLine::create(['journal_entry_id' => $je5->journal_entry_id, 'account_id' => $vatOutput, 'description' => 'Output VAT 12%', 'debit' => 0, 'credit' => 26250.00]);
+        JournalEntryLine::create(['journal_entry_id' => $je5->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 245000]);
     }
 }

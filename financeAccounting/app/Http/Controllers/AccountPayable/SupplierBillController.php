@@ -24,7 +24,12 @@ class SupplierBillController extends Controller
         $filterMethod = $request->input('filter_method');
         $tab = $request->input('tab', 'bills');
 
-        $query = SupplierBill::query();
+        $refunds = SupplierBill::where('bill_no', 'like', 'REF-%')
+            ->with(['attachments', 'payments'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $query = SupplierBill::where('bill_no', 'not like', 'REF-%');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -96,6 +101,7 @@ class SupplierBillController extends Controller
 
         return view('AccountPayable.supplier-bills.index', compact(
             'supplierBills',
+            'refunds',
             'upcomingBills',
             'overdueBills',
             'totalBillsAmount',
@@ -138,8 +144,8 @@ class SupplierBillController extends Controller
 
         $bill = SupplierBill::create([
             'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
-            'po_no'   => 'PO-2026-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
-            'grn_no'  => 'GRN-2026-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
+            'po_no'   => 'TSC-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
+            'grn_no'  => 'TSC-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT),
             'supplier' => $request->supplier,
             'amount' => $request->amount,
             'due_date' => $request->due_date,
@@ -200,7 +206,14 @@ class SupplierBillController extends Controller
         $bills = SupplierBill::whereIn('id', $ids)->where('status', 'Approved')->get();
         foreach ($bills as $bill) {
             $bill->update(['status' => 'Paid', 'paid_at' => now()]);
-            $this->createExpenseJournalEntry($bill);
+
+            $expenseExists = JournalEntryLine::whereHas('journalEntry', fn ($q) => $q->where('description', 'like', "%Bill #{$bill->bill_no}%"))
+                ->whereHas('account', fn ($q) => $q->where('account_code', '5000'))
+                ->exists();
+            if (!$expenseExists) {
+                $this->createExpenseJournalEntry($bill);
+            }
+
             $this->createPaymentJournalEntry($bill);
             audit_log($bill, 'paid', "Supplier bill #{$bill->bill_no} paid via batch payment");
         }
@@ -215,7 +228,14 @@ class SupplierBillController extends Controller
 public function pay(Request $request, SupplierBill $supplierBill)
 {
     $supplierBill->update(['status' => 'Paid', 'paid_at' => now()]);
-    $this->createExpenseJournalEntry($supplierBill);
+
+    $expenseExists = JournalEntryLine::whereHas('journalEntry', fn ($q) => $q->where('description', 'like', "%Bill #{$supplierBill->bill_no}%"))
+        ->whereHas('account', fn ($q) => $q->where('account_code', '5000'))
+        ->exists();
+    if (!$expenseExists) {
+        $this->createExpenseJournalEntry($supplierBill);
+    }
+
     $this->createPaymentJournalEntry($supplierBill);
     audit_log($supplierBill, 'paid', "Supplier bill #{$supplierBill->bill_no} marked as paid");
 
@@ -291,8 +311,8 @@ public function pay(Request $request, SupplierBill $supplierBill)
             $num = $i + 1;
             $bill->update([
                 'bill_no' => 'BILL-' . date('Y') . '-' . str_pad($num, 3, '0', STR_PAD_LEFT),
-                'po_no'   => 'PO-2026-' . str_pad($num, 3, '0', STR_PAD_LEFT),
-                'grn_no'  => 'GRN-2026-' . str_pad($num, 3, '0', STR_PAD_LEFT),
+                'po_no'   => 'TSC-' . date('Y') . '-' . str_pad($num, 3, '0', STR_PAD_LEFT),
+                'grn_no'  => 'TSC-' . date('Y') . '-' . str_pad($num, 3, '0', STR_PAD_LEFT),
             ]);
         }
 
