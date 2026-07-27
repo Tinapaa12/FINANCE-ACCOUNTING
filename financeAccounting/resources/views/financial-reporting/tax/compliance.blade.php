@@ -31,7 +31,43 @@
         </div>
 
         <div class="bg-white rounded-lg border p-5">
-            <h2 class="font-semibold text-lg mb-4">Tax Records</h2>
+            <h2 class="font-semibold text-lg mb-4">
+                Tax Records
+                <span class="relative group inline-block ml-1.5 align-middle">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-help">!</span>
+                    <div class="absolute left-0 top-6 z-50 hidden group-hover:block w-96 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 leading-relaxed">
+                        <p class="font-semibold mb-1.5 text-blue-300">Tax data is collected from 4 sources:</p>
+
+                        <p class="mb-1">
+                            <span class="text-yellow-300 font-medium">① GL Tax Accounts</span> (%VAT% / %Tax%)
+                            <br><span class="ml-2 text-gray-300">Tax = max(Credit − Debit, 0) for Credit accounts</span>
+                            <br><span class="ml-2 text-gray-300">Tax = max(Debit − Credit, 0) for Debit accounts</span>
+                            <br><span class="ml-2 text-gray-300">Rate = Tax ÷ Taxable Amount × 100</span>
+                        </p>
+
+                        <p class="mb-1">
+                            <span class="text-yellow-300 font-medium">② Sales Transactions</span> (VAT on sales)
+                            <br><span class="ml-2 text-gray-300">VAT = Gross Amount × 0.12 ÷ 1.12</span>
+                        </p>
+
+                        <p class="mb-1">
+                            <span class="text-yellow-300 font-medium">③ Purchase Orders</span> (VAT on purchases)
+                            <br><span class="ml-2 text-gray-300">VAT = PO Amount × 12%</span>
+                        </p>
+
+                        <p class="mb-1">
+                            <span class="text-yellow-300 font-medium">④ Supplier Bills</span> (EWT/VAT)
+                            <br><span class="ml-2 text-gray-300">Tax = Bill Amount × EWT Rate ÷ 100</span>
+                        </p>
+
+                        <p class="mt-1.5 border-t border-gray-600 pt-1.5">
+                            <span class="text-blue-300">Summary:</span> Total Taxable = Σ all taxable amounts
+                            <br><span class="ml-14">Total Tax</span> = Σ all computed tax amounts
+                            <br><span class="ml-14">Filed</span> = Σ tax where status = filed/paid
+                        </p>
+                    </div>
+                </span>
+            </h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>

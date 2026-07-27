@@ -7,7 +7,30 @@
 @section('content')
     <div class="bg-white rounded-lg border p-5">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-lg">Budget vs Actual</h2>
+            <h2 class="font-semibold text-lg">
+                Budget vs Actual
+                <span class="relative group inline-block ml-1.5">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-help">!</span>
+                    <div class="absolute left-0 top-6 z-50 hidden group-hover:block w-80 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 leading-relaxed">
+                        <p class="font-semibold mb-1 text-blue-300">How Actual is computed:</p>
+                        <p class="mb-1">For each account, the system queries <span class="text-yellow-300">Posted</span> journal entries in the selected period.</p>
+                        <p class="mb-1">
+                            If account normal balance is <span class="text-green-300">Credit</span> (Revenue):
+                            <br><span class="text-green-300 ml-2">Actual = max(Total Credits − Total Debits, 0)</span>
+                        </p>
+                        <p class="mb-1">
+                            If account normal balance is <span class="text-orange-300">Debit</span> (Expense):
+                            <br><span class="text-orange-300 ml-2">Actual = max(Total Debits − Total Credits, 0)</span>
+                        </p>
+                        <p class="mb-1 mt-2 border-t border-gray-600 pt-2">
+                            <span class="text-blue-300">Variance</span> = Actual − Budget
+                        </p>
+                        <p>
+                            <span class="text-blue-300">Status:</span> over (variance > 0) | under (variance < 0) | on_budget (variance = 0)
+                        </p>
+                    </div>
+                </span>
+            </h2>
             <div>
                 <span class="text-sm text-gray-500 mr-3">{{ $selectedPeriod ?? 'All periods' }}</span>
                 <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
