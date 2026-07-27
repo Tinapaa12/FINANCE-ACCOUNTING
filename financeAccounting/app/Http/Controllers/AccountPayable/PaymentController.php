@@ -57,6 +57,12 @@ class PaymentController extends Controller
         $wasNotPaid = $bill->status !== 'Paid';
         $bill->total_paid = $newTotal;
 
+        $expenseExists = JournalEntryLine::whereHas('journalEntry', fn ($q) => $q->where('description', 'like', "%Bill #{$bill->bill_no}%"))
+            ->whereHas('account', fn ($q) => $q->where('account_code', '5000'))
+            ->exists();
+        if (!$expenseExists) {
+            $this->createExpenseJournalEntry($bill, $request->amount);
+        }
         $this->createPaymentJournalEntry($bill, $request->amount, $ref, $request->payment_date);
 
         if ($newTotal >= $bill->amount) {
@@ -76,7 +82,7 @@ class PaymentController extends Controller
         return redirect()->route('supplier-bills.index');
     }
 
-    private function createExpenseJournalEntry(SupplierBill $bill): void
+    private function createExpenseJournalEntry(SupplierBill $bill, float $amount): void
     {
         $expenseAccount = $bill->expense_account_id
             ? ChartOfAccount::find($bill->expense_account_id)
@@ -110,7 +116,7 @@ class PaymentController extends Controller
             'journal_entry_id' => $entry->journal_entry_id,
             'account_id' => $expenseAccount->account_id,
             'description' => "{$expenseAccount->account_name} - {$bill->supplier} - Bill #{$bill->bill_no}",
-            'debit' => $bill->amount,
+            'debit' => $amount,
             'credit' => 0,
         ]);
 
@@ -119,7 +125,7 @@ class PaymentController extends Controller
             'account_id' => $apAccount->account_id,
             'description' => "Accounts Payable - {$bill->supplier} - Bill #{$bill->bill_no}",
             'debit' => 0,
-            'credit' => $bill->amount,
+            'credit' => $amount,
         ]);
     }
 
