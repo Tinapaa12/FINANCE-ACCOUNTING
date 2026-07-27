@@ -3,6 +3,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Sales\SalesTransaction;
 use App\Models\Invoice;
+use App\Services\DunningLetterService;
+use Illuminate\Http\Request;
 
 
 class ARController extends Controller
@@ -86,7 +88,7 @@ class ARController extends Controller
             'Cash'          => '#10b981',
             'Credit Card'   => '#3b82f6',
             'Bank Transfer' => '#ef4444',
-            'Installment'   => '#f59e0b',
+            'Pay Later'     => '#f59e0b',
         ];
 
         $methodTotals = $transactions->groupBy('payment_method')->map(function ($items, $method) use ($methodColors) {
@@ -125,24 +127,36 @@ class ARController extends Controller
     {
         $invoices = Invoice::with('customer')->whereIn('status', ['sent', 'overdue'])->get();
 
-        $currentAmount  = $invoices->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->sum('total');
-        $d1_30Amount    = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('total');
-        $d31_60Amount   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('total');
-        $d61_90Amount   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('total');
-        $d90Amount      = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 91)->sum('total');
+        $agingItems = collect();
 
-        $currentCount  = $invoices->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->count();
-        $d1_30Count    = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->count();
-        $d31_60Count   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->count();
-        $d61_90Count   = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->count();
-        $d90Count      = $invoices->filter(fn($i) => $this->daysOverdue($i) >= 91)->count();
+        foreach ($invoices as $inv) {
+            $agingItems->push((object) [
+                'customer_name' => $inv->customer?->name ?? 'Unknown',
+                'amount'        => (float) $inv->total,
+                'due_date'      => $inv->due_date,
+                'status'        => $inv->status,
+                'source'        => 'invoice',
+            ]);
+        }
 
-        $customers = $invoices->groupBy(fn($i) => $i->customer?->name ?? 'Unknown')->map(function ($items, $customer) {
-            $current = $items->filter(fn($i) => $i->status === 'sent' && (!$i->due_date || $i->due_date->isFuture()))->sum('total');
-            $d1_30   = $items->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('total');
-            $d31_60  = $items->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('total');
-            $d61_90  = $items->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('total');
-            $d90     = $items->filter(fn($i) => $this->daysOverdue($i) >= 91)->sum('total');
+        $currentAmount = $agingItems->filter(fn($i) => (!$i->due_date || $i->due_date->isFuture()))->sum('amount');
+        $d1_30Amount   = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('amount');
+        $d31_60Amount  = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('amount');
+        $d61_90Amount  = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('amount');
+        $d90Amount     = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 91)->sum('amount');
+
+        $currentCount = $agingItems->filter(fn($i) => (!$i->due_date || $i->due_date->isFuture()))->count();
+        $d1_30Count   = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->count();
+        $d31_60Count  = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->count();
+        $d61_90Count  = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->count();
+        $d90Count     = $agingItems->filter(fn($i) => $this->daysOverdue($i) >= 91)->count();
+
+        $customers = $agingItems->groupBy(fn($i) => $i->customer_name)->map(function ($items, $customer) {
+            $current = $items->filter(fn($i) => (!$i->due_date || $i->due_date->isFuture()))->sum('amount');
+            $d1_30   = $items->filter(fn($i) => $this->daysOverdue($i) >= 1 && $this->daysOverdue($i) <= 30)->sum('amount');
+            $d31_60  = $items->filter(fn($i) => $this->daysOverdue($i) >= 31 && $this->daysOverdue($i) <= 60)->sum('amount');
+            $d61_90  = $items->filter(fn($i) => $this->daysOverdue($i) >= 61 && $this->daysOverdue($i) <= 90)->sum('amount');
+            $d90     = $items->filter(fn($i) => $this->daysOverdue($i) >= 91)->sum('amount');
             $total   = $current + $d1_30 + $d31_60 + $d61_90 + $d90;
 
             $risk = 'Low';
@@ -174,10 +188,67 @@ class ARController extends Controller
         ));
     }
 
-    private function daysOverdue($invoice)
+    public function remindCustomer(Request $request)
     {
-        if (!$invoice->due_date) return 0;
-        $due = $invoice->due_date;
+        $customer = $request->query('customer') ?? $request->input('customer');
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Customer name is required.', 'full_url' => $request->fullUrl()], 422);
+        }
+
+        $overdueInvoices = Invoice::whereHas('customer', fn($q) => $q->where('name', $customer))
+            ->whereIn('status', ['sent', 'overdue'])
+            ->get();
+
+        $items = collect();
+        $sentMessages = [];
+
+        foreach ($overdueInvoices as $inv) {
+            $customerName = $inv->customer?->name ?? $customer;
+            $phone = $inv->customer?->phone ?? $inv->customer?->phone_number ?? null;
+
+            $result = DunningLetterService::send([
+                'customer_name' => $customerName,
+                'total_amount' => (float) $inv->total,
+                'due_date' => $inv->due_date,
+                'reference' => $inv->invoice_number,
+                'phone' => $phone,
+            ]);
+            $sentMessages[] = $result;
+
+            $items->push([
+                'type' => 'Invoice',
+                'ref' => $inv->invoice_number,
+                'amount' => (float) $inv->total,
+                'due_date' => $inv->due_date?->format('Y-m-d'),
+                'days_overdue' => $inv->due_date ? max(0, now()->startOfDay()->diffInDays($inv->due_date, false)) : 0,
+                'phone' => $phone,
+                'message_sent' => $result['message'],
+            ]);
+        }
+
+        $totalDue = $items->sum('amount');
+        $phoneNumbers = collect($sentMessages)->pluck('phone')->filter()->unique()->values();
+
+        $dunningData = $sentMessages[0] ?? null;
+
+        return response()->json([
+            'success' => true,
+            'customer' => $customer,
+            'phone' => $phoneNumbers->first() ?? null,
+            'phone_numbers' => $phoneNumbers,
+            'items' => $items,
+            'total_due' => $totalDue,
+            'item_count' => $items->count(),
+            'messages_sent' => count($sentMessages),
+            'dunning_letter' => $dunningData,
+            'message' => "Dunning letter sent to {$customer}" . ($phoneNumbers->isNotEmpty() ? " via " . $phoneNumbers->implode(', ') : "") . ". Total due: ₱" . number_format($totalDue, 2) . " across {$items->count()} item(s).",
+        ]);
+    }
+
+    private function daysOverdue($item)
+    {
+        if (!$item->due_date) return 0;
+        $due = $item->due_date;
         if ($due->isFuture()) return 0;
         return (int) $due->diffInDays(now());
     }

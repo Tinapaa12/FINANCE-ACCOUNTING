@@ -71,10 +71,12 @@
                                         $statusColors = [
                                             'Pending' => 'bg-[#fef9c3] text-[#a16207] ring-yellow-200',
                                             'Paid' => 'bg-[#f0fdf4] text-[#15803d] ring-green-200',
+                                            'Pay Later' => 'bg-[#fef9c3] text-[#a16207] ring-yellow-200',
                                         ];
+                                        $statusLabel = $txn->payment_method === 'Pay Later' && $txn->status === 'Pending' ? 'Pay Later' : $txn->status;
                                         @endphp
-                                        <span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset {{ $statusColors[$txn->status] ?? 'bg-gray-100 text-gray-600 ring-gray-200' }}">
-                                            {{ $txn->status }}
+                                        <span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset {{ $statusColors[$statusLabel] ?? 'bg-gray-100 text-gray-600 ring-gray-200' }}">
+                                            {{ $statusLabel }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-3.5">
@@ -127,12 +129,40 @@
 
 
 </div>
+
+    <div x-show="showPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" x-cloak>
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-6 relative">
+            <button @click="showPaymentModal = false; window.location.reload()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Payment Notice</h3>
+            <template x-if="paymentData">
+                <div class="space-y-3">
+                    <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p class="text-sm text-gray-800 leading-relaxed" x-text="paymentData.message"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div><span class="text-gray-500">Customer:</span> <span class="font-medium" x-text="paymentData.customer"></span></div>
+                        <div><span class="text-gray-500">Order:</span> <span class="font-medium" x-text="paymentData.order_no"></span></div>
+                        <div><span class="text-gray-500">Phone:</span> <span class="font-medium" x-text="paymentData.phone || 'N/A'"></span></div>
+                        <div><span class="text-gray-500">Total Amount:</span> <span class="font-medium" x-text="'₱' + Number(paymentData.total_amount).toLocaleString()"></span></div>
+                        <div><span class="text-gray-500">Initial Payment:</span> <span class="font-medium" x-text="'₱' + Number(paymentData.initial_payment).toLocaleString()"></span></div>
+                        <div><span class="text-gray-500">Remaining Paid:</span> <span class="font-medium" x-text="'₱' + Number(paymentData.remaining_paid).toLocaleString()"></span></div>
+                    </div>
+                </div>
+            </template>
+            <div class="mt-4 flex justify-end">
+                <button @click="showPaymentModal = false; window.location.reload()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium text-sm">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
     function paymentApp() {
             return {
+                showPaymentModal: false,
+                paymentData: null,
                 async markAsPaid(id) {
                     if (!confirm('Mark this transaction as Paid?')) return;
                     try {
@@ -144,17 +174,16 @@
                                 'Accept': 'application/json',
                             },
                         });
+                        const data = await res.json();
                         if (res.ok) {
-                            window.location.reload();
-                        } else {
-                            let msg = 'Request failed';
-                            try {
-                                const data = await res.json();
-                                msg = data.message || msg;
-                            } catch (_) {
-                                msg = 'Server error (look at console for details)';
+                            if (data.payment_data) {
+                                this.paymentData = data.payment_data;
+                                this.showPaymentModal = true;
+                            } else {
+                                window.location.reload();
                             }
-                            alert(msg);
+                        } else {
+                            alert('Error: ' + (data.message || 'Request failed'));
                         }
                     } catch (e) {
                         alert('Network error - check console for details');

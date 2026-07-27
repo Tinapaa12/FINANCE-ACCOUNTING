@@ -12,7 +12,10 @@ class SalesTransaction extends Model
     protected $fillable = [
         'order_no',
         'customer_name',
+        'phone_number',
         'total_amount',
+        'initial_payment',
+        'due_date',
         'payment_method',
         'status',
         'is_posted_to_finance',
@@ -21,6 +24,8 @@ class SalesTransaction extends Model
 
     protected $casts = [
         'total_amount' => 'decimal:2',
+        'initial_payment' => 'decimal:2',
+        'due_date' => 'date',
         'is_posted_to_finance' => 'boolean',
     ];
 

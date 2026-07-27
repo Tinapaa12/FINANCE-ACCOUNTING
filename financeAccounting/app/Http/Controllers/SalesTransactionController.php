@@ -19,8 +19,9 @@ class SalesTransactionController extends Controller
     {
         $validated = $request->validate([
             'customer_name'  => 'required|string|max:255',
+            'phone_number'   => 'required|string|regex:/^\+63\d{10}$/',
             'total_amount'   => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer,Installment',
+            'payment_method' => 'required|in:Cash,Credit Card,Bank Transfer',
             'status'         => 'required|in:Pending,Paid',
         ]);
 
@@ -93,6 +94,7 @@ class SalesTransactionController extends Controller
                     'status'         => 'cleared',
                     'notes'          => json_encode([['desc' => 'Sales - ' . $salesTransaction->order_no, 'qty' => 1, 'price' => $salesTransaction->total_amount]]),
                 ]);
+
             });
         } catch (\Exception $e) {
             if ($request->wantsJson()) {
@@ -102,9 +104,13 @@ class SalesTransactionController extends Controller
         }
 
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Transaction ' . $salesTransaction->order_no . ' marked as Paid.']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction ' . $salesTransaction->order_no . ' marked as Paid.',
+            ]);
         }
 
         return redirect()->back()->with('success', 'Transaction ' . $salesTransaction->order_no . ' marked as Paid and posted to Finance.');
     }
+
 }

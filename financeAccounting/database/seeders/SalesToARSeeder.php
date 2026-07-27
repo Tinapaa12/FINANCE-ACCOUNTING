@@ -142,13 +142,15 @@ class SalesToARSeeder extends Seeder
         JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $revenue, 'description' => 'Sales revenue', 'debit' => 0, 'credit' => 506696.43]);
         JournalEntryLine::create(['journal_entry_id' => $je3->journal_entry_id, 'account_id' => $vatOutput, 'description' => 'Output VAT 12%', 'debit' => 0, 'credit' => 60803.57]);
 
-        // === 4: Lim Grocery Trading — Grocery Wholesale (Pending - Installment with down payment) ===
+        // === 4: Lim Grocery Trading — Grocery Wholesale (Pending - Pay Later with down payment) ===
 
         $st4 = SalesTransaction::create([
             'order_no'             => 'SO-2026-012',
             'customer_name'        => 'Lim Grocery Trading',
             'total_amount'         => 89200,
-            'payment_method'       => 'Installment',
+            'initial_payment'      => 30000,
+            'due_date'             => '2026-08-14',
+            'payment_method'       => 'Pay Later',
             'status'               => 'Pending',
             'is_posted_to_finance' => false,
         ]);
@@ -165,14 +167,14 @@ class SalesToARSeeder extends Seeder
                 'vat_amount'   => 9557.14,
                 'total'        => 89200,
                 'status'       => 'sent',
-                'notes'        => 'Grocery wholesale - rice and canned goods, installment terms',
+                'notes'        => 'Grocery wholesale - rice and canned goods, pay later terms',
             ]
         );
 
         $je4 = JournalEntry::create([
             'transaction_date' => '2026-07-15',
             'reference_no'     => 'JE-2026-015',
-            'description'      => 'Down payment - Lim Grocery Trading (installment sale)',
+            'description'      => 'Down payment - Lim Grocery Trading (pay later sale)',
             'status'           => 'Posted',
         ]);
         JournalEntryLine::create(['journal_entry_id' => $je4->journal_entry_id, 'account_id' => $cash, 'description' => 'Down payment received', 'debit' => 30000, 'credit' => 0]);
