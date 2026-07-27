@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <!-- Bottom Section -->
+<!-- Bottom Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
                 <!-- Activities Table -->
                 <div class="lg:col-span-2 bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
@@ -54,9 +54,9 @@
                                     <th class="px-6 py-3 font-semibold text-[11px] uppercase tracking-wider border-b-2 border-gray-200">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-100">
+                            <tbody class="divide-y divide-gray-100" id="activityTableBody">
                                 @forelse($recentActivities as $activity)
-                                <tr class="transition-colors hover:bg-indigo-50/50">
+                                <tr class="transition-colors hover:bg-indigo-50/50 cursor-pointer" data-type="{{ $activity['type'] }}" data-id="{{ $activity['id'] }}" onclick="showTransactionDetail(this)">
                                     <td class="px-6 py-3.5 text-gray-600">
                                         <span class="inline-flex items-center gap-1.5">
                                             <i class="fas w-3.5 text-center {{ $activity['type'] === 'Invoice' ? 'fa-file-invoice text-blue-500' : ($activity['type'] === 'Payment' ? 'fa-hand-holding-usd text-emerald-500' : 'fa-triangle-exclamation text-red-500') }}"></i>
@@ -88,25 +88,14 @@
                     </div>
                 </div>
 
-                <!-- Aging Summary -->
-                <div class="bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 h-fit relative overflow-hidden">
+                <!-- Transaction Detail Panel -->
+                <div class="bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 h-fit relative overflow-hidden" id="detailPanel">
                     <div class="absolute -top-8 -right-8 w-28 h-28 bg-indigo-50 rounded-full"></div>
-                    <h3 class="font-bold text-gray-800 text-[16px] mb-5 flex items-center gap-2 relative"><i class="fas fa-layer-group text-indigo-500"></i> A/R Aging Summary</h3>
-                    <div class="flex flex-col items-center relative">
-                        <div class="relative w-[190px] h-[190px]">
-                            <canvas id="agingDonut" role="img" aria-label="Donut chart of accounts receivable aging buckets"></canvas>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span class="text-[11px] text-gray-400">Total</span>
-                                <span class="text-[19px] font-bold text-gray-900">₱{{ number_format($totalOutstanding) }}</span>
-                            </div>
-                        </div>
-                        <div class="w-full mt-6 space-y-2.5">
-                            @foreach($agingBuckets as $bucket)
-                            <div class="flex items-center justify-between text-[13px]">
-                                <span class="flex items-center gap-2 text-gray-600"><span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background-color: {{ $bucket['color'] }}"></span><span>{{ $bucket['label'] }}</span></span>
-                                <span class="font-medium text-gray-800 tabular-nums">₱{{ number_format($bucket['amount']) }}</span>
-                            </div>
-                            @endforeach
+                    <h3 class="font-bold text-gray-800 text-[16px] mb-5 flex items-center gap-2 relative"><i class="fas fa-circle-info text-indigo-500"></i> Transaction Details</h3>
+                    <div id="detailContent" class="relative">
+                        <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                            <i class="fas fa-arrow-left text-2xl mb-3"></i>
+                            <p class="text-[13px]">Click a transaction to view details</p>
                         </div>
                     </div>
                 </div>
@@ -121,46 +110,54 @@
             </div>
         </div>
 
-</div>
+    </div>
 @endsection
 
 @push('scripts')
 <script>
     function overviewApp() {
-            return {
-                barsLoaded: false,
-                init() {
-                    setTimeout(() => { this.barsLoaded = true; }, 150);
-                    this.$nextTick(() => this.initAgingChart());
-                },
-                initAgingChart() {
-                    const ctx = document.getElementById('agingDonut');
-                    if (!ctx || typeof Chart === 'undefined') return;
-                    const hasData = {!! json_encode(array_sum(array_column($agingBuckets, 'amount')) > 0) !!};
-                    if (!hasData) return;
-                    new Chart(ctx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: {!! json_encode(array_column($agingBuckets, 'label')) !!},
-                            datasets: [{
-                                data: {!! json_encode(array_column($agingBuckets, 'amount')) !!},
-                                backgroundColor: {!! json_encode(array_column($agingBuckets, 'color')) !!},
-                                borderColor: '#ffffff',
-                                borderWidth: 2
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            cutout: '70%',
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: { callbacks: { label: (c) => c.label + ': ₱' + c.parsed.toLocaleString() } }
-                            }
-                        }
-                    });
-                },
-            }
+        return {
+            barsLoaded: false,
+            init() {
+                setTimeout(() => { this.barsLoaded = true; }, 150);
+            },
         }
+    }
+    function showTransactionDetail(row) {
+        const type = row.dataset.type;
+        const id = row.dataset.id;
+        const apiType = type === 'Payment' ? 'transaction' : 'invoice';
+        const content = document.getElementById('detailContent');
+        content.innerHTML = '<div class="flex items-center justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>';
+        fetch('/api/ar/detail?type=' + encodeURIComponent(apiType) + '&id=' + encodeURIComponent(id))
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.message);
+                const d = data.data;
+                let html = '<div class="space-y-4">';
+                html += '<div class="flex items-center gap-2 mb-3"><span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset ' +
+                    (d.status === 'Sent' ? 'bg-[#fef9c3] text-[#a16207] ring-yellow-200' : '') +
+                    (d.status === 'Cleared' ? 'bg-[#f0fdf4] text-[#15803d] ring-green-200' : '') +
+                    (d.status === 'Paid' ? 'bg-[#f0fdf4] text-[#15803d] ring-green-200' : '') +
+                    (d.status === 'Overdue' ? 'bg-[#fff7ed] text-[#c2410c] ring-orange-200' : '') +
+                    '">' + d.status + '</span></div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Reference</p><p class="text-[14px] font-semibold text-gray-900">' + (d.invoice_number || d.order_no || '--') + '</p></div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Customer</p><p class="text-[14px] font-semibold text-gray-900">' + d.customer + '</p></div>';
+                if (d.customer_email) html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Email</p><p class="text-[13px] text-gray-600">' + d.customer_email + '</p></div>';
+                if (d.customer_phone) html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Phone</p><p class="text-[13px] text-gray-600">' + d.customer_phone + '</p></div>';
+                html += '<div class="grid grid-cols-2 gap-3">';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Amount</p><p class="text-[15px] font-bold text-gray-900 tabular-nums">₱' + Number(d.total || d.total_amount || 0).toLocaleString() + '</p></div>';
+                if (d.payment_method) html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Method</p><p class="text-[13px] text-gray-600">' + d.payment_method + '</p></div>';
+                html += '</div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Date</p><p class="text-[13px] text-gray-600">' + (d.invoice_date || d.created_at || '--') + '</p></div>';
+                if (d.due_date) html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Due Date</p><p class="text-[13px] text-gray-600">' + d.due_date + '</p></div>';
+                if (d.days_overdue !== undefined && d.days_overdue > 0) html += '<div class="text-[12px] text-red-500 font-medium">Overdue by ' + d.days_overdue + ' day(s)</div>';
+                html += '</div>';
+                content.innerHTML = html;
+            })
+            .catch(() => {
+                content.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p class="text-[13px]">Failed to load details</p></div>';
+            });
+    }
 </script>
 @endpush

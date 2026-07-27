@@ -56,8 +56,6 @@ class ARController extends Controller
             ->values()
             ->map(fn($item) => collect($item)->except('_sort')->all());
 
-        $agingBuckets = $this->computeAgingBuckets($invoices);
-
         $invoiceCount = $invoices->count();
         $overdueCount = $invoices->whereIn('status', ['sent', 'overdue'])->filter(fn($i) => $this->daysOverdue($i) > 0)->count();
         $paymentCount = $payments->count();
@@ -73,7 +71,7 @@ class ARController extends Controller
 
         return view('ar.overview', compact(
             'totalOutstanding', 'overdueAmount', 'collectedThisMonth',
-            'recentActivities', 'agingBuckets',
+            'recentActivities',
             'invoiceCount', 'overdueCount', 'paymentCount', 'avgDaysToCollect'
         ));
     }
@@ -208,6 +206,50 @@ class ARController extends Controller
     public function customerPay()
     {
         return view('ar.customer-pay');
+    }
+
+    public function detail(Request $request)
+    {
+        $type = $request->query('type');
+        $id = $request->query('id');
+
+        if ($type === 'invoice') {
+            $invoice = Invoice::with('customer')->find($id);
+            if (!$invoice) return response()->json(['success' => false, 'message' => 'Invoice not found'], 404);
+            return response()->json(['success' => true, 'data' => [
+                'id' => $invoice->id,
+                'type' => $invoice->type === 'credit_note' ? 'Credit Note' : 'Invoice',
+                'invoice_number' => $invoice->invoice_number,
+                'customer' => $invoice->customer?->name ?? 'Unknown',
+                'customer_email' => $invoice->customer?->email ?? null,
+                'customer_phone' => $invoice->customer?->phone ?? null,
+                'invoice_date' => $invoice->invoice_date?->format('M d, Y'),
+                'due_date' => $invoice->due_date?->format('M d, Y'),
+                'total' => (float) $invoice->total,
+                'subtotal' => (float) $invoice->subtotal,
+                'vat_amount' => (float) $invoice->vat_amount,
+'status' => ucfirst($invoice->status),
+            ]], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
+
+if ($type === 'transaction') {
+            $txn = SalesTransaction::find($id);
+            if (!$txn) return response()->json(['success' => false, 'message' => 'Transaction not found'], 404);
+            return response()->json(['success' => true, 'data' => [
+                'id' => $txn->sales_transaction_id,
+                'type' => 'Payment',
+                'order_no' => $txn->order_no,
+                'customer' => $txn->customer_name,
+                'phone' => $txn->phone_number ?? null,
+                'total_amount' => (float) $txn->total_amount,
+                'initial_payment' => (float) ($txn->initial_payment ?? 0),
+                'payment_method' => $txn->payment_method,
+                'status' => $txn->status,
+                'created_at' => $txn->created_at?->format('M d, Y'),
+            ]], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid type'], 400);
     }
 
     public function remindCustomer(Request $request)

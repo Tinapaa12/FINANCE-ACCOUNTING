@@ -39,10 +39,10 @@
                 </div>
             </div>
 
-            <!-- Content Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 relative">
+<!-- Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
                 <!-- Transactions Table -->
-                <div class="lg:col-span-3 bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
                     <div class="p-6 pb-4 flex items-center justify-between border-b border-gray-50">
                         <h3 class="font-bold text-gray-800 text-[16px] flex items-center gap-2"><i class="fas fa-receipt text-indigo-500"></i> Payments Received</h3>
                         <span class="text-[11px] font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">{{ $transactions->count() }} records</span>
@@ -56,12 +56,11 @@
                                     <th class="px-6 py-3 font-semibold text-[11px] uppercase tracking-wider border-b-2 border-gray-200 text-right">Amount</th>
                                     <th class="px-6 py-3 font-semibold text-[11px] uppercase tracking-wider border-b-2 border-gray-200">Method</th>
                                     <th class="px-6 py-3 font-semibold text-[11px] uppercase tracking-wider border-b-2 border-gray-200">Status</th>
-                                    <th class="px-6 py-3 font-semibold text-[11px] uppercase tracking-wider border-b-2 border-gray-200">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @forelse($transactions as $txn)
-                                <tr class="hover:bg-indigo-50/50 transition-colors">
+                                <tr class="hover:bg-indigo-50/50 transition-colors cursor-pointer" data-type="transaction" data-id="{{ $txn->sales_transaction_id }}" onclick="showTransactionDetail(this)">
                                     <td class="px-6 py-3.5 font-medium text-gray-800">{{ $txn->order_no }}</td>
                                     <td class="px-6 py-3.5 text-gray-600">{{ $txn->customer_name }}</td>
                                     <td class="px-6 py-3.5 font-medium text-gray-900 text-right tabular-nums">₱{{ number_format($txn->total_amount, 2) }}</td>
@@ -79,20 +78,10 @@
                                             {{ $statusLabel }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-3.5">
-                                        @if($txn->status === 'Pending')
-                                            <button @click="markAsPaid({{ $txn->sales_transaction_id }})" class="text-xs font-medium text-blue-600 hover:text-blue-800">Mark as Paid</button>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 text-xs font-medium text-green-600">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                Completed
-                                            </span>
-                                        @endif
-                                    </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-8 text-center text-gray-500">No sales transactions found.</td>
+                                    <td colspan="5" class="px-6 py-8 text-center text-gray-500">No sales transactions found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -100,33 +89,24 @@
                     </div>
                 </div>
 
-                <!-- Method Breakdown -->
-                <div class="bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 h-fit relative overflow-hidden">
+                <!-- Transaction Detail Panel -->
+                <div class="bg-white p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 h-fit relative overflow-hidden" id="detailPanel">
                     <div class="absolute -top-8 -right-8 w-28 h-28 bg-indigo-50 rounded-full"></div>
-                    <h3 class="font-bold text-gray-800 text-[15px] mb-4 flex items-center gap-2 relative"><i class="fas fa-chart-pie text-indigo-500"></i> Payment Method Breakdown</h3>
-                    <div class="space-y-4 mb-4 relative">
-                        @forelse($methodBreakdown as $method)
-                        <div class="flex items-center text-[13px]">
-                            <span class="w-14 text-gray-600 font-medium">{{ $method['label'] }}</span>
-                            <div class="flex-1 h-3 bg-gray-100 rounded-full mx-3 overflow-hidden">
-                                <div class="h-full rounded-full transition-all ease-out duration-1000"
-                                     x-init="$el.style.width = '{{ $method['pct'] }}%'; $el.style.backgroundColor = '{{ $method['color'] }}'"
-                                     style="width: 0%; background-color: {{ $method['color'] }}"></div>
-                            </div>
-                            <span class="font-medium text-gray-800 tabular-nums">₱{{ number_format($method['amount']) }}</span>
+                    <h3 class="font-bold text-gray-800 text-[16px] mb-5 flex items-center gap-2 relative"><i class="fas fa-circle-info text-indigo-500"></i> Transaction Details</h3>
+                    <div id="detailContent" class="relative">
+                        <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+                            <i class="fas fa-arrow-left text-2xl mb-3"></i>
+                            <p class="text-[13px]">Click a transaction to view details</p>
                         </div>
-                        @empty
-                        <p class="text-sm text-gray-400 text-center py-4">No payment data</p>
-                        @endforelse
-                    </div>
-                    <div class="pt-4 border-t border-gray-100 flex justify-between text-[14px] font-bold relative">
-                        <span class="text-gray-800">Total Received</span><span class="text-[#4338ca]">₱{{ number_format($grandTotal) }}</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Action Bar -->
+            <div class="bg-gradient-to-r from-white to-slate-50 p-6 rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-100 flex items-center justify-between">
+                <div class="hidden md:flex items-center gap-2 text-[12px] text-gray-400"><i class="fas fa-circle-info"></i> Data refreshed a few moments ago</div>
+            </div>
         </div>
-
-
 
 </div>
 
@@ -160,37 +140,91 @@
 @push('scripts')
 <script>
     function paymentApp() {
-            return {
-                showPaymentModal: false,
-                paymentData: null,
-                async markAsPaid(id) {
-                    if (!confirm('Mark this transaction as Paid?')) return;
-                    try {
-                        const res = await fetch('/sales-transactions/' + id + '/mark-as-paid', {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Accept': 'application/json',
-                            },
-                        });
-                        const data = await res.json();
-                        if (res.ok) {
-                            if (data.payment_data) {
-                                this.paymentData = data.payment_data;
-                                this.showPaymentModal = true;
-                            } else {
-                                window.location.reload();
-                            }
+        return {
+            showPaymentModal: false,
+            paymentData: null,
+            async markAsPaid(id) {
+                if (!confirm('Mark this transaction as Paid?')) return;
+                try {
+                    const res = await fetch('/sales-transactions/' + id + '/mark-as-paid', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        if (data.payment_data) {
+                            this.paymentData = data.payment_data;
+                            this.showPaymentModal = true;
                         } else {
-                            alert('Error: ' + (data.message || 'Request failed'));
+                            window.location.reload();
                         }
-                    } catch (e) {
-                        alert('Network error - check console for details');
-                        console.error(e);
+                    } else {
+                        alert('Error: ' + (data.message || 'Request failed'));
                     }
-                },
-            }
+                } catch (e) {
+                    alert('Network error - check console for details');
+                    console.error(e);
+                }
+            },
         }
+    }
+    function showTransactionDetail(row) {
+        const id = row.dataset.id;
+        const content = document.getElementById('detailContent');
+        content.innerHTML = '<div class="flex items-center justify-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div></div>';
+        fetch('/api/ar/detail?type=transaction&id=' + encodeURIComponent(id))
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) throw new Error(data.message);
+                const d = data.data;
+                let html = '<div class="space-y-4">';
+                html += '<div class="flex items-center gap-2 mb-3"><span class="px-3 py-1 text-[12px] font-medium rounded-full ring-1 ring-inset ' +
+                    (d.status === 'Paid' ? 'bg-[#f0fdf4] text-[#15803d] ring-green-200' : '') +
+                    (d.status === 'Pending' ? 'bg-[#fef9c3] text-[#a16207] ring-yellow-200' : '') +
+                    '">' + d.status + '</span></div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Order No</p><p class="text-[14px] font-semibold text-gray-900">' + (d.order_no || '--') + '</p></div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Customer</p><p class="text-[14px] font-semibold text-gray-900">' + d.customer + '</p></div>';
+                if (d.phone) html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Phone</p><p class="text-[13px] text-gray-600">' + d.phone + '</p></div>';
+                html += '<div class="grid grid-cols-2 gap-3">';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Total Amount</p><p class="text-[15px] font-bold text-gray-900 tabular-nums">₱' + Number(d.total_amount).toLocaleString() + '</p></div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Method</p><p class="text-[13px] text-gray-600">' + (d.payment_method || '--') + '</p></div>';
+                html += '</div>';
+                html += '<div><p class="text-[11px] text-gray-400 uppercase tracking-wider">Date</p><p class="text-[13px] text-gray-600">' + (d.created_at || '--') + '</p></div>';
+                if (d.status === 'Pending') {
+                    html += '<div class="pt-3 border-t border-gray-100"><button onclick="markAsPaid(' + d.id + ')" class="w-full bg-blue-500 hover:bg-blue-600 text-white text-[13px] py-2.5 px-4 rounded-lg font-medium transition flex items-center justify-center gap-2"><i class="fas fa-check"></i> Mark as Paid</button></div>';
+                }
+                html += '</div>';
+                content.innerHTML = html;
+            })
+            .catch(() => {
+                content.innerHTML = '<div class="text-center py-8 text-gray-400"><i class="fas fa-exclamation-triangle text-2xl mb-2"></i><p class="text-[13px]">Failed to load details</p></div>';
+            });
+    }
+    async function markAsPaid(id) {
+        if (!confirm('Mark this transaction as Paid?')) return;
+        try {
+            const res = await fetch('/sales-transactions/' + id + '/mark-as-paid', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'Request failed'));
+            }
+        } catch (e) {
+            alert('Network error - check console for details');
+            console.error(e);
+        }
+    }
 </script>
 @endpush

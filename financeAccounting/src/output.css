@@ -1093,6 +1093,9 @@
   .border-green-300 {
     border-color: var(--color-green-300);
   }
+  .border-indigo-500 {
+    border-color: var(--color-indigo-500);
+  }
   .border-orange-200 {
     border-color: var(--color-orange-200);
   }
