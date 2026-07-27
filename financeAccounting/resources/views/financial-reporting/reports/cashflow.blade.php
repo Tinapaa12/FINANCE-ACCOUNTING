@@ -9,7 +9,30 @@
         <div class="flex-1">
             <div class="bg-white rounded-lg border p-5">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-semibold text-lg">Cash Flow Statement</h2>
+                    <h2 class="font-semibold text-lg">
+                        Cash Flow Statement
+                        <span class="relative group inline-block ml-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-help">!</span>
+                            <div class="absolute left-0 top-6 z-50 hidden group-hover:block w-80 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 leading-relaxed">
+                                <p class="font-semibold mb-1.5 text-blue-300">How Cash Flow is computed:</p>
+                                <p class="mb-1">Identifies <span class="text-yellow-300">Cash</span> accounts (name like "Cash%").</p>
+                                <p class="mb-1">
+                                    <span class="text-green-300">Cash In</span> = SUM(Debit) entries to Cash accounts
+                                    <br><span class="text-gray-400 ml-2">where counterparty ≠ Cash</span>
+                                </p>
+                                <p class="mb-1">
+                                    <span class="text-red-300">Cash Out</span> = SUM(Credit) entries from Cash accounts
+                                    <br><span class="text-gray-400 ml-2">where counterparty = Expense/Liability</span>
+                                </p>
+                                <p class="mt-2 border-t border-gray-600 pt-2">
+                                    <span class="text-blue-300">Net Cash Flow</span> = Cash In − Cash Out
+                                </p>
+                                <p>
+                                    <span class="text-blue-300">Ending Cash</span> = Beginning Cash + Net Cash Flow
+                                </p>
+                            </div>
+                        </span>
+                    </h2>
                     <div class="flex items-center gap-3">
                         <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
                             @foreach($periods as $p)

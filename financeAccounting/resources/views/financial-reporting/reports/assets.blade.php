@@ -7,7 +7,36 @@
 @section('content')
     <div class="bg-white rounded-lg border p-5">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="font-semibold text-lg">Balance Sheet</h2>
+            <h2 class="font-semibold text-lg">
+                Balance Sheet
+                <span class="relative group inline-block ml-1.5">
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-help">!</span>
+                    <div class="absolute left-0 top-6 z-50 hidden group-hover:block w-80 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 leading-relaxed">
+                        <p class="font-semibold mb-1.5 text-blue-300">How Balance Sheet is computed:</p>
+                        <p class="mb-1">Queries <span class="text-yellow-300">Posted</span> journal entries for Asset, Liability & Equity accounts.</p>
+                        <p class="mb-1">
+                            <span class="text-blue-300">Assets</span> (normal balance = Debit):
+                            <br><span class="text-blue-300 ml-2">Balance = SUM(Debit) − SUM(Credit)</span>
+                        </p>
+                        <p class="mb-1">
+                            <span class="text-purple-300">Liabilities</span> (normal balance = Credit):
+                            <br><span class="text-purple-300 ml-2">Balance = SUM(Credit) − SUM(Debit)</span>
+                        </p>
+                        <p class="mb-1">
+                            <span class="text-amber-300">Equity</span> (normal balance = Credit):
+                            <br><span class="text-amber-300 ml-2">Balance = SUM(Credit) − SUM(Debit)</span>
+                        </p>
+                        <p class="mb-1">
+                            <span class="text-green-300">Retained Earnings</span> = Net Income (Revenue − Expenses)
+                            <br><span class="text-green-300 ml-2">added to Equity section</span>
+                        </p>
+                        <p class="mt-1.5 border-t border-gray-600 pt-1.5">
+                            <span class="text-blue-300">Accounting Equation:</span>
+                            <br><span class="ml-2">Assets = Liabilities + Equity</span>
+                        </p>
+                    </div>
+                </span>
+            </h2>
             <select class="border rounded px-3 py-1.5 text-sm" onchange="window.location.href='?period='+this.value">
                 @foreach($periods as $p)
                     <option value="{{ $p }}" @selected($p === $selectedPeriod)>{{ $p }}</option>

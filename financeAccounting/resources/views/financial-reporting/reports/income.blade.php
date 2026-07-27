@@ -8,7 +8,27 @@
         <div class="bg-white rounded-lg border p-5">
             <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h2 class="font-semibold text-lg">Income statements</h2>
+                    <h2 class="font-semibold text-lg">
+                        Income Statement
+                        <span class="relative group inline-block ml-1.5">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold cursor-help">!</span>
+                            <div class="absolute left-0 top-6 z-50 hidden group-hover:block w-80 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 leading-relaxed">
+                                <p class="font-semibold mb-1.5 text-blue-300">How Income Statement is computed:</p>
+                                <p class="mb-1">Queries <span class="text-yellow-300">Posted</span> journal entries in the selected period, grouped by account.</p>
+                                <p class="mb-1">
+                                    <span class="text-green-300">Revenue</span> accounts (normal balance = Credit):
+                                    <br><span class="text-green-300 ml-2">Total = SUM(Credit)</span>
+                                </p>
+                                <p class="mb-1">
+                                    <span class="text-red-300">Expense</span> accounts (normal balance = Debit):
+                                    <br><span class="text-red-300 ml-2">Total = SUM(Debit)</span>
+                                </p>
+                                <p class="mt-2 border-t border-gray-600 pt-2">
+                                    <span class="text-blue-300">Net Income</span> = Total Revenue − Total Expenses
+                                </p>
+                            </div>
+                        </span>
+                    </h2>
                     <p class="text-xs text-gray-500">
                         Period: {{ $selectedPeriod ?? 'All periods' }}
                     </p>
